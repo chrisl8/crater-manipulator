@@ -47,9 +47,10 @@ func Initialize(Local: bool):
 	set_physics_process_internal(IsLocal)
 	#
 
-	SpawnedDebugObject = DebugObject.instantiate()
-	get_node("/root").add_child(SpawnedDebugObject)
+	#SpawnedDebugObject = DebugObject.instantiate()
+	#get_node("/root").add_child(SpawnedDebugObject)
 
+var MaxHandDistance: float = 25.0
 
 func _process(_delta: float) -> void:
 	if IsLocal:
@@ -60,7 +61,7 @@ func _process(_delta: float) -> void:
 			)
 
 		Arm.look_at(MousePosition)
-		ArmDirection = Vector2(0, 1).rotated(Arm.global_rotation)
+		ArmTargetPosition.global_position=Arm.global_position + Arm.global_transform.x*(clamp(Arm.global_position.distance_to(MousePosition),0,MaxHandDistance))
 
 		CurrentMiningTime = clamp(CurrentMiningTime + _delta, 0.0, 100.0)
 		if mouse_left_down:
@@ -69,9 +70,6 @@ func _process(_delta: float) -> void:
 	else:
 		#Yes need this twice till refactor
 		Arm.look_at(MousePosition)
-		if !Globals.is_server:
-			#Arm.global_position = MousePosition
-			SpawnedDebugObject.global_position = MousePosition
 
 	if IsMining:
 		MiningParticles.look_at(MousePosition)
@@ -79,11 +77,7 @@ func _process(_delta: float) -> void:
 	#HeadTarget.global_position = MousePosition
 	MiningParticles.emitting = IsMining
 
-	TestArmIKTargetDeleteLater.global_position = MousePosition
-	SpawnedDebugObject.global_position = MousePosition
-
-
-@export var TestArmIKTargetDeleteLater: Node2D
+@export var ArmTargetPosition: Node2D
 
 const mouse_sensitivity = 10
 
@@ -104,7 +98,6 @@ var mouse_left_down: bool
 @export var MousePosition: Vector2
 
 var MineCast: RayCast2D
-var ArmDirection: Vector2
 
 var MiningSpeed: float = 0.1
 var CurrentMiningTime = 100
@@ -125,10 +118,10 @@ func MineRaycast():
 		#get_node("/root").add_child(SpawnedDebugObject)
 		#SpawnedDebugObject.global_position = Arm.global_position
 
-		var MiningParticleDistance = InteractRange / 2.0
 		var ArmPosition = Arm.global_position
+		var MiningParticleDistance = clamp(InteractRange,0.0,MiningParticles.global_position.distance_to(MousePosition))/2.0
 		var query = PhysicsRayQueryParameters2D.create(
-			ArmPosition, ArmPosition + Arm.global_transform.x * InteractRange
+			ArmPosition, ArmPosition + Arm.global_transform.x * ArmPosition.distance_to(MousePosition)
 		)
 		query.exclude = [self]
 		var result = space_state.intersect_ray(query)

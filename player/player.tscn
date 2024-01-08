@@ -38,6 +38,12 @@ properties/6/replication_mode = 2
 properties/7/path = NodePath("Interaction Controller:MiningDistance")
 properties/7/spawn = true
 properties/7/replication_mode = 2
+properties/8/path = NodePath("Arm/Left Hand Target:position")
+properties/8/spawn = true
+properties/8/replication_mode = 2
+properties/9/path = NodePath("Arm:rotation")
+properties/9/spawn = true
+properties/9/replication_mode = 2
 
 [sub_resource type="QuadMesh" id="QuadMesh_37pga"]
 
@@ -119,12 +125,12 @@ position = Vector2(0, -50)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("3_h2rqs")
 
-[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "HeadTarget", "TestArmIKTargetDeleteLater")]
+[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "HeadTarget", "ArmTargetPosition")]
 script = ExtResource("4_rfuvf")
 Arm = NodePath("../Arm")
 MiningParticles = NodePath("../Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm/GPUParticles2D")
 HeadTarget = NodePath("../Skeleton2D/Head Target")
-TestArmIKTargetDeleteLater = NodePath("../Arm/Left Hand Target")
+ArmTargetPosition = NodePath("../Arm/Left Hand Target")
 
 [node name="Arm" type="Node2D" parent="."]
 position = Vector2(0, -39)
