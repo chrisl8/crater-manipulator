@@ -1,8 +1,6 @@
-[gd_scene load_steps=17 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=15 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/PlayerController.gd" id="1_ntq5g"]
-[ext_resource type="Texture2D" uid="uid://rtlda15irjtr" path="res://Items/PlayerBox.png" id="3_8dug6"]
-[ext_resource type="Texture2D" uid="uid://bwi88dcimnyfh" path="res://Items/Box.png" id="3_h2rqs"]
 [ext_resource type="Script" path="res://player/PlayerInteractionController.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/Player Atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/skeleton_fixer.gd" id="5_yow5u"]
@@ -38,12 +36,9 @@ properties/6/replication_mode = 2
 properties/7/path = NodePath("Interaction Controller:MiningDistance")
 properties/7/spawn = true
 properties/7/replication_mode = 2
-properties/8/path = NodePath("Arm/Left Hand Target:position")
+properties/8/path = NodePath("Interaction Controller:Flipped")
 properties/8/spawn = true
 properties/8/replication_mode = 2
-properties/9/path = NodePath("Arm:rotation")
-properties/9/spawn = true
-properties/9/replication_mode = 2
 
 [sub_resource type="QuadMesh" id="QuadMesh_37pga"]
 
@@ -114,56 +109,72 @@ position = Vector2(0, -31.37)
 zoom = Vector2(2, 2)
 position_smoothing_enabled = true
 
-[node name="Box" type="Sprite2D" parent="."]
-visible = false
-position = Vector2(0, -32)
-texture = ExtResource("3_8dug6")
-
-[node name="Box2" type="Sprite2D" parent="."]
-visible = false
-position = Vector2(0, -50)
-scale = Vector2(0.25, 0.25)
-texture = ExtResource("3_h2rqs")
-
-[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "HeadTarget", "ArmTargetPosition")]
+[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "FlipPoint", "HeadTarget", "ArmTargetPosition")]
 script = ExtResource("4_rfuvf")
-Arm = NodePath("../Arm")
-MiningParticles = NodePath("../Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm/GPUParticles2D")
-HeadTarget = NodePath("../Skeleton2D/Head Target")
-ArmTargetPosition = NodePath("../Arm/Left Hand Target")
+Arm = NodePath("../Flip Point/Arm")
+MiningParticles = NodePath("../Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm/GPUParticles2D")
+FlipPoint = NodePath("../Flip Point")
+HeadTarget = NodePath("../Flip Point/Skeleton2D/Head Target")
+ArmTargetPosition = NodePath("../Flip Point/Arm/Left Hand Target")
 
-[node name="Arm" type="Node2D" parent="."]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(3, -25)
+polygon = PackedVector2Array(10, -21, -3, -30, -16, -21, -16, 3, -3, 25, 10, 3)
+
+[node name="Flip Point" type="Node2D" parent="."]
+
+[node name="Arm" type="Node2D" parent="Flip Point"]
 position = Vector2(0, -39)
 
-[node name="MeshInstance2D" type="MeshInstance2D" parent="Arm"]
+[node name="MeshInstance2D" type="MeshInstance2D" parent="Flip Point/Arm"]
 visible = false
 position = Vector2(15, 0)
 scale = Vector2(30, 10)
 mesh = SubResource("QuadMesh_37pga")
 
-[node name="Left Hand Target" type="Node2D" parent="Arm"]
+[node name="Left Hand Target" type="Node2D" parent="Flip Point/Arm"]
 position = Vector2(23, -2)
 
-[node name="Skeleton2D" type="Skeleton2D" parent="."]
+[node name="Player" type="Node2D" parent="Flip Point"]
+
+[node name="Upper Left Leg" type="Polygon2D" parent="Flip Point/Player"]
+visible = false
+texture_filter = 1
+position = Vector2(-10, -59)
+texture = ExtResource("5_e4w6p")
+skeleton = NodePath("../../Skeleton2D")
+polygon = PackedVector2Array(7.07904, 50.4467, 15.1203, 50.1718, 14.9141, 68.3849, 7.42268, 68.4536)
+uv = PackedVector2Array(7.07904, 50.4467, 15.1203, 50.1718, 14.9141, 68.3849, 7.42268, 68.4536)
+
+[node name="Lower Left Leg" type="Polygon2D" parent="Flip Point/Player"]
+visible = false
+texture_filter = 1
+position = Vector2(-10, -68)
+texture = ExtResource("5_e4w6p")
+skeleton = NodePath("../../Skeleton2D")
+polygon = PackedVector2Array(7.40402, 76.234, 14.6252, 76.1426, 14.9909, 94.9726, 6.94699, 94.7898)
+uv = PackedVector2Array(7.40402, 76.234, 14.6252, 76.1426, 14.9909, 94.9726, 6.94699, 94.7898)
+
+[node name="Skeleton2D" type="Skeleton2D" parent="Flip Point"]
 modification_stack = SubResource("SkeletonModificationStack2D_tbk5s")
 script = ExtResource("5_yow5u")
 apply_all_local = true
 
-[node name="Torso" type="Bone2D" parent="Skeleton2D"]
+[node name="Torso" type="Bone2D" parent="Flip Point/Skeleton2D"]
 position = Vector2(2, -21)
 rest = Transform2D(1, 0, 0, 1, 2, -21)
 auto_calculate_length_and_angle = false
 length = 17.0
 bone_angle = -90.0
 
-[node name="Upper Arm" type="Bone2D" parent="Skeleton2D/Torso"]
+[node name="Upper Arm" type="Bone2D" parent="Flip Point/Skeleton2D/Torso"]
 position = Vector2(-2, -18)
 rotation = 0.643471
 scale = Vector2(0.999984, 0.999984)
 rest = Transform2D(0.800005, 0.599967, -0.599967, 0.800005, -2, -18)
 metadata/_local_pose_override_enabled_ = true
 
-[node name="Lower Arm" type="Bone2D" parent="Skeleton2D/Torso/Upper Arm"]
+[node name="Lower Arm" type="Bone2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm"]
 position = Vector2(15.0002, -6.55681e-07)
 rotation = -2.85776
 scale = Vector2(0.999988, 0.999988)
@@ -173,7 +184,7 @@ length = 15.0
 bone_angle = 90.0
 metadata/_local_pose_override_enabled_ = true
 
-[node name="Lower Left Arm" type="Polygon2D" parent="Skeleton2D/Torso/Upper Arm/Lower Arm"]
+[node name="Lower Left Arm" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm"]
 z_index = 1
 texture_filter = 1
 position = Vector2(-52.0015, -6.00017)
@@ -182,7 +193,7 @@ skeleton = NodePath("../../../..")
 polygon = PackedVector2Array(49, 6, 55, 6, 55, 21, 49, 21)
 uv = PackedVector2Array(49, 6, 55, 6, 55, 21, 49, 21)
 
-[node name="GPUParticles2D" type="GPUParticles2D" parent="Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm"]
+[node name="GPUParticles2D" type="GPUParticles2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm"]
 position = Vector2(52.0015, 21.0002)
 rotation = 1.20897
 scale = Vector2(1.00011, 1.00011)
@@ -192,7 +203,7 @@ lifetime = 0.5
 collision_base_size = 0.0
 visibility_rect = Rect2(0, -15, 1000, 30)
 
-[node name="Upper Left Arm" type="Polygon2D" parent="Skeleton2D/Torso/Upper Arm"]
+[node name="Upper Left Arm" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm"]
 z_index = 2
 texture_filter = 1
 position = Vector2(-6.00028, 40.0019)
@@ -202,7 +213,7 @@ skeleton = NodePath("../../..")
 polygon = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
 uv = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
 
-[node name="Body" type="Polygon2D" parent="Skeleton2D/Torso"]
+[node name="Body" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso"]
 texture_filter = 1
 position = Vector2(-21, -39)
 texture = ExtResource("5_e4w6p")
@@ -210,12 +221,12 @@ skeleton = NodePath("../..")
 polygon = PackedVector2Array(6, 14, 15, 14, 18, 16, 24, 16, 29, 21, 29, 30, 26, 40, 15, 40, 14, 38, 6, 38)
 uv = PackedVector2Array(6, 14, 15, 14, 15, 18, 26, 18, 29, 21, 29, 30, 26, 40, 15, 40, 14, 38, 6, 38)
 
-[node name="Neck" type="Bone2D" parent="Skeleton2D/Torso"]
+[node name="Neck" type="Bone2D" parent="Flip Point/Skeleton2D/Torso"]
 position = Vector2(0, -21)
 rotation = -1.5708
 rest = Transform2D(-3.61999e-06, -1, 1, -3.61999e-06, 0, -21)
 
-[node name="Head" type="Bone2D" parent="Skeleton2D/Torso/Neck"]
+[node name="Head" type="Bone2D" parent="Flip Point/Skeleton2D/Torso/Neck"]
 rotation = 1.5708
 scale = Vector2(0.99995, 0.99995)
 rest = Transform2D(-3.50061e-06, 0.99995, -0.99995, -3.50061e-06, 0, 0)
@@ -224,7 +235,7 @@ length = 4.0
 bone_angle = 0.0
 metadata/_local_pose_override_enabled_ = true
 
-[node name="Head2" type="Polygon2D" parent="Skeleton2D/Torso/Neck/Head"]
+[node name="Head2" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso/Neck/Head"]
 texture_filter = 1
 position = Vector2(-21.0011, -12.0006)
 texture = ExtResource("5_e4w6p")
@@ -232,29 +243,5 @@ skeleton = NodePath("../../../..")
 polygon = PackedVector2Array(15, 0, 15, 12, 27, 12, 27, 0)
 uv = PackedVector2Array(15, 0, 15, 12, 27, 12, 27, -7.45058e-09)
 
-[node name="Head Target" type="Node2D" parent="Skeleton2D"]
+[node name="Head Target" type="Node2D" parent="Flip Point/Skeleton2D"]
 position = Vector2(20, -42)
-
-[node name="Player" type="Node2D" parent="."]
-
-[node name="Upper Left Leg" type="Polygon2D" parent="Player"]
-visible = false
-texture_filter = 1
-position = Vector2(-10, -59)
-texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../Skeleton2D")
-polygon = PackedVector2Array(7.07904, 50.4467, 15.1203, 50.1718, 14.9141, 68.3849, 7.42268, 68.4536)
-uv = PackedVector2Array(7.07904, 50.4467, 15.1203, 50.1718, 14.9141, 68.3849, 7.42268, 68.4536)
-
-[node name="Lower Left Leg" type="Polygon2D" parent="Player"]
-visible = false
-texture_filter = 1
-position = Vector2(-10, -68)
-texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../Skeleton2D")
-polygon = PackedVector2Array(7.40402, 76.234, 14.6252, 76.1426, 14.9909, 94.9726, 6.94699, 94.7898)
-uv = PackedVector2Array(7.40402, 76.234, 14.6252, 76.1426, 14.9909, 94.9726, 6.94699, 94.7898)
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
-position = Vector2(3, -25)
-polygon = PackedVector2Array(7, -16, -17, -21, -15, 2, -4, 20, 5, 4)

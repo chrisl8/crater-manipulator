@@ -19,8 +19,11 @@ const InteractRange: float = 200.0
 		MiningDistance = new_value
 		UpdateMiningParticleLength()
 
+@export var FlipPoint: Node2D
+
 var SpawnedDebugObject: Node2D
 
+@export var Flipped: bool = false
 
 func UpdateMiningParticleLength():
 	var Extents: Vector3 = MiningParticles.process_material.get("emission_box_extents")
@@ -57,6 +60,18 @@ var MaxHandDistance: float = 25.0
 func _process(_delta: float) -> void:
 	if IsLocal:
 		MousePosition = get_global_mouse_position()
+
+		
+		Flipped = MousePosition.x < global_position.x
+		'''
+		if(Flipped):
+			FlipPoint.scale.x = -1
+		else:
+			FlipPoint.scale.x = 1
+		'''
+		
+		
+
 		if Input.is_action_just_pressed(&"interact"):
 			Globals.WorldMap.ModifyCell(
 				Vector2i(randi_range(-50, 50), randi_range(0, -50)), Vector2i(1, 1)
@@ -75,14 +90,25 @@ func _process(_delta: float) -> void:
 		if mouse_left_down:
 			MineRaycast()
 		IsMining = mouse_left_down
+
+		
 	else:
+		'''
+		if(Flipped):
+			FlipPoint.scale.x = -1
+		else:
+			FlipPoint.scale.x = 1
+		'''
+
 		#Yes need this twice till refactor
 		Arm.look_at(MousePosition)
 
 	if IsMining:
 		MiningParticles.look_at(MousePosition)
 
-	#HeadTarget.global_position = MousePosition
+
+	
+	HeadTarget.global_position = MousePosition
 	MiningParticles.emitting = IsMining
 
 
