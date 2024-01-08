@@ -25,6 +25,7 @@ var SpawnedDebugObject: Node2D
 
 @export var Flipped: bool = false
 
+
 func UpdateMiningParticleLength():
 	var Extents: Vector3 = MiningParticles.process_material.get("emission_box_extents")
 	Extents.x = MiningDistance
@@ -61,7 +62,6 @@ func _process(_delta: float) -> void:
 	if IsLocal:
 		MousePosition = get_global_mouse_position()
 
-		
 		Flipped = MousePosition.x < global_position.x
 		'''
 		if(Flipped):
@@ -69,8 +69,6 @@ func _process(_delta: float) -> void:
 		else:
 			FlipPoint.scale.x = 1
 		'''
-		
-		
 
 		if Input.is_action_just_pressed(&"interact"):
 			Globals.WorldMap.ModifyCell(
@@ -91,7 +89,6 @@ func _process(_delta: float) -> void:
 			MineRaycast()
 		IsMining = mouse_left_down
 
-		
 	else:
 		'''
 		if(Flipped):
@@ -106,8 +103,6 @@ func _process(_delta: float) -> void:
 	if IsMining:
 		MiningParticles.look_at(MousePosition)
 
-
-	
 	HeadTarget.global_position = MousePosition
 	MiningParticles.emitting = IsMining
 
