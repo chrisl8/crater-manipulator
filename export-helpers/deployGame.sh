@@ -47,7 +47,7 @@ print_usage() {
   echo ""
   echo "You MAY also include the following options:"
   echo "You an also supply a 'local' path to drop Linux and Windows binaries into. I use this to share them with friends. It is not required."
-  echo "--cloud-drive-path /mnt/c/Users/me/Dropbox/SpaceGame"
+  echo "--cloud-drive-path /mnt/c/Users/me/Dropbox/Game"
   echo ""
   echo "Example Usage:"
   echo "deployGame.sh --godot-version 4.1.2-stable --project-path /mnt/c/Dev/game --remote-host server.example.com --game-name game"
