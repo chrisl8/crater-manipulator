@@ -50,7 +50,9 @@ func Initialize(Local: bool):
 	#SpawnedDebugObject = DebugObject.instantiate()
 	#get_node("/root").add_child(SpawnedDebugObject)
 
+
 var MaxHandDistance: float = 25.0
+
 
 func _process(_delta: float) -> void:
 	if IsLocal:
@@ -61,7 +63,13 @@ func _process(_delta: float) -> void:
 			)
 
 		Arm.look_at(MousePosition)
-		ArmTargetPosition.global_position=Arm.global_position + Arm.global_transform.x*(clamp(Arm.global_position.distance_to(MousePosition),0,MaxHandDistance))
+		ArmTargetPosition.global_position = (
+			Arm.global_position
+			+ (
+				Arm.global_transform.x
+				* (clamp(Arm.global_position.distance_to(MousePosition), 0, MaxHandDistance))
+			)
+		)
 
 		CurrentMiningTime = clamp(CurrentMiningTime + _delta, 0.0, 100.0)
 		if mouse_left_down:
@@ -76,6 +84,7 @@ func _process(_delta: float) -> void:
 
 	#HeadTarget.global_position = MousePosition
 	MiningParticles.emitting = IsMining
+
 
 @export var ArmTargetPosition: Node2D
 
@@ -119,9 +128,13 @@ func MineRaycast():
 		#SpawnedDebugObject.global_position = Arm.global_position
 
 		var ArmPosition = Arm.global_position
-		var MiningParticleDistance = clamp(InteractRange,0.0,MiningParticles.global_position.distance_to(MousePosition))/2.0
+		var MiningParticleDistance = (
+			clamp(InteractRange, 0.0, MiningParticles.global_position.distance_to(MousePosition))
+			/ 2.0
+		)
 		var query = PhysicsRayQueryParameters2D.create(
-			ArmPosition, ArmPosition + Arm.global_transform.x * ArmPosition.distance_to(MousePosition)
+			ArmPosition,
+			ArmPosition + Arm.global_transform.x * ArmPosition.distance_to(MousePosition)
 		)
 		query.exclude = [self]
 		var result = space_state.intersect_ray(query)
