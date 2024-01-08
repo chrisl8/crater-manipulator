@@ -2,5 +2,6 @@
 .godot/
 /.idea/
 /.vscode/
+/.vs/
 addons/debug_draw_3d/libs/~*
 /addons/debug_draw_3d/
