@@ -7,7 +7,6 @@ extends RigidBody2D
 var player_focused: String
 
 
-
 func _ready() -> void:
 	set_physics_process(get_multiplayer_authority() == multiplayer.get_unique_id())
 	if Globals.is_server and spawn_position:
@@ -38,7 +37,8 @@ func unselect(other_name: String) -> void:
 	$SpotLight3D.visible = false
 
 
-@rpc("any_peer", "call_remote") func grab() -> void:
+@rpc("any_peer", "call_remote")
+func grab() -> void:
 	Helpers.log_print(
 		str(
 			"I (",

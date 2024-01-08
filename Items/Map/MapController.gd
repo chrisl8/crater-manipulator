@@ -21,6 +21,7 @@ var IsServer = false
 
 var ServerDataChanged = false
 
+
 #Initialization
 func _ready() -> void:
 	IsServer = Globals.is_server
@@ -38,18 +39,18 @@ func _ready() -> void:
 func GenerateMap():
 	var HalfLength = 50
 	while HalfLength >= 0:
-		var Height = randi_range(0, 3)+50
-		var End = randi_range(0,1)
+		var Height = randi_range(0, 3) + 50
+		var End = randi_range(0, 1)
 		while Height >= 0:
-			if(randf() > 0.98):
-				CurrentData[Vector2i(HalfLength, 5+Height)] = GetRandomOreTile()
+			if randf() > 0.98:
+				CurrentData[Vector2i(HalfLength, 5 + Height)] = GetRandomOreTile()
 			else:
-				CurrentData[Vector2i(HalfLength, 5+Height)] = GetRandomStoneTile()
+				CurrentData[Vector2i(HalfLength, 5 + Height)] = GetRandomStoneTile()
 
-			if(randf() > 0.98):
-				CurrentData[Vector2i(HalfLength*-1, 5+Height)] = GetRandomOreTile()
+			if randf() > 0.98:
+				CurrentData[Vector2i(HalfLength * -1, 5 + Height)] = GetRandomOreTile()
 			else:
-				CurrentData[Vector2i(HalfLength*-1, 5+Height)] = GetRandomStoneTile()
+				CurrentData[Vector2i(HalfLength * -1, 5 + Height)] = GetRandomStoneTile()
 			Height -= 1
 		HalfLength -= 1
 
@@ -61,6 +62,7 @@ func GenerateMap():
 #Gets a random valid stone tile ID from the atlas
 func GetRandomStoneTile():
 	return Vector2i(randi_range(0, 9), 0)
+
 
 func GetRandomOreTile():
 	return Vector2i(randi_range(0, 9), 1)
@@ -95,7 +97,9 @@ func ServerSendBufferedChanges():
 		var Count = ChunkSize
 		var ChunkedData = {}
 		while Count > 0 and len(ServerBufferedChanges.keys()) > 0:
-			ChunkedData[ServerBufferedChanges.keys()[0]] = ServerBufferedChanges[ServerBufferedChanges.keys()[0]]
+			ChunkedData[ServerBufferedChanges.keys()[0]] = ServerBufferedChanges[
+				ServerBufferedChanges.keys()[0]
+			]
 			ServerBufferedChanges.erase(ServerBufferedChanges.keys()[0])
 			Count -= 1
 		ServerSendChangedData.rpc(ChunkedData)
@@ -285,7 +289,7 @@ func RPCSendChangedData(Data: Dictionary) -> void:
 		for Key: Vector2i in Data.keys():
 			ServerBufferedChanges[Key] = Data[Key]
 			SyncedData[Key] = Data[Key]
-			
+
 		ServerDataChanged = true
 		'''
 		if (
@@ -307,7 +311,6 @@ var BufferedChangesRecievedFromServer: Array[Dictionary] = []
 #Sends changes from the server to clients
 @rpc("authority", "call_remote", "reliable")
 func ServerSendChangedData(Data: Dictionary) -> void:
-	
 	if !HasFinishedLoadingMap:
 		#Store changes and process after the maps has been fully loaded
 		BufferedChangesRecievedFromServer.append(Data)

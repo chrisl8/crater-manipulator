@@ -79,7 +79,9 @@ func quit_gracefully() -> void:
 				"[color=orange]Disconnecting clients and saving data before shutting down server...[/color]"
 			)
 			if Globals.my_camera:
-				var toast: Toast = Toast.new("Disconnecting clients and shutting down server...", 2.0)
+				var toast: Toast = Toast.new(
+					"Disconnecting clients and shutting down server...", 2.0
+				)
 				Globals.my_camera.add_child(toast)
 				toast.display()
 			Network.shutdown_server()
