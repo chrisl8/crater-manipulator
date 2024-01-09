@@ -17,16 +17,16 @@ func _apply_all_skeleton_modifier_set_local_to_scene(
 		indent += "  "
 
 	if !stack:
-		print("%sStack empty" % [indent])
+		#print("%sStack empty" % [indent])
 		return
 
 	stack.resource_local_to_scene = boo
-	print("%sSetting stack %s -> resource_local_to_scene = %s " % [indent, stack, boo])
+	#print("%sSetting stack %s -> resource_local_to_scene = %s " % [indent, stack, boo])
 
 	for idx in range(0, stack.modification_count):
 		var modification: SkeletonModification2D = stack.get_modification(idx)
 		modification.resource_local_to_scene = boo
-		print("%sSetting modifier %s -> resource_local_to_scene = %s " % [indent, stack, boo])
+		#print("%sSetting modifier %s -> resource_local_to_scene = %s " % [indent, stack, boo])
 
 		if modification is SkeletonModification2DStackHolder:
 			_apply_all_skeleton_modifier_set_local_to_scene(
@@ -35,4 +35,4 @@ func _apply_all_skeleton_modifier_set_local_to_scene(
 				level + 1
 			)
 
-	print("%sSetting stack %s -> done" % [indent, stack])
+	#print("%sSetting stack %s -> done" % [indent, stack])
