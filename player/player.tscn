@@ -112,10 +112,15 @@ position_smoothing_enabled = true
 [node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "FlipPoint", "HeadTarget", "ArmTargetPosition")]
 script = ExtResource("4_rfuvf")
 Arm = NodePath("../Flip Point/Arm")
+DebugObject = null
 MiningParticles = NodePath("../Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm/GPUParticles2D")
+IsMining = null
+MiningDistance = null
 FlipPoint = NodePath("../Flip Point")
+Flipped = null
 HeadTarget = NodePath("../Flip Point/Skeleton2D/Head Target")
 ArmTargetPosition = NodePath("../Flip Point/Arm/Left Hand Target")
+MousePosition = null
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 position = Vector2(3, -25)

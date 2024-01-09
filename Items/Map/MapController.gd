@@ -37,22 +37,36 @@ func _ready() -> void:
 
 #Procedural world generation
 func GenerateMap():
-	var HalfLength = 50
-	while HalfLength >= 0:
-		var Height = randi_range(0, 3) + 50
-		var End = randi_range(0, 1)
-		while Height >= 0:
-			if randf() > 0.98:
-				CurrentData[Vector2i(HalfLength, 5 + Height)] = GetRandomOreTile()
-			else:
-				CurrentData[Vector2i(HalfLength, 5 + Height)] = GetRandomStoneTile()
+	var Diameter = 200
+	var CurrentRadius = Diameter/2
+	var Radius = Diameter/2
 
+	var TopCenter = -5
+	var BottomCenter = -50
+	var TopEdge = 0
+	var BottomEdge = -10
+
+	while CurrentRadius >= 0:
+		var RadialMultiplier = 1.0-cos(3.14159265 / Radius * CurrentRadius / 2.0)
+		var TopHeight = roundi(float(TopCenter) + (float(TopEdge) - float(TopCenter)) / float(Radius) * float(CurrentRadius) * float(RadialMultiplier))
+		var BottomHeight = roundi(float(BottomCenter) + (float(BottomEdge) - float(BottomCenter)) / float(Radius) * float(CurrentRadius) * float(RadialMultiplier))
+
+		var BottomHeightA = BottomHeight+randi_range(-2, 2)
+		var BottomHeightB = BottomHeight+randi_range(-2, 2)
+		print(BottomHeight)
+		for Level in range(BottomHeightA,TopHeight,1):
 			if randf() > 0.98:
-				CurrentData[Vector2i(HalfLength * -1, 5 + Height)] = GetRandomOreTile()
+				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomOreTile()
 			else:
-				CurrentData[Vector2i(HalfLength * -1, 5 + Height)] = GetRandomStoneTile()
-			Height -= 1
-		HalfLength -= 1
+				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomStoneTile()
+
+		for Level in range(BottomHeightB,TopHeight,1):
+			if randf() > 0.98:
+				CurrentData[Vector2i(-CurrentRadius, -Level)] = GetRandomOreTile()
+			else:
+				CurrentData[Vector2i(-CurrentRadius, -Level)] = GetRandomStoneTile()
+
+		CurrentRadius -= 1.0
 
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData

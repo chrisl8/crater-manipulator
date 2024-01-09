@@ -76,6 +76,8 @@ func _process(_delta: float) -> void:
 			)
 
 		Arm.look_at(MousePosition)
+		ArmTargetPosition.global_position = MousePosition
+		'''
 		ArmTargetPosition.global_position = (
 			Arm.global_position
 			+ (
@@ -83,6 +85,7 @@ func _process(_delta: float) -> void:
 				* (clamp(Arm.global_position.distance_to(MousePosition), 0, MaxHandDistance))
 			)
 		)
+		'''
 
 		CurrentMiningTime = clamp(CurrentMiningTime + _delta, 0.0, 100.0)
 		if mouse_left_down:
