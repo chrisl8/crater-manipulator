@@ -78,12 +78,11 @@ func quit_gracefully() -> void:
 			print_rich(
 				"[color=orange]Disconnecting clients and saving data before shutting down server...[/color]"
 			)
-			if Globals.my_camera:
-				var toast: Toast = Toast.new(
-					"Disconnecting clients and shutting down server...", 2.0
-				)
-				Globals.my_camera.add_child(toast)
-				toast.display()
+			var server_label = get_node_or_null(
+				"/root/Main/Map/ServerCamera/CanvasLayer/Control/Label"
+			)
+			if server_label:
+				server_label.text = "Disconnecting clients and shutting down server..."
 			Network.shutdown_server()
 			while Network.peers.size() > 0:
 				print_rich("[color=orange]...server still clearing clients...[/color]")

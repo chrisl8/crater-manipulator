@@ -173,9 +173,7 @@ func _ready() -> void:
 
 	if OS.is_debug_build() and OS.get_name() != "Web":
 		Globals.release_mouse_text = "F1 to Release Mouse"
-		if Globals.is_server:
-			Globals.how_to_end_game_text = "This is the server window. You cannot interact with it.\nYou must run at least 2 game instances to play.\nPress ESC to close Server and all Clients."
-		else:
+		if not Globals.is_server:
 			Globals.how_to_end_game_text = "ESC to Close this Client"
 	elif OS.get_name() != "Web":
 		# No need to ever display this in web, as people just close the tab to end the game,
@@ -266,11 +264,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		and event.button_index == MOUSE_BUTTON_LEFT
 		and event.pressed
 		and Globals.my_camera
+		and not Globals.is_server
 	):
 		var text_to_toast: String = Globals.how_to_end_game_text
 		var text_duration: float = 2.0
-		if Globals.is_server:
-			text_duration = 10.0
 		if text_to_toast != "" and text_to_toast != Globals.last_toast:
 			# Set it to an empty string to signal that we don't want to display anything this time.
 			Globals.last_toast = text_to_toast

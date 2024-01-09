@@ -11,20 +11,21 @@ script = ExtResource("1_knfvd")
 
 [node name="Control" type="Control" parent="CanvasLayer"]
 layout_mode = 3
-anchors_preset = 1
-anchor_left = 1.0
+anchors_preset = 15
 anchor_right = 1.0
-offset_left = -40.0
-offset_bottom = 40.0
-grow_horizontal = 0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
 
 [node name="Label" type="Label" parent="CanvasLayer/Control"]
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
+anchors_preset = 15
 anchor_right = 1.0
-offset_left = -55.0
-offset_right = -5.0
-offset_bottom = 23.0
-grow_horizontal = 0
-text = "Server"
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Server
+Press Esc to gracefully disconnect all clients and close Server."
+horizontal_alignment = 1
