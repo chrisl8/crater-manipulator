@@ -153,12 +153,12 @@ func MineRaycast():
 
 		var ArmPosition = Arm.global_position
 		var MiningParticleDistance = (
-			clamp(InteractRange, 0.0, MiningParticles.global_position.distance_to(MousePosition))
+			clamp(clamp(ArmPosition.distance_to(MousePosition), 0, InteractRange), 0.0, MiningParticles.global_position.distance_to(MousePosition))
 			/ 2.0
 		)
 		var query = PhysicsRayQueryParameters2D.create(
 			ArmPosition,
-			ArmPosition + Arm.global_transform.x * ArmPosition.distance_to(MousePosition)
+			ArmPosition + Arm.global_transform.x * clamp(ArmPosition.distance_to(MousePosition), 0, InteractRange)
 		)
 		query.exclude = [self]
 		var result = space_state.intersect_ray(query)
