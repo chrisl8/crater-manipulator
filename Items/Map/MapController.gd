@@ -30,7 +30,7 @@ func _ready() -> void:
 		GenerateMap()
 		HasFinishedLoadingMap = true
 	else:
-		RequestBlockState.rpc()
+		RequestBlockState.rpc_id(1)
 
 	Globals.WorldMap = self
 
@@ -265,6 +265,8 @@ func SendBlockState(Positions, IDs, Finished) -> void:
 		SetAllCellData(CurrentData, 0)
 
 		HasFinishedLoadingMap = Finished
+		if HasFinishedLoadingMap:
+			Helpers.log_print("Finished loading map.")
 
 
 #Architecture plan:
