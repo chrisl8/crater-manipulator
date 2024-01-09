@@ -53,7 +53,7 @@ func GenerateMap():
 
 		var BottomHeightA = BottomHeight+randi_range(-2, 2)
 		var BottomHeightB = BottomHeight+randi_range(-2, 2)
-		print(BottomHeight)
+
 		for Level in range(BottomHeightA,TopHeight,1):
 			if randf() > 0.98:
 				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomOreTile()
