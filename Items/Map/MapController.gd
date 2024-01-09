@@ -194,11 +194,14 @@ func ProcessChunkedInitialStateData():
 				InitialStatesRemainingIDs[Count - 1].remove_at(0)
 				SliceCount -= 1
 
-			SendBlockState.rpc(
-				SlicePositions,
-				SliceIDs,
-				len(InitialStatesRemainingPos[Count]) == 0,
-				PlayersToSendInitialState[Count]
+			(
+				SendBlockState
+				. rpc_id(
+					PlayersToSendInitialState[Count],
+					SlicePositions,
+					SliceIDs,
+					len(InitialStatesRemainingPos[Count]) == 0,
+				)
 			)
 
 			if len(InitialStatesRemainingPos[Count]) == 0:
@@ -228,8 +231,8 @@ func ServerCompressAndSendBlockStates(Data, Finished):
 '''
 #Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "reliable")
-func SendBlockState(Positions, IDs, Finished, Target) -> void:
-	if !HasFinishedLoadingMap and Target == multiplayer.get_unique_id():
+func SendBlockState(Positions, IDs, Finished) -> void:
+	if !HasFinishedLoadingMap:
 		#Compression system, removed for now because didn't give significant performance improvement
 		'''
 		var Positions = []
