@@ -17,3 +17,24 @@ func _process(_delta):
 	move.y = -input.z
 
 	global_position += move * MovementSpeed
+
+
+var mouse_left_down: bool = false
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == 1 and event.is_pressed():
+			mouse_left_down = true
+		elif event.button_index == 1 and not event.is_pressed():
+			mouse_left_down = false
+	if (
+		event is InputEventMouseMotion
+		and mouse_left_down
+		and get_multiplayer_authority() == multiplayer.get_unique_id()
+	):
+		var move: Vector2 = Vector2()
+		move.x = -event.relative.x
+		move.y = -event.relative.y
+
+		global_position += move

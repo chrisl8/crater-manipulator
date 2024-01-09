@@ -27,5 +27,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "Server
-Press Esc to gracefully disconnect all clients and close Server."
+Press Esc to gracefully disconnect all clients and close Server.
+Move server camera with WASD or hold down left mouse button and drag."
 horizontal_alignment = 1
