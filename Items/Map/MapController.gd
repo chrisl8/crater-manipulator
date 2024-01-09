@@ -9,7 +9,7 @@ var MapGenerated: bool = false
 var SyncedData: Dictionary = {}
 #Current map state, presumably faster than reading tilemap again
 var CurrentData: Dictionary = {}
-#Local modifications buffered untill next sync cycle
+#Local modifications buffered until next sync cycle
 var ChangedData: Dictionary = {}
 var ChangedDataFailedCycles: Dictionary = {}
 
@@ -38,8 +38,8 @@ func _ready() -> void:
 #Procedural world generation
 func GenerateMap():
 	var Diameter = 200
-	var CurrentRadius = Diameter/2
-	var Radius = Diameter/2
+	var CurrentRadius = Diameter / 2
+	var Radius = Diameter / 2
 
 	var TopCenter = -5
 	var BottomCenter = -50
@@ -47,20 +47,40 @@ func GenerateMap():
 	var BottomEdge = -10
 
 	while CurrentRadius >= 0:
-		var RadialMultiplier = 1.0-cos(3.14159265 / Radius * CurrentRadius / 2.0)
-		var TopHeight = roundi(float(TopCenter) + (float(TopEdge) - float(TopCenter)) / float(Radius) * float(CurrentRadius) * float(RadialMultiplier))
-		var BottomHeight = roundi(float(BottomCenter) + (float(BottomEdge) - float(BottomCenter)) / float(Radius) * float(CurrentRadius) * float(RadialMultiplier))
+		var RadialMultiplier = 1.0 - cos(3.14159265 / Radius * CurrentRadius / 2.0)
+		var TopHeight = roundi(
+			(
+				float(TopCenter)
+				+ (
+					(float(TopEdge) - float(TopCenter))
+					/ float(Radius)
+					* float(CurrentRadius)
+					* float(RadialMultiplier)
+				)
+			)
+		)
+		var BottomHeight = roundi(
+			(
+				float(BottomCenter)
+				+ (
+					(float(BottomEdge) - float(BottomCenter))
+					/ float(Radius)
+					* float(CurrentRadius)
+					* float(RadialMultiplier)
+				)
+			)
+		)
 
-		var BottomHeightA = BottomHeight+randi_range(-2, 2)
-		var BottomHeightB = BottomHeight+randi_range(-2, 2)
+		var BottomHeightA = BottomHeight + randi_range(-2, 2)
+		var BottomHeightB = BottomHeight + randi_range(-2, 2)
 
-		for Level in range(BottomHeightA,TopHeight,1):
+		for Level in range(BottomHeightA, TopHeight, 1):
 			if randf() > 0.98:
 				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomOreTile()
 			else:
 				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomStoneTile()
 
-		for Level in range(BottomHeightB,TopHeight,1):
+		for Level in range(BottomHeightB, TopHeight, 1):
 			if randf() > 0.98:
 				CurrentData[Vector2i(-CurrentRadius, -Level)] = GetRandomOreTile()
 			else:
@@ -105,7 +125,7 @@ func _process(delta: float) -> void:
 		SetAllCellData(SyncedData, 0)
 
 
-#Check for any buffered change data on the server (data reiceved from clients and waiting to be sent), then chunk it and send it out to clients
+#Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
 func ServerSendBufferedChanges():
 	if len(ServerBufferedChanges.keys()) > 0:
 		var Count = ChunkSize
@@ -119,7 +139,7 @@ func ServerSendBufferedChanges():
 		ServerSendChangedData.rpc(ChunkedData)
 
 
-#Set the tile map to the given values at given cells. Clears the tile map before doing so. Meant for complete map refershes, not for incrimental changes
+#Set the tile map to the given values at given cells. Clears the tile map before doing so. Meant for complete map refreshes, not for incremental changes
 func SetAllCellData(Data: Dictionary, Layer: int) -> void:
 	clear_layer(Layer)
 	for Key: Vector2i in Data.keys():
@@ -146,7 +166,7 @@ var PlayersToSendInitialState: Array[int] = []
 var InitialStatesRemainingPos = []
 var InitialStatesRemainingIDs = []
 
-#Requests a world state sync from the server, this is an inital request only sent when a client first joins
+#Requests a world state sync from the server, this is an initial request only sent when a client first joins
 @rpc("any_peer", "call_remote", "reliable")
 func RequestBlockState() -> void:
 	if IsServer:
@@ -160,8 +180,8 @@ func RequestBlockState() -> void:
 		InitialStatesRemainingIDs.append(Values)
 
 
-#Processes chunked intial states for each client that has requested a world state sync
-#CUrrently sends out chunks to every client in parralel, but should propbably send out data to one client at a time to avoid many simultaneouse RPC's if multiple clients join at the same time
+#Processes chunked initial states for each client that has requested a world state sync
+#Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
 func ProcessChunkedInitialStateData():
 	var Count = len(PlayersToSendInitialState) - 1
 	if Count > -1:
@@ -232,12 +252,12 @@ func SendBlockState(Positions, IDs, Finished, Target) -> void:
 			Count -= 1
 
 		if Finished:
-			if len(BufferedChangesRecievedFromServer) > 0:
-				for BufferedChange in BufferedChangesRecievedFromServer:
+			if len(BufferedChangesReceivedFromServer) > 0:
+				for BufferedChange in BufferedChangesReceivedFromServer:
 					for Key: Vector2i in BufferedChange.keys():
 						SyncedData[Key] = BufferedChange[Key]
 						CurrentData[Key] = BufferedChange[Key]
-			BufferedChangesRecievedFromServer.clear()
+			BufferedChangesReceivedFromServer.clear()
 
 		SetAllCellData(CurrentData, 0)
 
@@ -248,20 +268,20 @@ func SendBlockState(Positions, IDs, Finished, Target) -> void:
 
 #Players modify local data
 #Push data to server, store buffered status
-#Server recieves push and overwrites local data
+#Server receives push and overwrites local data
 #Server pushes modifications to all clients
-#Recieving client accepts changes
-#Failed local state revision drops placed cells, drop items are not spawned untill state change is confirmed
+#Receiving client accepts changes
+#Failed local state revision drops placed cells, drop items are not spawned until state change is confirmed
 
 #Design Issues:
 #Empty cells considered empty data, requires updating entire tile map for empty refresh (expensive?)
 #Solution is to store remove tile changes as separate system
 
 
-#Modify a cell from the client, checks for finished world load and buffers changes for server accordinly
+#Modify a cell from the client, checks for finished world load and buffers changes for server accordingly
 func ModifyCell(Position: Vector2i, ID: Vector2i):
 	if !HasFinishedLoadingMap:
-		#Not allowd to modify map untill first state recieved
+		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
 	ChangedData[Position] = ID
@@ -279,7 +299,7 @@ func PlaceCellAtPosition(Position: Vector2):
 	ModifyCell(local_to_map(to_local(Position)), GetRandomStoneTile())
 
 
-#Set tbe current data of a cell to a given value
+#Set the current data of a cell to a given value
 func SetCellData(Position: Vector2i, ID: Vector2i) -> void:
 	CurrentData[Position] = ID
 	set_cell(0, Position, 0, ID)
@@ -293,7 +313,7 @@ func PushChangedData() -> void:
 		ChangedData.clear()
 
 
-#Changes the server has recieved and accepted, and is waiting to send back to all clients later
+#Changes the server has received and accepted, and is waiting to send back to all clients later
 var ServerBufferedChanges: Dictionary = {}
 
 #Sends changes from the client to the server to be processed
@@ -320,14 +340,14 @@ func RPCSendChangedData(Data: Dictionary) -> void:
 		'''
 
 
-var BufferedChangesRecievedFromServer: Array[Dictionary] = []
+var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 #Sends changes from the server to clients
 @rpc("authority", "call_remote", "reliable")
 func ServerSendChangedData(Data: Dictionary) -> void:
 	if !HasFinishedLoadingMap:
 		#Store changes and process after the maps has been fully loaded
-		BufferedChangesRecievedFromServer.append(Data)
+		BufferedChangesReceivedFromServer.append(Data)
 		return
 	if IsServer:
 		return
