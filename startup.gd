@@ -252,8 +252,10 @@ func force_close_popup() -> void:
 		pop_up = null
 
 
+# Sets player as authority over itself on the client
+# when the player spawns
+# It cannot be done sooner or anywhere else
 func _on_players_spawner_spawned(node: Node) -> void:
-	Helpers.log_print(str("_on_players_spawner_spawned ", node.name), "green")
 	node.set_multiplayer_authority(str(node.name).to_int())
 
 

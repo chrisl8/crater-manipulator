@@ -24,3 +24,5 @@ var WorldMap: Node
 
 var my_camera: Camera2D
 var last_toast: String = ""
+
+var initial_map_load_finished: bool = false
