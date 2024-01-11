@@ -1,6 +1,5 @@
 extends Node2D
 
-
 var PowderResources: Dictionary = {}
 
 
@@ -17,12 +16,12 @@ func _process(delta):
 	pass
 
 
-
 func AddResource(ID: Vector2i, Ammount: int):
-	if(ID.x == 0):
+	if ID.x == 0:
 		pass
 
-func AddData(Data) -> void:
 
+func AddData(Data) -> void:
 	for Key in Data.keys():
-		PowderResources[Globals.GetResourceName(Key)] += Data[Key]
+		if Key > -1:
+			PowderResources[Globals.GetResourceName(Key)] += Data[Key]
