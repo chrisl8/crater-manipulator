@@ -24,3 +24,27 @@ var WorldMap: Node
 
 var my_camera: Camera2D
 var last_toast: String = ""
+
+#Resources
+var ResourceIDs = {
+	"Stone": 0,
+	"Red Ore": 1
+}
+var ResourceNames = {}
+
+func GetResourceName(ID):
+    BuildResourcesDictionaries()
+    return(ResourceNames[ID])
+
+func GetResourceID(Name):
+    BuildResourcesDictionaries()
+    return(ResourceIDs[Name])
+
+var HasBuiltResourcesDistionary = false
+func BuildResourcesDictionaries():
+    if(!HasBuiltResourcesDistionary):
+        for Key in ResourceIDs.keys():
+            ResourceNames[ResourceIDs[Key]] = Key
+        HasBuiltResourcesDistionary = true
+
+var Players = {}

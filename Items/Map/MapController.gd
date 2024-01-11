@@ -11,7 +11,6 @@ var SyncedData: Dictionary = {}
 var CurrentData: Dictionary = {}
 #Local modifications buffered until next sync cycle
 var ChangedData: Dictionary = {}
-var ChangedDataFailedCycles: Dictionary = {}
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
@@ -119,6 +118,11 @@ func _process(delta: float) -> void:
 		var Count = len(PlayersToSendInitialState) - 1
 		if Count > -1:
 			ProcessChunkedInitialStateData()
+
+		if(len(StoredPlayerInventoryDrops)):
+			for Key in StoredPlayerInventoryDrops.keys():
+				Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
+			StoredPlayerInventoryDrops.clear()
 
 	if IsServer and ServerDataChanged:
 		ServerDataChanged = false
@@ -289,8 +293,12 @@ func ModifyCell(Position: Vector2i, ID: Vector2i):
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
-	ChangedData[Position] = ID
-	ChangedDataFailedCycles[Position] = 0
+	if(Position in ChangedData.keys()):
+		ChangedData[Position] = [ChangedData[Position][0], ID]
+	else:
+		ChangedData[Position] = [SyncedData[Position], ID]
+
+
 	SetCellData(Position, ID)
 
 
@@ -325,24 +333,21 @@ var ServerBufferedChanges: Dictionary = {}
 @rpc("any_peer", "call_remote", "reliable")
 func RPCSendChangedData(Data: Dictionary) -> void:
 	if IsServer:
+		var Player = multiplayer.get_remote_sender_id()
 		for Key: Vector2i in Data.keys():
-			ServerBufferedChanges[Key] = Data[Key]
-			SyncedData[Key] = Data[Key]
+			if(SyncedData[Key] == Data[Key][0]):
+				ServerBufferedChanges[Key] = Data[Key][1]
+				SyncedData[Key] = Data[Key][1]
+				if(Player not in StoredPlayerInventoryDrops.keys()):
+					StoredPlayerInventoryDrops[Player] = {}
+				if(Data[Key][0].y in StoredPlayerInventoryDrops[Player].keys()):
+					StoredPlayerInventoryDrops[Player][Data[Key][0].y]+=1
+				else:
+					StoredPlayerInventoryDrops[Player][Data[Key][0].y] = 1
 
 		ServerDataChanged = true
-		'''
-		if (
-			Data[Key] != Vector2i(-1, -1)
-			and (!SyncedData.has(Key) or SyncedData[Key] == Vector2i(-1, -1))
-		):
-			#Replace air with Cell, valid
-			ServerBufferedChanges[Key] = Data[Key]
-			SyncedData[Key] = Data[Key]
-		elif Data[Key] == Vector2i(-1, -1):
-			#Replace with air, valid
-			ServerBufferedChanges[Key] = Data[Key]
-			SyncedData[Key] = Data[Key]
-		'''
+
+var StoredPlayerInventoryDrops = {}
 
 
 var BufferedChangesReceivedFromServer: Array[Dictionary] = []

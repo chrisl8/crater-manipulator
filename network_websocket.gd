@@ -383,6 +383,7 @@ func player_joined(id: int, data: String) -> void:
 		character.name = str(id)
 		get_node("../Main/Players").add_child(character, true)
 		character.set_multiplayer_authority(character.player)
+		Globals.Players[id] = character
 
 		# Always update our saved data now in case this is a new player
 		Helpers.save_server_player_save_data_to_file()

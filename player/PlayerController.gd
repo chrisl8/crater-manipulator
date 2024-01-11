@@ -110,3 +110,10 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 			state.transform = Transform2D(SyncedRotation, state.origin)
 		UpdateSyncedPosition = false
 		UpdateSyncedRotation = false
+
+@export var InventoryManager: Node2D
+
+@rpc("any_peer", "call_remote", "reliable")
+func AddInventoryData(Data) -> void:
+	if(IsLocal):
+		InventoryManager.AddData(Data)

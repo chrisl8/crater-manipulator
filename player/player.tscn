@@ -1,8 +1,9 @@
-[gd_scene load_steps=15 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=16 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/PlayerController.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/PlayerInteractionController.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/Player Atlas.png" id="5_e4w6p"]
+[ext_resource type="Script" path="res://player/PlayerInventoryManager.gd" id="5_xpvfg"]
 [ext_resource type="Script" path="res://player/skeleton_fixer.gd" id="5_yow5u"]
 
 [sub_resource type="GDScript" id="1"]
@@ -84,7 +85,7 @@ emission_curve = SubResource("CurveTexture_qpmck")
 hue_variation_min = -0.13
 hue_variation_max = 0.1
 
-[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "InteractionController") groups=["players"]]
+[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "InteractionController", "InventoryManager") groups=["players"]]
 collision_layer = 2
 collision_mask = 11
 physics_material_override = SubResource("PhysicsMaterial_qk016")
@@ -100,6 +101,7 @@ script = ExtResource("1_ntq5g")
 player_spawn_point = Vector2(0, 0)
 camera = NodePath("Camera2D")
 InteractionController = NodePath("Interaction Controller")
+InventoryManager = NodePath("Inventory Manager")
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_ir062")
@@ -250,3 +252,6 @@ uv = PackedVector2Array(15, 0, 15, 12, 27, 12, 27, -7.45058e-09)
 
 [node name="Head Target" type="Node2D" parent="Flip Point/Skeleton2D"]
 position = Vector2(20, -42)
+
+[node name="Inventory Manager" type="Node2D" parent="."]
+script = ExtResource("5_xpvfg")
