@@ -35,13 +35,13 @@ func _ready() -> void:
 
 #Procedural world generation
 func GenerateMap():
-	var Diameter = 200
+	var Diameter = 400
 	var CurrentRadius = Diameter / 2
 	var Radius = Diameter / 2
 
-	var TopCenter = -5
-	var BottomCenter = -50
-	var TopEdge = 0
+	var TopCenter = -10
+	var BottomCenter = -130
+	var TopEdge = 5
 	var BottomEdge = -10
 
 	while CurrentRadius >= 0:

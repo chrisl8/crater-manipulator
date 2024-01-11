@@ -26,6 +26,7 @@ func _ready() -> void:
 	IsLocal = player == multiplayer.get_unique_id()
 
 	InteractionController.Initialize(IsLocal)
+	InventoryManager.Initialize(IsLocal)
 
 	set_process(IsLocal)
 	set_physics_process(IsLocal)

@@ -253,11 +253,11 @@ uv = PackedVector2Array(15, 0, 15, 12, 27, 12, 27, -7.45058e-09)
 [node name="Head Target" type="Node2D" parent="Flip Point/Skeleton2D"]
 position = Vector2(20, -42)
 
-[node name="Inventory Manager" type="Node2D" parent="."]
+[node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("StoneBar")]
 script = ExtResource("5_xpvfg")
+StoneBar = NodePath("../CanvasLayer/Control/Control")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
-visible = false
 
 [node name="Control" type="Control" parent="CanvasLayer"]
 layout_mode = 3
@@ -283,13 +283,13 @@ text = "Inventory"
 
 [node name="Control" type="Control" parent="CanvasLayer/Control"]
 anchors_preset = 0
-offset_left = 533.0
-offset_top = 37.0
-offset_right = 573.0
-offset_bottom = 77.0
+offset_left = 496.0
+offset_top = 65.0
+offset_right = 536.0
+offset_bottom = 105.0
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Control"]
 layout_mode = 0
-offset_left = -39.0
-offset_right = 1.0
-offset_bottom = 40.0
+offset_left = -5.0
+offset_top = -10.0
+offset_right = 5.0
