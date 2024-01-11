@@ -112,9 +112,10 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		UpdateSyncedPosition = false
 		UpdateSyncedRotation = false
 
+
 @export var InventoryManager: Node2D
 
 @rpc("any_peer", "call_remote", "reliable")
 func AddInventoryData(Data) -> void:
-	if(IsLocal):
+	if IsLocal:
 		InventoryManager.AddData(Data)

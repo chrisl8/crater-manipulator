@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 		if Count > -1:
 			ProcessChunkedInitialStateData()
 
-		if(len(StoredPlayerInventoryDrops)):
+		if len(StoredPlayerInventoryDrops):
 			for Key in StoredPlayerInventoryDrops.keys():
 				Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
 			StoredPlayerInventoryDrops.clear()
@@ -292,13 +292,12 @@ func ModifyCell(Position: Vector2i, ID: Vector2i):
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
-	if (Position in ChangedData.keys()):
+	if Position in ChangedData.keys():
 		ChangedData[Position] = [ChangedData[Position][0], ID]
-	elif (SyncedData.has(Position)):
+	elif SyncedData.has(Position):
 		ChangedData[Position] = [SyncedData[Position], ID]
 	else:
-		ChangedData[Position] = [Vector2i(-1,-1), ID]
-
+		ChangedData[Position] = [Vector2i(-1, -1), ID]
 
 	SetCellData(Position, ID)
 
@@ -336,23 +335,22 @@ func RPCSendChangedData(Data: Dictionary) -> void:
 	if IsServer:
 		var Player = multiplayer.get_remote_sender_id()
 		for Key: Vector2i in Data.keys():
-			if(not SyncedData.has(Key) or SyncedData[Key] == Data[Key][0]):
+			if not SyncedData.has(Key) or SyncedData[Key] == Data[Key][0]:
 				ServerBufferedChanges[Key] = Data[Key][1]
 				SyncedData[Key] = Data[Key][1]
 
-				
-				if(Data[Key][0].y > -1):
-					if(Player not in StoredPlayerInventoryDrops.keys()):
+				if Data[Key][0].y > -1:
+					if Player not in StoredPlayerInventoryDrops.keys():
 						StoredPlayerInventoryDrops[Player] = {}
-					if(Data[Key][0].y in StoredPlayerInventoryDrops[Player].keys()):
-						StoredPlayerInventoryDrops[Player][Data[Key][0].y]+=1
+					if Data[Key][0].y in StoredPlayerInventoryDrops[Player].keys():
+						StoredPlayerInventoryDrops[Player][Data[Key][0].y] += 1
 					else:
 						StoredPlayerInventoryDrops[Player][Data[Key][0].y] = 1
 
 		ServerDataChanged = true
 
-var StoredPlayerInventoryDrops = {}
 
+var StoredPlayerInventoryDrops = {}
 
 var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
