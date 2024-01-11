@@ -255,3 +255,41 @@ position = Vector2(20, -42)
 
 [node name="Inventory Manager" type="Node2D" parent="."]
 script = ExtResource("5_xpvfg")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -83.0
+offset_top = -1.0
+offset_right = 490.0
+offset_bottom = 74.0
+grow_horizontal = 0
+text = "Inventory"
+
+[node name="Control" type="Control" parent="CanvasLayer/Control"]
+anchors_preset = 0
+offset_left = 533.0
+offset_top = 37.0
+offset_right = 573.0
+offset_bottom = 77.0
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Control"]
+layout_mode = 0
+offset_left = -39.0
+offset_right = 1.0
+offset_bottom = 40.0

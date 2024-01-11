@@ -35,18 +35,18 @@ var ResourceIDs = {
 var ResourceNames = {}
 
 func GetResourceName(ID):
-    BuildResourcesDictionaries()
-    return(ResourceNames[ID])
+	BuildResourcesDictionaries()
+	return(ResourceNames[ID])
 
 func GetResourceID(Name):
-    BuildResourcesDictionaries()
-    return(ResourceIDs[Name])
+	BuildResourcesDictionaries()
+	return(ResourceIDs[Name])
 
 var HasBuiltResourcesDistionary = false
 func BuildResourcesDictionaries():
-    if(!HasBuiltResourcesDistionary):
-        for Key in ResourceIDs.keys():
-            ResourceNames[ResourceIDs[Key]] = Key
-        HasBuiltResourcesDistionary = true
+	if(!HasBuiltResourcesDistionary):
+		for Key in ResourceIDs.keys():
+			ResourceNames[ResourceIDs[Key]] = Key
+		HasBuiltResourcesDistionary = true
 
 var Players = {}

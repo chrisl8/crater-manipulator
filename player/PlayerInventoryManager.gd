@@ -23,5 +23,4 @@ func AddResource(ID: Vector2i, Ammount: int):
 
 func AddData(Data) -> void:
 	for Key in Data.keys():
-		if Key > -1:
-			PowderResources[Globals.GetResourceName(Key)] += Data[Key]
+		PowderResources[Globals.GetResourceName(Key)] += Data[Key]
