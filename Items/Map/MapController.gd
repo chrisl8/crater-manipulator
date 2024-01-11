@@ -1,6 +1,5 @@
 extends TileMap
 
-var HasFinishedLoadingMap: bool = false
 var MapGenerated: bool = false
 
 #No longer using arrays, read/write requires an indexing system which negates the performance benefit of using array index overlap as link. Reading Positions and IDs separately may be faster if staggered separately but can be added later and merged into local dictionaries.
@@ -27,7 +26,7 @@ func _ready() -> void:
 
 	if IsServer:
 		GenerateMap()
-		HasFinishedLoadingMap = true
+		Globals.initial_map_load_finished = true
 	else:
 		RequestBlockState.rpc_id(1)
 
@@ -236,7 +235,7 @@ func ServerCompressAndSendBlockStates(Data, Finished):
 #Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "reliable")
 func SendBlockState(Positions, IDs, Finished) -> void:
-	if !HasFinishedLoadingMap:
+	if !Globals.initial_map_load_finished:
 		#Compression system, removed for now because didn't give significant performance improvement
 		'''
 		var Positions = []
@@ -268,8 +267,8 @@ func SendBlockState(Positions, IDs, Finished) -> void:
 
 		SetAllCellData(CurrentData, 0)
 
-		HasFinishedLoadingMap = Finished
-		if HasFinishedLoadingMap:
+		Globals.initial_map_load_finished = Finished
+		if Globals.initial_map_load_finished:
 			Helpers.log_print("Finished loading map.")
 
 
@@ -289,7 +288,7 @@ func SendBlockState(Positions, IDs, Finished) -> void:
 
 #Modify a cell from the client, checks for finished world load and buffers changes for server accordingly
 func ModifyCell(Position: Vector2i, ID: Vector2i):
-	if !HasFinishedLoadingMap:
+	if !Globals.initial_map_load_finished:
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
@@ -355,7 +354,7 @@ var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 #Sends changes from the server to clients
 @rpc("authority", "call_remote", "reliable")
 func ServerSendChangedData(Data: Dictionary) -> void:
-	if !HasFinishedLoadingMap:
+	if !Globals.initial_map_load_finished:
 		#Store changes and process after the maps has been fully loaded
 		BufferedChangesReceivedFromServer.append(Data)
 		return

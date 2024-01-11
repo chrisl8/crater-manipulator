@@ -64,7 +64,7 @@ func _process(_delta: float) -> void:
 	# Initialize the Map if it isn't yet
 	if not game_scene_initialized:
 		if not game_scene_initialize_in_progress:
-			# Helpers.log_print("Load level", "cyan")
+			Helpers.log_print("Loading map.", "cyan")
 			game_scene_initialize_in_progress = true
 			load_level.call_deferred(map)
 		elif get_node_or_null("../Main/Map/game_scene"):
@@ -72,6 +72,7 @@ func _process(_delta: float) -> void:
 			close_popup.emit()
 		return
 
+	# NOTE: As of 1/9/2024 Spawner does absolutely nothing, but maybe it will someday?
 	Spawner.things()
 
 
@@ -84,7 +85,6 @@ func _ready() -> void:
 
 
 func load_level(scene: PackedScene) -> void:
-	# Helpers.log_print("Loading Scene", "cyan")
 	var level_parent: Node = get_tree().get_root().get_node("Main/Map")
 	for c in level_parent.get_children():
 		level_parent.remove_child(c)
@@ -181,8 +181,12 @@ func _connected_to_server() -> void:
 		return
 
 	#TODO: Testing data read/write
-	#save_player_data("doot!")
 	var saved_player_data: String = Helpers.load_data_from_file(player_save_data_filename())
+
+	# Wait for map data to load from server before initiating player spawn
+	while not Globals.initial_map_load_finished:
+		Helpers.log_print("waiting for map data to finish loading...", "orange")
+		await get_tree().create_timer(1).timeout
 
 	# Server does not spawn our player until we send a "join" message
 	send_data_to(1, Message.PLAYER_JOINED, saved_player_data)
@@ -347,6 +351,7 @@ func player_joined(id: int, data: String) -> void:
 		# Save player's UUID to peer list so we can find it later
 		peers[id]["uuid"] = player_uuid
 
+		# Spawn a character/player for the client
 		var character: Node = player_character_template.instantiate()
 		character.player = id  # Set player id.
 
