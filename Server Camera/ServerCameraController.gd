@@ -1,6 +1,6 @@
 extends Node2D
 
-const MovementSpeed: float = 4.0
+const MovementSpeed: float = 16.0
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.

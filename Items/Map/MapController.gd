@@ -32,9 +32,39 @@ func _ready() -> void:
 
 	Globals.WorldMap = self
 
+func GetDepthFunction(x, WidthScale,HeightScale, CraterScale)->float:
+	return(-1.0*sin(x*WidthScale/CraterScale) / (x*WidthScale/CraterScale) * HeightScale)
 
 #Procedural world generation
 func GenerateMap():
+	# Desmos Formula:
+	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
+	#x>r
+	#x<r
+	# d = WidthScale
+	# h = HeightScale
+	# c = CraterScale
+	# r = radius
+
+	var Radius: int = 1909
+	var WidthScale = 8
+	var HeightScale = 1000
+	var CraterScale = 2000.0
+
+	while(Radius > 0):
+		var Depth = roundi(GetDepthFunction(float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)))
+		for i in range(0,20):
+			CurrentData[Vector2i(Radius, -(Depth+i))] = GetRandomStoneTile()
+			CurrentData[Vector2i(-Radius, -(Depth+i))] = GetRandomStoneTile()
+			Depth+=1
+
+		Radius-=1
+
+	#New version
+
+
+	#Simple version
+	'''
 	var Diameter = 400
 	var CurrentRadius = Diameter / 2
 	var Radius = Diameter / 2
@@ -85,7 +115,7 @@ func GenerateMap():
 				CurrentData[Vector2i(-CurrentRadius, -Level)] = GetRandomStoneTile()
 
 		CurrentRadius -= 1.0
-
+	'''
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
 	MapGenerated = true
