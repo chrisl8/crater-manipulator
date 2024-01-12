@@ -23,6 +23,19 @@ var IsLocal: bool = false
 
 
 func _ready() -> void:
+	# Attempt to fix character getting stuck on tiles as they move parallel to them
+	# https://github.com/godotengine/godot/issues/47148
+	# https://github.com/godotengine/godot/issues/50595#issuecomment-882647580
+	# See here for documentation on this setting:
+	# https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-physics-2d-solver-contact-max-allowed-penetration
+	# "In this example, it will be set to 0 but you can set any other value."
+	# I believe the default is 0.3, so anything from 0.0 to < 0.3 should help improve this situation
+	# Feel free two tweak the number as you see fit.
+	var space = get_world_2d().space
+	PhysicsServer2D.space_set_param(
+		space, PhysicsServer2D.SPACE_PARAM_CONTACT_MAX_ALLOWED_PENETRATION, 0.0
+	)
+
 	IsLocal = player == multiplayer.get_unique_id()
 
 	InteractionController.Initialize(IsLocal)
