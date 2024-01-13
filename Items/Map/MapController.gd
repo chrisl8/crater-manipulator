@@ -13,8 +13,8 @@ var ChangedData: Dictionary = {}
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
-const ChunkSize = 400
-const ServerChunkSendFrequency = 0.1
+const ChunkSize = 4000
+const ServerChunkSendFrequency = 0.4
 var CurrentServerChunkSendTime = 0
 
 var IsServer = false
@@ -24,19 +24,26 @@ var ServerDataChanged = false
 
 #Initialization
 func _ready() -> void:
+	# Without this, sending a StreamPeerBuffer over an RPC generates the error
+	# "Cannot convert argument 1 from Object to Object" on the receiving end
+	# and fails.
+	# https://github.com/godotengine/godot/issues/82718
+	multiplayer.allow_object_decoding = true
+
 	IsServer = Globals.is_server
 
 	if IsServer:
 		GenerateMap()
 		Globals.initial_map_load_finished = true
-		SendTestPeerBuffer()
 	else:
 		RequestBlockState.rpc_id(1)
 
 	Globals.WorldMap = self
 
-func GetDepthFunction(x, WidthScale,HeightScale, CraterScale)->float:
-	return(-1.0*sin(x*WidthScale/CraterScale) / (x*WidthScale/CraterScale) * HeightScale)
+
+func GetDepthFunction(x, WidthScale, HeightScale, CraterScale) -> float:
+	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
+
 
 #Procedural world generation
 func GenerateMap():
@@ -54,17 +61,20 @@ func GenerateMap():
 	var HeightScale = 1000
 	var CraterScale = 2000.0
 
-	while(Radius > 0):
-		var Depth = roundi(GetDepthFunction(float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)))
-		for i in range(0,20):
-			CurrentData[Vector2i(Radius, -(Depth+i))] = GetRandomStoneTile()
-			CurrentData[Vector2i(-Radius, -(Depth+i))] = GetRandomStoneTile()
-			Depth+=1
+	while Radius > 0:
+		var Depth = roundi(
+			GetDepthFunction(
+				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
+			)
+		)
+		for i in range(0, 20):
+			CurrentData[Vector2i(Radius, -(Depth + i))] = GetRandomStoneTile()
+			CurrentData[Vector2i(-Radius, -(Depth + i))] = GetRandomStoneTile()
+			Depth += 1
 
-		Radius-=1
+		Radius -= 1
 
 	#New version
-
 
 	#Simple version
 	'''
@@ -147,12 +157,12 @@ func _process(delta: float) -> void:
 		CurrentCycleTime = 0.0
 
 	if IsServer and MapGenerated:
-		CurrentServerChunkSendTime+=delta
-		if(CurrentServerChunkSendTime > ServerChunkSendFrequency):
+		CurrentServerChunkSendTime += delta
+		if CurrentServerChunkSendTime > ServerChunkSendFrequency:
 			CurrentServerChunkSendTime = 0.0
 			var Count = len(PlayersToSendInitialState) - 1
 			if Count > -1:
-				ProcessChunkedInitialStateData()
+				ChunkAndProcessInitialStateData()
 
 			if len(StoredPlayerInventoryDrops):
 				for Key in StoredPlayerInventoryDrops.keys():
@@ -221,76 +231,83 @@ func RequestBlockState() -> void:
 
 #Processes chunked initial states for each client that has requested a world state sync
 #Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
-func ProcessChunkedInitialStateData():
-	var Count = len(PlayersToSendInitialState) - 1
-	if Count > -1:
-		while Count >= 0:
-			var SliceCount = clamp(len(InitialStatesRemainingPos[Count]), 0, ChunkSize)
-			var SlicePositions = InitialStatesRemainingPos[Count].slice(0, SliceCount)
-			var SliceIDs = InitialStatesRemainingIDs[Count].slice(0, SliceCount)
-			while SliceCount > 0:
-				InitialStatesRemainingPos[Count - 1].remove_at(0)
-				InitialStatesRemainingIDs[Count - 1].remove_at(0)
-				SliceCount -= 1
-
-			#print(len(InitialStatesRemainingPos[Count]) == 0,)
-			(
-				SendBlockState
-				. rpc_id(
-					PlayersToSendInitialState[Count],
-					SlicePositions,
-					SliceIDs,
-					len(InitialStatesRemainingPos[Count]) == 0,
-				)
+func ChunkAndProcessInitialStateData():
+	var player_index: int = len(PlayersToSendInitialState) - 1
+	if player_index >= 0:
+		while player_index >= 0:
+			#SendTestPeerBuffer(PlayersToSendInitialState[player_index])
+			Helpers.log_print(str("Tile Count: ", len(InitialStatesRemainingPos[player_index])))
+			var SliceCount = clamp(len(InitialStatesRemainingPos[player_index]), 0, ChunkSize)
+			var SlicePositions = InitialStatesRemainingPos[player_index].slice(0, SliceCount)
+			var SliceIDs = InitialStatesRemainingIDs[player_index].slice(0, SliceCount)
+			InitialStatesRemainingPos[player_index - 1] = (
+				InitialStatesRemainingPos[player_index - 1].slice(SliceCount)
+			)
+			InitialStatesRemainingIDs[player_index - 1] = (
+				InitialStatesRemainingIDs[player_index - 1].slice(SliceCount)
 			)
 
-			if len(InitialStatesRemainingPos[Count]) == 0:
-				InitialStatesRemainingPos.remove_at(Count)
-				InitialStatesRemainingIDs.remove_at(Count)
-				PlayersToSendInitialState.remove_at(Count)
-			Count -= 1
+			ServerCompressAndSendBlockStates(
+				PlayersToSendInitialState[player_index],
+				SlicePositions,
+				SliceIDs,
+				len(InitialStatesRemainingPos[player_index]) == 0,
+			)
 
-#-HERE-1
-'''
-func ServerCompressAndSendBlockStates(Data, Finished):
-	#Too much data, need to compress somehow
-	var CompressedData: StreamPeerBuffer = StreamPeerBuffer.new()
+			if len(InitialStatesRemainingPos[player_index]) == 0:
+				InitialStatesRemainingPos.remove_at(player_index)
+				InitialStatesRemainingIDs.remove_at(player_index)
+				PlayersToSendInitialState.remove_at(player_index)
+			player_index -= 1
 
-	var Count: int = len(SyncedData.keys())
-	CompressedData.put_u32(Count)
 
-	while(Count-1>=0):
-		CompressedData.put_32(SyncedData.keys()[Count-1].x)
-		CompressedData.put_32(SyncedData.keys()[Count-1].y)
+func ServerCompressAndSendBlockStates(player_id, Positions, IDs, Finished):
+	var StreamData: StreamPeerBuffer = StreamPeerBuffer.new()
 
-		CompressedData.put_32(SyncedData.values()[Count-1].x)
-		CompressedData.put_32(SyncedData.values()[Count-1].y)
-		Count-=1
+	var Count: int = len(Positions) - 1
+	StreamData.put_u16(Count)
 
-	SendBlockState.rpc(CompressedData.data_array, Finished)
-'''
+	while Count >= 0:
+		StreamData.put_16(Positions[Count].x)
+		StreamData.put_16(Positions[Count].y)
+
+		StreamData.put_16(IDs[Count].x)
+		StreamData.put_16(IDs[Count].y)
+		Count -= 1
+
+	SendBlockState.rpc_id(
+		player_id, StreamData.data_array.size(), StreamData.data_array.compress(), Finished
+	)
+
 
 #Send chunks of the world dat block to clients, used for initial world sync
-@rpc("authority", "call_remote", "reliable")
-func SendBlockState(Positions, IDs, Finished) -> void:
+@rpc("authority", "call_remote", "unreliable")
+func SendBlockState(DataSize: int, CompressedData: PackedByteArray, Finished: bool) -> void:
 	if !Globals.initial_map_load_finished:
-		#Compression system, removed for now because didn't give significant performance improvement
-
-		#-HERE-2
-		'''
+		# Decompress data from stream buffer
 		var Positions = []
 		var IDs = []
 
-		var ExtractedData = StreamPeerBuffer.new()
-		ExtractedData.data_array  = Data
+		var Data: StreamPeerBuffer = StreamPeerBuffer.new()
+		Helpers.log_print(
+			str(
+				"Received CompressedData Size: ",
+				CompressedData.size(),
+				" Originally: ",
+				DataSize,
+				" Chunk Size: ",
+				ChunkSize
+			)
+		)
+		Data.data_array = CompressedData.decompress(DataSize)
 
-		var Length = ExtractedData.get_u32()-1
-		while(Length >= 0):
-			Positions.append(Vector2i(ExtractedData.get_32(),ExtractedData.get_32()))
-			IDs.append(Vector2i(ExtractedData.get_32(),ExtractedData.get_32()))
-			Length-=1
-		'''
+		var Length = Data.get_u16() - 1
+		while Length >= 0:
+			Positions.append(Vector2i(Data.get_16(), Data.get_16()))
+			IDs.append(Vector2i(Data.get_16(), Data.get_16()))
+			Length -= 1
 
+		# Convert arrays back into dictionary
 		var Count = len(Positions) - 1
 		while Count >= 0:
 			SyncedData[Positions[Count]] = IDs[Count]
@@ -414,41 +431,38 @@ func UpdateCellFromCurrent(Position):
 	set_cell(0, Position, 0, CurrentData[Position])
 
 
-
-
 #Test RPC's
-func SendTestPeerBuffer():
-	print("A")
-	
-	var CompressedData: StreamPeerBuffer = StreamPeerBuffer.new()
+func SendTestPeerBuffer(player_id: int) -> void:
+	var StreamData: StreamPeerBuffer = StreamPeerBuffer.new()
+	StreamData.put_8(127)
+	StreamData.put_8(126)
+	StreamData.put_8(125)
+	StreamData.put_8(-123)
+	Helpers.log_print(
+		str("Sending test data of length ", StreamData.data_array.size(), " to ", player_id)
+	)
+	StreamData.seek(0)
+	Helpers.log_print(str(StreamData.get_8()))
+	Helpers.log_print(str(StreamData.get_8()))
+	Helpers.log_print(str(StreamData.get_8()))
+	Helpers.log_print(str(StreamData.get_8()))
 
-	var A = 1
-	var B = 2
-	var C = 3
-	var D = 4
-	print(CompressedData.data_array.size())
-	CompressedData.put_8(127)
-	CompressedData.put_8(126)
+	# That's right, the cursor i sin the StreamPeerBuffer and will be where you left it on the receiving end!
+	StreamData.seek(0)
 
-	CompressedData.put_8(125)
-	CompressedData.put_8(-123)
-
-	print("B")
-	
-	#var CompressedDataCopy: StreamPeerBuffer = CompressedData.duplicate()
-	CompressedData.seek(0)
+	RPCSendTestPeerBuffer.rpc_id(
+		player_id, StreamData.data_array.size(), StreamData.data_array.compress()
+	)
 
 
-	print("C")
-	RPCSendTestPeerBuffer.rpc(CompressedData)
-
-@rpc("any_peer", "call_local", "reliable")
-func RPCSendTestPeerBuffer(Data: StreamPeerBuffer) -> void:
-	print("D")
-
-	print(Data.get_8())
-	print(Data.get_8())
-	print(Data.get_8())
-	print(Data.get_8())
-
-	print("E")
+@rpc("any_peer", "call_remote", "reliable")
+func RPCSendTestPeerBuffer(DataSize: int, CompressedData: PackedByteArray) -> void:
+	var Data: StreamPeerBuffer = StreamPeerBuffer.new()
+	Data.data_array = CompressedData.decompress(DataSize)
+	Helpers.log_print(str("Received test data:"))
+	#Helpers.log_print(str("Received test data of length ", StreamPeerBuffer.data_array.size()))
+	#Data.seek(0)  # Probably not needed, since we just received this?
+	Helpers.log_print(str(Data.get_8()))
+	Helpers.log_print(str(Data.get_8()))
+	Helpers.log_print(str(Data.get_8()))
+	Helpers.log_print(str(Data.get_8()))
