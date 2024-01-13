@@ -13,7 +13,7 @@ var ChangedData: Dictionary = {}
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
-const ChunkSize = 200
+const ChunkSize = 50
 
 var IsServer = false
 
@@ -219,7 +219,7 @@ func ProcessChunkedInitialStateData():
 	var Count = len(PlayersToSendInitialState) - 1
 	if Count > -1:
 		while Count >= 0:
-			var SliceCount = clamp(ChunkSize, 0, len(InitialStatesRemainingPos[Count]))
+			var SliceCount = clamp(len(InitialStatesRemainingPos[Count]), 0, ChunkSize)
 			var SlicePositions = InitialStatesRemainingPos[Count].slice(0, SliceCount)
 			var SliceIDs = InitialStatesRemainingIDs[Count].slice(0, SliceCount)
 			while SliceCount > 0:
@@ -227,6 +227,9 @@ func ProcessChunkedInitialStateData():
 				InitialStatesRemainingIDs[Count - 1].remove_at(0)
 				SliceCount -= 1
 
+			Sent+=1
+			print('Sent : ', Sent)
+			#print(len(InitialStatesRemainingPos[Count]) == 0,)
 			(
 				SendBlockState
 				. rpc_id(
@@ -262,9 +265,13 @@ func ServerCompressAndSendBlockStates(Data, Finished):
 
 	SendBlockState.rpc(CompressedData.data_array, Finished)
 '''
+var Sent = 0
+var Recieved = 0
 #Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "reliable")
 func SendBlockState(Positions, IDs, Finished) -> void:
+	Recieved+=1
+	print('Recieved : ', Recieved)
 	if !Globals.initial_map_load_finished:
 		#Compression system, removed for now because didn't give significant performance improvement
 		'''
