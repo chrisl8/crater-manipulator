@@ -13,7 +13,9 @@ var ChangedData: Dictionary = {}
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
-const ChunkSize = 50
+const ChunkSize = 400
+const ServerChunkSendFrequency = 0.1
+var CurrentServerChunkSendTime = 0
 
 var IsServer = false
 
@@ -27,6 +29,7 @@ func _ready() -> void:
 	if IsServer:
 		GenerateMap()
 		Globals.initial_map_load_finished = true
+		SendTestPeerBuffer()
 	else:
 		RequestBlockState.rpc_id(1)
 
@@ -144,14 +147,17 @@ func _process(delta: float) -> void:
 		CurrentCycleTime = 0.0
 
 	if IsServer and MapGenerated:
-		var Count = len(PlayersToSendInitialState) - 1
-		if Count > -1:
-			ProcessChunkedInitialStateData()
+		CurrentServerChunkSendTime+=delta
+		if(CurrentServerChunkSendTime > ServerChunkSendFrequency):
+			CurrentServerChunkSendTime = 0.0
+			var Count = len(PlayersToSendInitialState) - 1
+			if Count > -1:
+				ProcessChunkedInitialStateData()
 
-		if len(StoredPlayerInventoryDrops):
-			for Key in StoredPlayerInventoryDrops.keys():
-				Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
-			StoredPlayerInventoryDrops.clear()
+			if len(StoredPlayerInventoryDrops):
+				for Key in StoredPlayerInventoryDrops.keys():
+					Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
+				StoredPlayerInventoryDrops.clear()
 
 	if IsServer and ServerDataChanged:
 		ServerDataChanged = false
@@ -227,8 +233,6 @@ func ProcessChunkedInitialStateData():
 				InitialStatesRemainingIDs[Count - 1].remove_at(0)
 				SliceCount -= 1
 
-			Sent+=1
-			print('Sent : ', Sent)
 			#print(len(InitialStatesRemainingPos[Count]) == 0,)
 			(
 				SendBlockState
@@ -246,7 +250,7 @@ func ProcessChunkedInitialStateData():
 				PlayersToSendInitialState.remove_at(Count)
 			Count -= 1
 
-
+#-HERE-1
 '''
 func ServerCompressAndSendBlockStates(Data, Finished):
 	#Too much data, need to compress somehow
@@ -265,15 +269,14 @@ func ServerCompressAndSendBlockStates(Data, Finished):
 
 	SendBlockState.rpc(CompressedData.data_array, Finished)
 '''
-var Sent = 0
-var Recieved = 0
+
 #Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "reliable")
 func SendBlockState(Positions, IDs, Finished) -> void:
-	Recieved+=1
-	print('Recieved : ', Recieved)
 	if !Globals.initial_map_load_finished:
 		#Compression system, removed for now because didn't give significant performance improvement
+
+		#-HERE-2
 		'''
 		var Positions = []
 		var IDs = []
@@ -409,3 +412,43 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 #Updates a cells tile from current data
 func UpdateCellFromCurrent(Position):
 	set_cell(0, Position, 0, CurrentData[Position])
+
+
+
+
+#Test RPC's
+func SendTestPeerBuffer():
+	print("A")
+	
+	var CompressedData: StreamPeerBuffer = StreamPeerBuffer.new()
+
+	var A = 1
+	var B = 2
+	var C = 3
+	var D = 4
+	print(CompressedData.data_array.size())
+	CompressedData.put_8(127)
+	CompressedData.put_8(126)
+
+	CompressedData.put_8(125)
+	CompressedData.put_8(-123)
+
+	print("B")
+	
+	#var CompressedDataCopy: StreamPeerBuffer = CompressedData.duplicate()
+	CompressedData.seek(0)
+
+
+	print("C")
+	RPCSendTestPeerBuffer.rpc(CompressedData)
+
+@rpc("any_peer", "call_local", "reliable")
+func RPCSendTestPeerBuffer(Data: StreamPeerBuffer) -> void:
+	print("D")
+
+	print(Data.get_8())
+	print(Data.get_8())
+	print(Data.get_8())
+	print(Data.get_8())
+
+	print("E")
