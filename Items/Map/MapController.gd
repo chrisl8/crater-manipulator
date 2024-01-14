@@ -13,13 +13,27 @@ var ChangedData: Dictionary = {}
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
-const ChunkSize = 4000
-const ServerChunkSendFrequency = 0.4
-var CurrentServerChunkSendTime = 0
+const ChunkSize: int = 4000
 
-var IsServer = false
+var IsServer: bool = false
 
-var ServerDataChanged = false
+var ServerDataChanged: bool = false
+
+var current_cycle_time: float = 0.0
+const send_frequency: float = -0.1  # TODO: Set back to 0.1 after testing
+const re_request_initial_map_data_timeout: float = 2.0
+var re_request_initial_map_data_timer: float = 0.0
+
+var local_player_initial_map_data_current_chunk_id: int = 0
+
+#Changes the server has received and accepted, and is waiting to send back to all clients later
+var ServerBufferedChanges: Dictionary = {}
+
+var StoredPlayerInventoryDrops: Dictionary = {}
+
+var BufferedChangesReceivedFromServer: Array[Dictionary] = []
+
+var server_side_per_player_initial_map_data: Dictionary = {}
 
 
 #Initialization
@@ -36,17 +50,17 @@ func _ready() -> void:
 		GenerateMap()
 		Globals.initial_map_load_finished = true
 	else:
-		RequestBlockState.rpc_id(1)
+		request_initial_map_data.rpc_id(1)
 
 	Globals.WorldMap = self
 
 
-func GetDepthFunction(x, WidthScale, HeightScale, CraterScale) -> float:
+func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterScale: float) -> float:
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
 
 #Procedural world generation
-func GenerateMap():
+func GenerateMap() -> void:
 	# Desmos Formula:
 	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
 	#x>r
@@ -57,17 +71,17 @@ func GenerateMap():
 	# r = radius
 
 	var Radius: int = 1909
-	var WidthScale = 8
-	var HeightScale = 1000
-	var CraterScale = 2000.0
+	var WidthScale: int = 8
+	var HeightScale: int = 1000
+	var CraterScale: float = 2000.0
 
 	while Radius > 0:
-		var Depth = roundi(
+		var Depth: int = roundi(
 			GetDepthFunction(
 				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
 			)
 		)
-		for i in range(0, 20):
+		for i: int in range(0, 20):
 			CurrentData[Vector2i(Radius, -(Depth + i))] = GetRandomStoneTile()
 			CurrentData[Vector2i(-Radius, -(Depth + i))] = GetRandomStoneTile()
 			Depth += 1
@@ -135,39 +149,39 @@ func GenerateMap():
 
 
 #Gets a random valid stone tile ID from the atlas
-func GetRandomStoneTile():
+func GetRandomStoneTile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 0)
 
 
-func GetRandomOreTile():
+func GetRandomOreTile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 1)
 
 
-var CurrentCycleTime: float = 0.0
-const SendFrequency = 0.1
-
-
 func _process(delta: float) -> void:
-	CurrentCycleTime += delta
-	if CurrentCycleTime > SendFrequency:
-		if !IsServer:
-			PushChangedData()
-		else:
+	current_cycle_time += delta
+	if current_cycle_time > send_frequency:
+		if Globals.is_server:
 			ServerSendBufferedChanges()
-		CurrentCycleTime = 0.0
+			if MapGenerated:
+				chunk_and_send_initial_map_data_to_players()
 
-	if IsServer and MapGenerated:
-		CurrentServerChunkSendTime += delta
-		if CurrentServerChunkSendTime > ServerChunkSendFrequency:
-			CurrentServerChunkSendTime = 0.0
-			var Count = len(PlayersToSendInitialState) - 1
-			if Count > -1:
-				ChunkAndProcessInitialStateData()
-
-			if len(StoredPlayerInventoryDrops):
-				for Key in StoredPlayerInventoryDrops.keys():
-					Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
-				StoredPlayerInventoryDrops.clear()
+				if len(StoredPlayerInventoryDrops):
+					for Key: int in StoredPlayerInventoryDrops.keys():
+						Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
+					StoredPlayerInventoryDrops.clear()
+		else:
+			PushChangedData()
+			if not Globals.initial_map_load_finished:
+				re_request_initial_map_data_timer += delta
+				if re_request_initial_map_data_timer > re_request_initial_map_data_timeout:
+					re_request_initial_map_data_timer = 0.0  # Reset timer
+					printerr("Timeout waiting for map data!")
+					# Acknowledge the last packet again. If they lost the ACK, this will fix that,
+					# If they sent us something newer, they will resend it.
+					acknowledge_received_chunk.rpc_id(
+						1, local_player_initial_map_data_current_chunk_id
+					)
+		current_cycle_time = 0.0
 
 	if IsServer and ServerDataChanged:
 		ServerDataChanged = false
@@ -175,10 +189,10 @@ func _process(delta: float) -> void:
 
 
 #Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
-func ServerSendBufferedChanges():
+func ServerSendBufferedChanges() -> void:
 	if len(ServerBufferedChanges.keys()) > 0:
-		var Count = ChunkSize
-		var ChunkedData = {}
+		var Count: int = ChunkSize
+		var ChunkedData: Dictionary = {}
 		while Count > 0 and len(ServerBufferedChanges.keys()) > 0:
 			ChunkedData[ServerBufferedChanges.keys()[0]] = ServerBufferedChanges[
 				ServerBufferedChanges.keys()[0]
@@ -202,131 +216,196 @@ func GetCellPositions(Layer: int) -> Array[Vector2i]:
 
 
 #Get the tile IDs of every cell in the tile map
-func GetCellIDs(Layer):
-	var IDs: Array[Vector2i]
+func GetCellIDs(Layer: int) -> Array:
+	var IDs: Array[Vector2i] = []
 	var Positions: Array[Vector2i] = get_used_cells(Layer)
 
-	for Position in Positions:
+	for Position: Vector2i in Positions:
 		IDs.append(get_cell_atlas_coords(Layer, Position))
 	return IDs
 
 
-var PlayersToSendInitialState: Array[int] = []
-var InitialStatesRemainingPos = []
-var InitialStatesRemainingIDs = []
-
 #Requests a world state sync from the server, this is an initial request only sent when a client first joins
 @rpc("any_peer", "call_remote", "reliable")
-func RequestBlockState() -> void:
-	if IsServer:
-		PlayersToSendInitialState.append(multiplayer.get_remote_sender_id())
+func request_initial_map_data() -> void:
+	var player_id: int = multiplayer.get_remote_sender_id()
 
-		var Values = []
-		for Key in SyncedData.keys():
-			Values.append(SyncedData[Key])
+	server_side_per_player_initial_map_data[player_id] = {
+		"synced_map_data_snapshot": [],
+		"last_sent_stream_buffer": StreamPeerBuffer.new(),
+		"last_sent_chunk_id": 0,
+		"last_acknowledged_chunk_id": 0,
+		"last_sent_map_data_index": -1,
+		"finished_sending": false,
+		"received_ack_for_finish": false,
+		"resend": false,
+	}
 
-		InitialStatesRemainingPos.append(SyncedData.keys())
-		InitialStatesRemainingIDs.append(Values)
+	# It is required that we convert the Dictionary to an Array,
+	# because we cannot iterate over a Dictionary in "chunks" in different frames,
+	# because there is no defined order for a Dictionary.
+	for key: Vector2i in SyncedData:
+		var value: Vector2i = SyncedData[key]
+		server_side_per_player_initial_map_data[player_id].synced_map_data_snapshot.append(
+			[key, value]
+		)
 
 
 #Processes chunked initial states for each client that has requested a world state sync
 #Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
-func ChunkAndProcessInitialStateData():
-	var player_index: int = len(PlayersToSendInitialState) - 1
-	if player_index >= 0:
-		while player_index >= 0:
-			#SendTestPeerBuffer(PlayersToSendInitialState[player_index])
-			Helpers.log_print(str("Tile Count: ", len(InitialStatesRemainingPos[player_index])))
-			var SliceCount = clamp(len(InitialStatesRemainingPos[player_index]), 0, ChunkSize)
-			var SlicePositions = InitialStatesRemainingPos[player_index].slice(0, SliceCount)
-			var SliceIDs = InitialStatesRemainingIDs[player_index].slice(0, SliceCount)
-			InitialStatesRemainingPos[player_index - 1] = (
-				InitialStatesRemainingPos[player_index - 1].slice(SliceCount)
-			)
-			InitialStatesRemainingIDs[player_index - 1] = (
-				InitialStatesRemainingIDs[player_index - 1].slice(SliceCount)
-			)
+func chunk_and_send_initial_map_data_to_players() -> void:
+	if server_side_per_player_initial_map_data.size():
+		for player_id: int in server_side_per_player_initial_map_data:
+			if (
+				server_side_per_player_initial_map_data[player_id].resend
+				or (
+					not server_side_per_player_initial_map_data[player_id].finished_sending
+					and (
+						(
+							server_side_per_player_initial_map_data[player_id]
+							. last_acknowledged_chunk_id
+						)
+						== server_side_per_player_initial_map_data[player_id].last_sent_chunk_id
+					)
+				)
+			):
+				if not server_side_per_player_initial_map_data[player_id].resend:
+					var StreamData: StreamPeerBuffer = StreamPeerBuffer.new()
 
-			ServerCompressAndSendBlockStates(
-				PlayersToSendInitialState[player_index],
-				SlicePositions,
-				SliceIDs,
-				len(InitialStatesRemainingPos[player_index]) == 0,
-			)
+					while (
+						StreamData.get_size() < 64000  # Should this relate to the setting used in network_websocket?
+						and (
+							(
+								server_side_per_player_initial_map_data[player_id]
+								. last_sent_map_data_index
+							)
+							< (
+								len(
+									(
+										server_side_per_player_initial_map_data[player_id]
+										. synced_map_data_snapshot
+									)
+								)
+								- 1
+							)
+						)
+					):
+						var next_map_index: int = (
+							(
+								server_side_per_player_initial_map_data[player_id]
+								. last_sent_map_data_index
+							)
+							+ 1
+						)
+						var map_entry: Array = (
+							server_side_per_player_initial_map_data[player_id]
+							. synced_map_data_snapshot[next_map_index]
+						)
+						StreamData.put_16(map_entry[0][0])
+						StreamData.put_16(map_entry[0][1])
+						StreamData.put_16(map_entry[1][0])
+						StreamData.put_16(map_entry[1][1])
+						server_side_per_player_initial_map_data[player_id].last_sent_map_data_index = next_map_index
 
-			if len(InitialStatesRemainingPos[player_index]) == 0:
-				InitialStatesRemainingPos.remove_at(player_index)
-				InitialStatesRemainingIDs.remove_at(player_index)
-				PlayersToSendInitialState.remove_at(player_index)
-			player_index -= 1
+					server_side_per_player_initial_map_data[player_id].last_sent_chunk_id += 1
+					if (
+						server_side_per_player_initial_map_data[player_id].last_sent_map_data_index
+						>= (
+							len(
+								(
+									server_side_per_player_initial_map_data[player_id]
+									. synced_map_data_snapshot
+								)
+							)
+							- 1
+						)
+					):
+						server_side_per_player_initial_map_data[player_id].finished_sending = true
+
+					server_side_per_player_initial_map_data[player_id].last_sent_stream_buffer = (
+						StreamData.duplicate()
+					)
+
+				server_side_per_player_initial_map_data[player_id].resend = false
+
+				send_initial_map_data_chunk_to_client.rpc_id(
+					player_id,
+					server_side_per_player_initial_map_data[player_id].last_sent_chunk_id,
+					(
+						server_side_per_player_initial_map_data[player_id]
+						. last_sent_stream_buffer
+						. data_array
+						. size()
+					),
+					(
+						server_side_per_player_initial_map_data[player_id]
+						. last_sent_stream_buffer
+						. data_array
+						. compress()
+					),
+					server_side_per_player_initial_map_data[player_id].resend
+				)
+				server_side_per_player_initial_map_data[player_id].resend = false
 
 
-func ServerCompressAndSendBlockStates(player_id, Positions, IDs, Finished):
-	var StreamData: StreamPeerBuffer = StreamPeerBuffer.new()
+@rpc("authority", "call_remote", "reliable")
+func tell_client_initial_map_data_send_is_finished() -> void:
+	if len(BufferedChangesReceivedFromServer) > 0:
+		for BufferedChange: Dictionary in BufferedChangesReceivedFromServer:
+			for Key: Vector2i in BufferedChange.keys():
+				SyncedData[Key] = BufferedChange[Key]
+				CurrentData[Key] = BufferedChange[Key]
+	BufferedChangesReceivedFromServer.clear()
 
-	var Count: int = len(Positions) - 1
-	StreamData.put_u16(Count)
+	Globals.initial_map_load_finished = true
 
-	while Count >= 0:
-		StreamData.put_16(Positions[Count].x)
-		StreamData.put_16(Positions[Count].y)
 
-		StreamData.put_16(IDs[Count].x)
-		StreamData.put_16(IDs[Count].y)
-		Count -= 1
-
-	SendBlockState.rpc_id(
-		player_id, StreamData.data_array.size(), StreamData.data_array.compress(), Finished
-	)
+@rpc("any_peer", "call_remote", "reliable")
+func acknowledge_received_chunk(chunk_id: int) -> void:
+	var player_id: int = multiplayer.get_remote_sender_id()
+	if chunk_id != server_side_per_player_initial_map_data[player_id].last_sent_chunk_id:
+		server_side_per_player_initial_map_data[player_id].resend = true
+		printerr(
+			player_id,
+			" requested a resend of map data chunk id ",
+			server_side_per_player_initial_map_data[player_id].last_sent_chunk_id
+		)
+	else:
+		server_side_per_player_initial_map_data[player_id].last_acknowledged_chunk_id = chunk_id
+		if server_side_per_player_initial_map_data[player_id].finished_sending:
+			tell_client_initial_map_data_send_is_finished.rpc_id(player_id)
 
 
 #Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
-func SendBlockState(DataSize: int, CompressedData: PackedByteArray, Finished: bool) -> void:
-	if !Globals.initial_map_load_finished:
-		# Decompress data from stream buffer
-		var Positions = []
-		var IDs = []
+func send_initial_map_data_chunk_to_client(
+	chunk_id: int, data_size: int, compressed_data: PackedByteArray, resend: bool
+) -> void:
+	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
+	if not resend:
+		local_player_initial_map_data_current_chunk_id += 1
 
-		var Data: StreamPeerBuffer = StreamPeerBuffer.new()
-		Helpers.log_print(
-			str(
-				"Received CompressedData Size: ",
-				CompressedData.size(),
-				" Originally: ",
-				DataSize,
-				" Chunk Size: ",
-				ChunkSize
-			)
+	if local_player_initial_map_data_current_chunk_id != chunk_id:
+		printerr(
+			"New System Packet ID mismatch! Possibly missed packet! Client chunk_id ",
+			local_player_initial_map_data_current_chunk_id,
+			" != Server chunk_id ",
+			chunk_id
 		)
-		Data.data_array = CompressedData.decompress(DataSize)
+		# TODO: Tell the server to re-send
+		return
 
-		var Length = Data.get_u16() - 1
-		while Length >= 0:
-			Positions.append(Vector2i(Data.get_16(), Data.get_16()))
-			IDs.append(Vector2i(Data.get_16(), Data.get_16()))
-			Length -= 1
+	# Decompress data from stream buffer
+	var data: StreamPeerBuffer = StreamPeerBuffer.new()
+	data.data_array = compressed_data.decompress(data_size)
 
-		# Convert arrays back into dictionary
-		var Count = len(Positions) - 1
-		while Count >= 0:
-			SyncedData[Positions[Count]] = IDs[Count]
-			CurrentData[Positions[Count]] = IDs[Count]
-			Count -= 1
-
-		if Finished:
-			if len(BufferedChangesReceivedFromServer) > 0:
-				for BufferedChange in BufferedChangesReceivedFromServer:
-					for Key: Vector2i in BufferedChange.keys():
-						SyncedData[Key] = BufferedChange[Key]
-						CurrentData[Key] = BufferedChange[Key]
-			BufferedChangesReceivedFromServer.clear()
-
-		SetAllCellData(CurrentData, 0)
-
-		Globals.initial_map_load_finished = Finished
-		if Globals.initial_map_load_finished:
-			Helpers.log_print("Finished loading map.")
+	while data.get_available_bytes() >= 8:
+		var map_position: Vector2i = Vector2i(data.get_16(), data.get_16())
+		var id: Vector2i = Vector2i(data.get_16(), data.get_16())
+		SyncedData[map_position] = id
+		CurrentData[map_position] = id
+	SetAllCellData(CurrentData, 0)
+	acknowledge_received_chunk.rpc_id(1, local_player_initial_map_data_current_chunk_id)
 
 
 #Architecture plan:
@@ -344,7 +423,7 @@ func SendBlockState(DataSize: int, CompressedData: PackedByteArray, Finished: bo
 
 
 #Modify a cell from the client, checks for finished world load and buffers changes for server accordingly
-func ModifyCell(Position: Vector2i, ID: Vector2i):
+func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 	if !Globals.initial_map_load_finished:
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
@@ -360,12 +439,12 @@ func ModifyCell(Position: Vector2i, ID: Vector2i):
 
 
 #Place air at a position : TEST TEMP
-func MineCellAtPosition(Position: Vector2):
+func MineCellAtPosition(Position: Vector2) -> void:
 	ModifyCell(local_to_map(to_local(Position)), Vector2i(-1, -1))
 
 
 #Place a standard piece of stone at a position : TEST TEMP
-func PlaceCellAtPosition(Position: Vector2):
+func PlaceCellAtPosition(Position: Vector2) -> void:
 	ModifyCell(local_to_map(to_local(Position)), GetRandomStoneTile())
 
 
@@ -383,33 +462,26 @@ func PushChangedData() -> void:
 		ChangedData.clear()
 
 
-#Changes the server has received and accepted, and is waiting to send back to all clients later
-var ServerBufferedChanges: Dictionary = {}
-
 #Sends changes from the client to the server to be processed
 @rpc("any_peer", "call_remote", "reliable")
 func RPCSendChangedData(Data: Dictionary) -> void:
 	if IsServer:
-		var Player = multiplayer.get_remote_sender_id()
+		var player_id: int = multiplayer.get_remote_sender_id()
 		for Key: Vector2i in Data.keys():
 			if not SyncedData.has(Key) or SyncedData[Key] == Data[Key][0]:
 				ServerBufferedChanges[Key] = Data[Key][1]
 				SyncedData[Key] = Data[Key][1]
 
 				if Data[Key][0].y > -1:
-					if Player not in StoredPlayerInventoryDrops.keys():
-						StoredPlayerInventoryDrops[Player] = {}
-					if Data[Key][0].y in StoredPlayerInventoryDrops[Player].keys():
-						StoredPlayerInventoryDrops[Player][Data[Key][0].y] += 1
+					if player_id not in StoredPlayerInventoryDrops.keys():
+						StoredPlayerInventoryDrops[player_id] = {}
+					if Data[Key][0].y in StoredPlayerInventoryDrops[player_id].keys():
+						StoredPlayerInventoryDrops[player_id][Data[Key][0].y] += 1
 					else:
-						StoredPlayerInventoryDrops[Player][Data[Key][0].y] = 1
+						StoredPlayerInventoryDrops[player_id][Data[Key][0].y] = 1
 
 		ServerDataChanged = true
 
-
-var StoredPlayerInventoryDrops = {}
-
-var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 #Sends changes from the server to clients
 @rpc("authority", "call_remote", "reliable")
@@ -427,42 +499,5 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 
 
 #Updates a cells tile from current data
-func UpdateCellFromCurrent(Position):
+func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
-
-
-#Test RPC's
-func SendTestPeerBuffer(player_id: int) -> void:
-	var StreamData: StreamPeerBuffer = StreamPeerBuffer.new()
-	StreamData.put_8(127)
-	StreamData.put_8(126)
-	StreamData.put_8(125)
-	StreamData.put_8(-123)
-	Helpers.log_print(
-		str("Sending test data of length ", StreamData.data_array.size(), " to ", player_id)
-	)
-	StreamData.seek(0)
-	Helpers.log_print(str(StreamData.get_8()))
-	Helpers.log_print(str(StreamData.get_8()))
-	Helpers.log_print(str(StreamData.get_8()))
-	Helpers.log_print(str(StreamData.get_8()))
-
-	# That's right, the cursor i sin the StreamPeerBuffer and will be where you left it on the receiving end!
-	StreamData.seek(0)
-
-	RPCSendTestPeerBuffer.rpc_id(
-		player_id, StreamData.data_array.size(), StreamData.data_array.compress()
-	)
-
-
-@rpc("any_peer", "call_remote", "reliable")
-func RPCSendTestPeerBuffer(DataSize: int, CompressedData: PackedByteArray) -> void:
-	var Data: StreamPeerBuffer = StreamPeerBuffer.new()
-	Data.data_array = CompressedData.decompress(DataSize)
-	Helpers.log_print(str("Received test data:"))
-	#Helpers.log_print(str("Received test data of length ", StreamPeerBuffer.data_array.size()))
-	#Data.seek(0)  # Probably not needed, since we just received this?
-	Helpers.log_print(str(Data.get_8()))
-	Helpers.log_print(str(Data.get_8()))
-	Helpers.log_print(str(Data.get_8()))
-	Helpers.log_print(str(Data.get_8()))

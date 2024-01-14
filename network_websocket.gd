@@ -2,12 +2,10 @@ extends Node
 
 signal reset
 signal close_popup
+signal update_popup_message
 
 enum Message { PLAYER_JOINED, PLAYER_TOKEN, SHUTDOWN_SERVER }
 
-#@export var player_spawn_point: Vector2 = Vector2(0, 0)
-
-var ws: WebSocketPeer = WebSocketPeer.new()
 var ready_to_connect: bool = false
 var peers: Dictionary
 var peer_count: int = -1
@@ -185,6 +183,7 @@ func _connected_to_server() -> void:
 
 	# Wait for map data to load from server before initiating player spawn
 	while not Globals.initial_map_load_finished:
+		update_popup_message.emit("Loading map...")
 		Helpers.log_print("waiting for map data to finish loading...", "orange")
 		await get_tree().create_timer(1).timeout
 
@@ -237,6 +236,9 @@ func init_network() -> void:
 		if error:
 			Helpers.log_print(str("Websocket Error: ", error), "cyan")
 	get_tree().get_multiplayer().multiplayer_peer = websocket_multiplayer_peer
+	# In theory these can help, but I have not been able to prove that they have any affect:
+	#websocket_multiplayer_peer.inbound_buffer_size = 16777216
+	#websocket_multiplayer_peer.outbound_buffer_size = 16777216
 	network_initialized = true
 
 
@@ -397,3 +399,6 @@ func player_joined(id: int, data: String) -> void:
 		var new_player_jwt: String = generate_jwt(Globals.server_config["jwt_secret"], player_uuid)
 		var data_for_player: Dictionary = {"jwt": new_player_jwt}
 		send_data_to(id, Message.PLAYER_TOKEN, JSON.stringify(data_for_player))
+
+		# Clean up initial map data sending data in MapController
+		Globals.WorldMap.server_side_per_player_initial_map_data.erase(id)

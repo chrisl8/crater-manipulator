@@ -115,6 +115,7 @@ func _ready() -> void:
 
 	Network.reset.connect(connection_reset)
 	Network.close_popup.connect(force_close_popup)
+	Network.update_popup_message.connect(update_popup_message)
 	if (
 		!Globals.force_client
 		and OS.is_debug_build()
@@ -276,3 +277,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var toast: Toast = Toast.new(text_to_toast, text_duration)
 			Globals.my_camera.add_child(toast)
 			toast.display()
+
+
+func update_popup_message(message: String) -> void:
+	pop_up.set_msg(message)
