@@ -501,3 +501,5 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 #Updates a cells tile from current data
 func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
+
+@export var TileModificationPartcilesController: CPUParticles2D
