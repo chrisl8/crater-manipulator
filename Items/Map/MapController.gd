@@ -20,7 +20,7 @@ var IsServer: bool = false
 var ServerDataChanged: bool = false
 
 var current_cycle_time: float = 0.0
-const send_frequency: float = -0.1  # TODO: Set back to 0.1 after testing
+const send_frequency: float = 0.1
 const re_request_initial_map_data_timeout: float = 2.0
 var re_request_initial_map_data_timer: float = 0.0
 
