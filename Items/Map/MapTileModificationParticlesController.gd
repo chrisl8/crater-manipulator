@@ -10,23 +10,11 @@ var ParticleCount = 0
 
 @export var Map: TileMap
 
-'''
-#Initialization
+
 func _ready() -> void:
-	AddMineParticles([Vector2i(0,0),Vector2i(1,1),Vector2i(-1,1)])
-'''
+	#emitting = true
+	pass
 
-func AddMineParticles(Positions: Array[Vector2i]) -> void:
-	var MineColor: Color = Color()
-	MineColor.r = 100
-	MineColor.g = 0
-	MineColor.b = 0
-
-	for Position in Positions:
-		Points.append(Vector2(Position.x,Position.y))
-
-	emission_points = Points
-	
 func DestroyCell(Position: Vector2i, ID: Vector2i) -> void:
 
 

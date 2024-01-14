@@ -156,6 +156,7 @@ script = ExtResource("2_xpmlm")
 TileModificationPartcilesController = NodePath("CPUParticles2D")
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="." node_paths=PackedStringArray("Map")]
+emitting = false
 amount = 256
 script = ExtResource("3_s0ufw")
 Map = NodePath("..")

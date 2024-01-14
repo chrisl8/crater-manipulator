@@ -175,7 +175,7 @@ func MineRaycast():
 		if len(result) > 0:
 			var HitPoint = result["position"]
 			if result["collider"] is TileMap:
-				Globals.WorldMap.MineCellAtPosition(HitPoint - result["normal"] * 0.001)
+				Globals.WorldMap.MineCellAtPosition(HitPoint - result["normal"])
 			MiningParticleDistance = MiningParticles.global_position.distance_to(HitPoint) / 2.0
 
 		MiningDistance = MiningParticleDistance
