@@ -84,7 +84,7 @@ func _ready() -> void:
 
 func load_level(scene: PackedScene) -> void:
 	var level_parent: Node = get_tree().get_root().get_node("Main/Map")
-	for c in level_parent.get_children():
+	for c: Node in level_parent.get_children():
 		level_parent.remove_child(c)
 		c.queue_free()
 	var game_scene: Node = scene.instantiate()

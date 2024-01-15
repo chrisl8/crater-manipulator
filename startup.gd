@@ -23,7 +23,7 @@ func _init() -> void:
 		# It also provides us with a unique "instance number" for each debug instance of the game run by the editor
 		# https://gist.github.com/CrankyBunny/71316e7af809d7d4cf5ec6e2369a30b9
 		_instance_socket = TCPServer.new()
-		for n in range(0, 4):  # Godot Editor only creates up to 4 instances maximum.
+		for n: int in range(0, 4):  # Godot Editor only creates up to 4 instances maximum.
 			if _instance_socket.listen(5000 + n) == OK:
 				Globals.local_debug_instance_number = n
 				break
@@ -33,7 +33,7 @@ func _init() -> void:
 		# 	print("We are instance number ", Globals.local_debug_instance_number)
 
 	if OS.get_cmdline_user_args().size() > 0:
-		for arg in OS.get_cmdline_user_args():
+		for arg: String in OS.get_cmdline_user_args():
 			var arg_array: Array = arg.split("=")
 			if arg_array[0] == "server":
 				print_rich("[color=green]Setting as server based on command line argument.[/color]")

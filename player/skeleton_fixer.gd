@@ -3,7 +3,7 @@
 @tool
 extends Skeleton2D
 
-@export var apply_all_local = false:
+@export var apply_all_local: bool = false:
 	set(val):
 		apply_all_local = val
 		_apply_all_skeleton_modifier_set_local_to_scene(get_modification_stack(), val, 0)
@@ -11,9 +11,9 @@ extends Skeleton2D
 
 func _apply_all_skeleton_modifier_set_local_to_scene(
 	stack: SkeletonModificationStack2D, boo: bool, level: int
-):
-	var indent = ""
-	for k in range(0, level):
+) -> void:
+	var indent: String = ""
+	for k: int in range(0, level):
 		indent += "  "
 
 	if !stack:
@@ -23,7 +23,7 @@ func _apply_all_skeleton_modifier_set_local_to_scene(
 	stack.resource_local_to_scene = boo
 	#print("%sSetting stack %s -> resource_local_to_scene = %s " % [indent, stack, boo])
 
-	for idx in range(0, stack.modification_count):
+	for idx: int in range(0, stack.modification_count):
 		var modification: SkeletonModification2D = stack.get_modification(idx)
 		modification.resource_local_to_scene = boo
 		#print("%sSetting modifier %s -> resource_local_to_scene = %s " % [indent, stack, boo])

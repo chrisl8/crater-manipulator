@@ -26,7 +26,7 @@ var SpawnedDebugObject: Node2D
 @export var Flipped: bool = false
 
 
-func UpdateMiningParticleLength():
+func UpdateMiningParticleLength() -> void:
 	var Extents: Vector3 = MiningParticles.process_material.get("emission_box_extents")
 	Extents.x = MiningDistance
 
@@ -38,7 +38,7 @@ func UpdateMiningParticleLength():
 @export var HeadTarget: Node
 
 
-func Initialize(Local: bool):
+func Initialize(Local: bool) -> void:
 	IsLocal = Local
 	#set_process(IsLocal)
 
@@ -112,10 +112,8 @@ func _process(_delta: float) -> void:
 
 @export var ArmTargetPosition: Node2D
 
-const mouse_sensitivity = 10
 
-
-func _input(event):
+func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
 			if !mouse_left_down:
@@ -133,26 +131,26 @@ var mouse_left_down: bool
 var MineCast: RayCast2D
 
 var MiningSpeed: float = 0.1
-var CurrentMiningTime = 100
+var CurrentMiningTime: float = 100
 
 
-func LeftMouseClicked():
+func LeftMouseClicked() -> void:
 	if CurrentTool == 1:
 		pass
 	pass
 
 
-func MineRaycast():
+func MineRaycast() -> void:
 	if CurrentMiningTime > MiningSpeed:
 		CurrentMiningTime = 0.0
-		var space_state = get_world_2d().direct_space_state
+		var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 
 		#var SpawnedDebugObject = DebugObject.instantiate()
 		#get_node("/root").add_child(SpawnedDebugObject)
 		#SpawnedDebugObject.global_position = Arm.global_position
 
-		var ArmPosition = Arm.global_position
-		var MiningParticleDistance = (
+		var ArmPosition: Vector2 = Arm.global_position
+		var MiningParticleDistance: float = (
 			clamp(
 				clamp(ArmPosition.distance_to(MousePosition), 0, InteractRange),
 				0.0,
@@ -160,7 +158,7 @@ func MineRaycast():
 			)
 			/ 2.0
 		)
-		var query = PhysicsRayQueryParameters2D.create(
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
 			ArmPosition,
 			(
 				ArmPosition
@@ -171,9 +169,9 @@ func MineRaycast():
 			)
 		)
 		query.exclude = [self]
-		var result = space_state.intersect_ray(query)
-		if len(result) > 0:
-			var HitPoint = result["position"]
+		var result: Dictionary = space_state.intersect_ray(query)
+		if result.size() > 0:
+			var HitPoint: Vector2 = result["position"]
 			if result["collider"] is TileMap:
 				Globals.WorldMap.MineCellAtPosition(HitPoint - result["normal"])
 			MiningParticleDistance = MiningParticles.global_position.distance_to(HitPoint) / 2.0
@@ -181,6 +179,6 @@ func MineRaycast():
 		MiningDistance = MiningParticleDistance
 
 
-func RightMouseClicked():
+func RightMouseClicked() -> void:
 	Globals.WorldMap.PlaceCellAtPosition(get_global_mouse_position())
 	pass

@@ -4,7 +4,7 @@ const MovementSpeed: float = 16.0
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
+func _process(_delta: float) -> void:
 	var move: Vector2 = Vector2()
 
 	var input: Vector3 = Vector3()

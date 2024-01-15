@@ -8,16 +8,16 @@ const MaxBarScale: float = 4
 
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	#Round about because names dictionary isn't defined till request
-	for Key in Globals.ResourceIDs.keys():
+	for Key: String in Globals.ResourceIDs.keys():
 		PowderResources[Key] = 0
 
 
 var IsLocal: bool = false
 
 
-func Initialize(NewIsLocal):
+func Initialize(NewIsLocal: bool) -> void:
 	IsLocal = NewIsLocal
 	set_process(IsLocal)
 	InventoryUpdated = true
@@ -27,7 +27,7 @@ var InventoryUpdated: bool = false
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if InventoryUpdated:
 		StoneBar.scale.y = float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"])
 		print(float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"]))
@@ -35,14 +35,14 @@ func _process(_delta):
 		InventoryUpdated = false
 
 
-#func AddResource(ID: Vector2i, Ammount: int):
+#func AddResource(ID: Vector2i, Amount: int):
 #	if ID.x == 0:
 #		pass
 
 
-func AddData(Data) -> void:
-	for Key in Data.keys():
-		var Extra = PowderResources[Globals.GetResourceName(Key)] + Data[Key] - MaxStone
+func AddData(Data: Dictionary) -> void:
+	for Key: String in Data.keys():
+		var Extra: int = PowderResources[Globals.GetResourceName(Key)] + Data[Key] - MaxStone
 		if Extra <= 0:
 			PowderResources[Globals.GetResourceName(Key)] += Data[Key]
 		else:

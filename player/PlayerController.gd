@@ -31,7 +31,7 @@ func _ready() -> void:
 	# "In this example, it will be set to 0 but you can set any other value."
 	# I believe the default is 0.3, so anything from 0.0 to < 0.3 should help improve this situation
 	# Feel free two tweak the number as you see fit.
-	var space = get_world_2d().space
+	var space: RID = get_world_2d().space
 	PhysicsServer2D.space_set_param(
 		space, PhysicsServer2D.SPACE_PARAM_CONTACT_MAX_ALLOWED_PENETRATION, 0.0
 	)
@@ -129,6 +129,6 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 @export var InventoryManager: Node2D
 
 @rpc("any_peer", "call_remote", "reliable")
-func AddInventoryData(Data) -> void:
+func AddInventoryData(Data: int) -> void:
 	if IsLocal:
 		InventoryManager.AddData(Data)

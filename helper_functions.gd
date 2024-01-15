@@ -78,7 +78,7 @@ func quit_gracefully() -> void:
 			print_rich(
 				"[color=orange]Disconnecting clients and saving data before shutting down server...[/color]"
 			)
-			var server_label = get_node_or_null(
+			var server_label: Node = get_node_or_null(
 				"/root/Main/Map/ServerCamera/CanvasLayer/Control/Label"
 			)
 			if server_label:

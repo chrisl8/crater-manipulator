@@ -28,28 +28,28 @@ var last_toast: String = ""
 var initial_map_load_finished: bool = false
 
 #Resources
-var ResourceIDs = {"Stone": 0, "Red Ore": 1}
-var ResourceNames = {}
+var ResourceIDs: Dictionary = {"Stone": 0, "Red Ore": 1}
+var ResourceNames: Dictionary = {}
 
 
-func GetResourceName(ID):
+func GetResourceName(ID: String) -> Array:
 	BuildResourcesDictionaries()
 	return ResourceNames[ID]
 
 
-func GetResourceID(Name):
+func GetResourceID(Name: String) -> Array:
 	BuildResourcesDictionaries()
 	return ResourceIDs[Name]
 
 
-var HasBuiltResourcesDistionary = false
+var HasBuiltResourcesDictionary: bool = false
 
 
-func BuildResourcesDictionaries():
-	if !HasBuiltResourcesDistionary:
-		for Key in ResourceIDs.keys():
+func BuildResourcesDictionaries() -> void:
+	if !HasBuiltResourcesDictionary:
+		for Key: String in ResourceIDs.keys():
 			ResourceNames[ResourceIDs[Key]] = Key
-		HasBuiltResourcesDistionary = true
+		HasBuiltResourcesDictionary = true
 
 
-var Players = {}
+var Players: Dictionary = {}
