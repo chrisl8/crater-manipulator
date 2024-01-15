@@ -1,6 +1,7 @@
 extends Node2D
 
-const MovementSpeed: float = 16.0
+const MOVEMENT_SPEED: float = 16.0
+var mouse_left_down: bool = false
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -16,10 +17,7 @@ func _process(_delta: float) -> void:
 	move.x = input.x
 	move.y = -input.z
 
-	global_position += move * MovementSpeed
-
-
-var mouse_left_down: bool = false
+	global_position += move * MOVEMENT_SPEED
 
 
 func _input(event: InputEvent) -> void:
