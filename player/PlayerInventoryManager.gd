@@ -41,7 +41,7 @@ func _process(_delta: float) -> void:
 
 
 func AddData(Data: Dictionary) -> void:
-	for Key: String in Data.keys():
+	for Key: int in Data.keys():
 		var Extra: int = PowderResources[Globals.GetResourceName(Key)] + Data[Key] - MaxStone
 		if Extra <= 0:
 			PowderResources[Globals.GetResourceName(Key)] += Data[Key]

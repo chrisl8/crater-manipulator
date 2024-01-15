@@ -32,7 +32,7 @@ var ResourceIDs: Dictionary = {"Stone": 0, "Red Ore": 1}
 var ResourceNames: Dictionary = {}
 
 
-func GetResourceName(ID: String) -> Array:
+func GetResourceName(ID: int) -> String:
 	BuildResourcesDictionaries()
 	return ResourceNames[ID]
 

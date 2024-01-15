@@ -129,6 +129,6 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 @export var InventoryManager: Node2D
 
 @rpc("any_peer", "call_remote", "reliable")
-func AddInventoryData(Data: int) -> void:
+func AddInventoryData(Data: Dictionary) -> void:
 	if IsLocal:
 		InventoryManager.AddData(Data)
