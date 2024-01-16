@@ -438,6 +438,17 @@ func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 	SetCellData(Position, ID)
 
 
+func get_cell_data_at_position(at_position: Vector2) -> Vector2i:
+	var local_at_position: Vector2i = local_to_map(to_local(at_position))
+	if ChangedData.has(local_at_position):
+		return ChangedData[local_at_position]
+	elif SyncedData.has(local_at_position):
+		return SyncedData[local_at_position]
+	else:
+		# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
+		return Vector2i(-1, -1)
+
+
 #Place air at a position : TEST TEMP
 func MineCellAtPosition(Position: Vector2) -> void:
 	ModifyCell(local_to_map(to_local(Position)), Vector2i(-1, -1))
