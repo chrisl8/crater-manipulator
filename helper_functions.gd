@@ -51,6 +51,7 @@ func load_data_from_file(file_name: String) -> String:
 	return content
 
 
+## Saves player data on the server side for use when the same player joins again later.
 func save_server_player_save_data_to_file() -> void:
 	# Save config back out to file, even if we imported it from the file.
 	save_data_to_file(

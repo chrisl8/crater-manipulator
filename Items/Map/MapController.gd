@@ -36,7 +36,6 @@ var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 var server_side_per_player_initial_map_data: Dictionary = {}
 
 
-#Initialization
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
 	# "Cannot convert argument 1 from Object to Object" on the receiving end
@@ -59,7 +58,7 @@ func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterSca
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
 
-#Procedural world generation
+## Procedural world generation
 func GenerateMap() -> void:
 	# Desmos Formula:
 	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
@@ -164,7 +163,7 @@ func GenerateMap() -> void:
 	'''
 
 
-#Gets a random valid stone tile ID from the atlas
+## Gets a random valid stone tile ID from the atlas
 func GetRandomStoneTile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 0)
 
@@ -204,7 +203,7 @@ func _process(delta: float) -> void:
 		SetAllCellData(SyncedData, 0)
 
 
-#Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
+## Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
 func ServerSendBufferedChanges() -> void:
 	if len(ServerBufferedChanges.keys()) > 0:
 		var Count: int = ChunkSize
@@ -218,20 +217,20 @@ func ServerSendBufferedChanges() -> void:
 		ServerSendChangedData.rpc(ChunkedData)
 
 
-#Set the tile map to the given values at given cells. Clears the tile map before doing so. Meant for complete map refreshes, not for incremental changes
+## Set the tile map to the given values at given cells. Clears the tile map before doing so. Meant for complete map refreshes, not for incremental changes
 func SetAllCellData(Data: Dictionary, Layer: int) -> void:
 	clear_layer(Layer)
 	for Key: Vector2i in Data.keys():
 		set_cell(Layer, Key, 0, Data[Key])
 
 
-#Get the positions of every cell in the tile map
+## Get the positions of every cell in the tile map
 func GetCellPositions(Layer: int) -> Array[Vector2i]:
 	var Positions: Array[Vector2i] = get_used_cells(Layer)
 	return Positions
 
 
-#Get the tile IDs of every cell in the tile map
+## Get the tile IDs of every cell in the tile map
 func GetCellIDs(Layer: int) -> Array:
 	var IDs: Array[Vector2i] = []
 	var Positions: Array[Vector2i] = get_used_cells(Layer)
@@ -241,7 +240,7 @@ func GetCellIDs(Layer: int) -> Array:
 	return IDs
 
 
-#Requests a world state sync from the server, this is an initial request only sent when a client first joins
+## Requests a world state sync from the server, this is an initial request only sent when a client first joins
 @rpc("any_peer", "call_remote", "reliable")
 func request_initial_map_data() -> void:
 	var player_id: int = multiplayer.get_remote_sender_id()
@@ -267,8 +266,8 @@ func request_initial_map_data() -> void:
 		)
 
 
-#Processes chunked initial states for each client that has requested a world state sync
-#Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
+## Processes chunked initial states for each client that has requested a world state sync
+## Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
 func chunk_and_send_initial_map_data_to_players() -> void:
 	if server_side_per_player_initial_map_data.size():
 		for player_id: int in server_side_per_player_initial_map_data:
@@ -392,7 +391,7 @@ func acknowledge_received_chunk(chunk_id: int) -> void:
 			tell_client_initial_map_data_send_is_finished.rpc_id(player_id)
 
 
-#Send chunks of the world dat block to clients, used for initial world sync
+## Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
 func send_initial_map_data_chunk_to_client(
 	chunk_id: int, data_size: int, compressed_data: PackedByteArray, resend: bool
@@ -438,7 +437,7 @@ func send_initial_map_data_chunk_to_client(
 #Solution is to store remove tile changes as separate system
 
 
-#Modify a cell from the client, checks for finished world load and buffers changes for server accordingly
+## Modify a cell from the client, checks for finished world load and buffers changes for server accordingly
 func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 	if !Globals.initial_map_load_finished:
 		#Not allowed to modify map until first state received
@@ -454,10 +453,12 @@ func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 	SetCellData(Position, ID)
 
 
+## Return the map tile position at a given world position
 func get_cell_position_at_position(at_position: Vector2) -> Vector2i:
 	return local_to_map(to_local(at_position))
 
 
+## Return the tile data at a given map tile position
 func get_cell_data_at_local_position(at_position: Vector2i) -> Vector2i:
 	if CurrentData.has(at_position):
 		return CurrentData[at_position]
@@ -466,12 +467,13 @@ func get_cell_data_at_local_position(at_position: Vector2i) -> Vector2i:
 		return Vector2i(-1, -1)
 
 
+## Return the tile data at a given world position
 func get_cell_data_at_position(at_position: Vector2) -> Vector2i:
 	var local_at_position: Vector2i = get_cell_position_at_position(at_position)
 	return get_cell_data_at_local_position(local_at_position)
 
 
-#Place air at a position : TEST TEMP
+## Place air at a position : TEST TEMP
 func MineCellAtPosition(Position: Vector2) -> void:
 	var CompensatedPosition: Vector2i = local_to_map(to_local(Position))
 	if (
@@ -484,26 +486,26 @@ func MineCellAtPosition(Position: Vector2) -> void:
 	ModifyCell(CompensatedPosition, Vector2i(-1, -1))
 
 
-#Place a standard piece of stone at a position : TEST TEMP
+## Place a standard piece of stone at a position : TEST TEMP
 func PlaceCellAtPosition(Position: Vector2) -> void:
 	ModifyCell(local_to_map(to_local(Position)), GetRandomStoneTile())
 
 
-#Set the current data of a cell to a given value
+## Set the current data of a cell to a given value
 func SetCellData(Position: Vector2i, ID: Vector2i) -> void:
 	CurrentData[Position] = ID
 	set_cell(0, Position, 0, ID)
 
 
-#Push change data stored on the client to the server, if there is any
-#Still need to add chunking to this process right here
+## Push change data stored on the client to the server, if there is any
+## Still need to add chunking to this process right here
 func PushChangedData() -> void:
 	if len(ChangedData.keys()) > 0:
 		RPCSendChangedData.rpc(ChangedData)
 		ChangedData.clear()
 
 
-#Sends changes from the client to the server to be processed
+## Sends changes from the client to the server to be processed
 @rpc("any_peer", "call_remote", "reliable")
 func RPCSendChangedData(Data: Dictionary) -> void:
 	if IsServer:
@@ -524,7 +526,7 @@ func RPCSendChangedData(Data: Dictionary) -> void:
 		ServerDataChanged = true
 
 
-#Sends changes from the server to clients
+## Sends changes from the server to clients
 @rpc("authority", "call_remote", "reliable")
 func ServerSendChangedData(Data: Dictionary) -> void:
 	if !Globals.initial_map_load_finished:
@@ -545,7 +547,7 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 		UpdateCellFromCurrent(Key)
 
 
-#Updates a cells tile from current data
+## Updates a cells tile from current data
 func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
 
