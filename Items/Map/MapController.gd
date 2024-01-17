@@ -143,9 +143,25 @@ func GenerateMap() -> void:
 
 		CurrentRadius -= 1.0
 	'''
+
+	'''
+	CurrentData[Vector2i(0, 0)] = GetRandomOreTile()
+	CurrentData[Vector2i(1, 0)] = GetRandomOreTile()
+	CurrentData[Vector2i(0, 1)] = GetRandomOreTile()
+	CurrentData[Vector2i(1, 1)] = GetRandomOreTile()
+	CurrentData[Vector2i(-1, 1)] = GetRandomOreTile()
+	'''
+
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
 	MapGenerated = true
+
+	'''
+	# TileModificationParticlesController.DestroyCells([Vector2i(0, 0)],[CurrentData[Vector2i(0, 0)]])
+
+	TileModificationParticlesController.DestroyCells([Vector2i(0, 0),Vector2i(1, 0),Vector2i(0, 1),Vector2i(1, 1),Vector2i(-1, 1)],
+	[CurrentData[Vector2i(0, 0)],CurrentData[Vector2i(1, 0)],CurrentData[Vector2i(0, 1)],CurrentData[Vector2i(1, 1)],CurrentData[Vector2i(-1, 1)]])
+	'''
 
 
 #Gets a random valid stone tile ID from the atlas
@@ -440,12 +456,6 @@ func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 
 func get_cell_data_at_position(at_position: Vector2) -> Vector2i:
 	var local_at_position: Vector2i = local_to_map(to_local(at_position))
-	'''
-	if ChangedData.has(local_at_position):
-		return ChangedData[local_at_position]
-	elif SyncedData.has(local_at_position):
-		return SyncedData[local_at_position]
-	'''
 	if CurrentData.has(local_at_position):
 		return CurrentData[local_at_position]
 	else:
@@ -455,7 +465,10 @@ func get_cell_data_at_position(at_position: Vector2) -> Vector2i:
 
 #Place air at a position : TEST TEMP
 func MineCellAtPosition(Position: Vector2) -> void:
-	ModifyCell(local_to_map(to_local(Position)), Vector2i(-1, -1))
+	var CompensatedPosition = (local_to_map(to_local(Position)))
+	if((CompensatedPosition in CurrentData.keys()) and (CurrentData[CompensatedPosition] != Vector2i(-1,-1))):
+		TileModificationParticlesController.DestroyCell(CompensatedPosition,CurrentData[CompensatedPosition])
+	ModifyCell(CompensatedPosition, Vector2i(-1, -1))
 
 
 #Place a standard piece of stone at a position : TEST TEMP
@@ -508,6 +521,8 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 	if IsServer:
 		return
 	for Key: Vector2i in Data.keys():
+		if((CurrentData[Key] != Data[Key]) and (Key in CurrentData.keys()) and (CurrentData[Key] != Vector2i(-1,-1))):
+			TileModificationParticlesController.DestroyCell(Key,Data[Key])
 		SyncedData[Key] = Data[Key]
 		CurrentData[Key] = Data[Key]
 		UpdateCellFromCurrent(Key)
@@ -518,4 +533,4 @@ func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
 
 
-@export var TileModificationPartcilesController: CPUParticles2D
+@export var TileModificationParticlesController: CPUParticles2D

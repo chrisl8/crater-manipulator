@@ -6,7 +6,6 @@
 script = ExtResource("1_knfvd")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.01, 0.01)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
