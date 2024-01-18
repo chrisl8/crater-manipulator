@@ -153,6 +153,20 @@ func GenerateMap() -> void:
 
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
+
+	# Save map size
+	for map_coordinate: Vector2i in CurrentData:
+		if map_coordinate.x < Globals.map_edges.min.x:
+			Globals.map_edges.min.x = map_coordinate.x
+		if map_coordinate.x > Globals.map_edges.max.x:
+			Globals.map_edges.max.x = map_coordinate.x
+		if map_coordinate.y < Globals.map_edges.min.x:
+			Globals.map_edges.min.x = map_coordinate.y
+		if map_coordinate.y > Globals.map_edges.max.y:
+			Globals.map_edges.max.y = map_coordinate.y
+
+	print(Globals.map_edges)
+
 	MapGenerated = true
 
 	'''
@@ -267,7 +281,6 @@ func request_initial_map_data() -> void:
 
 
 ## Processes chunked initial states for each client that has requested a world state sync
-## Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
 func chunk_and_send_initial_map_data_to_players() -> void:
 	if server_side_per_player_initial_map_data.size():
 		for player_id: int in server_side_per_player_initial_map_data:
@@ -454,12 +467,12 @@ func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 
 
 ## Return the map tile position at a given world position
-func get_cell_position_at_position(at_position: Vector2) -> Vector2i:
+func get_cell_position_at_global_position(at_position: Vector2) -> Vector2i:
 	return local_to_map(to_local(at_position))
 
 
 ## Return the tile data at a given map tile position
-func get_cell_data_at_local_position(at_position: Vector2i) -> Vector2i:
+func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
 	if CurrentData.has(at_position):
 		return CurrentData[at_position]
 	else:
@@ -468,9 +481,14 @@ func get_cell_data_at_local_position(at_position: Vector2i) -> Vector2i:
 
 
 ## Return the tile data at a given world position
-func get_cell_data_at_position(at_position: Vector2) -> Vector2i:
-	var local_at_position: Vector2i = get_cell_position_at_position(at_position)
-	return get_cell_data_at_local_position(local_at_position)
+func get_cell_data_at_global_position(at_position: Vector2) -> Vector2i:
+	var local_at_position: Vector2i = get_cell_position_at_global_position(at_position)
+	return get_cell_data_at_map_local_position(local_at_position)
+
+
+## Return the global position of a map cell given its map local position
+func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2:
+	return to_global(map_to_local(at_position))
 
 
 ## Place air at a position : TEST TEMP
