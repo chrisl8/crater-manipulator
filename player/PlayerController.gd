@@ -61,6 +61,13 @@ func _process(_delta: float) -> void:
 		return
 
 
+## Remotely force the player to a given position
+@rpc("any_peer", "call_remote", "reliable")
+func set_player_position(new_position: Vector2) -> void:
+	Helpers.log_print(str("Player was forced to ", new_position), "red")
+	position = new_position
+
+
 func _physics_process(delta: float) -> void:
 	'''
 	if Input.is_action_pressed("sprint"):
