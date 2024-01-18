@@ -69,12 +69,15 @@ func GenerateMap() -> void:
 	# c = CraterScale
 	# r = radius
 
-	var Radius: int = 1909
+	var TotalRadius: int = 1909
 	var WidthScale: int = 8
 	var HeightScale: int = 1000
 	var CraterScale: float = 2000.0
 
-	while Radius > 0:
+	while TotalRadius >= 0:
+		var Radius: float = float(TotalRadius)
+		if(TotalRadius == 0):
+			Radius+=0.00001
 		var Depth: int = roundi(
 			GetDepthFunction(
 				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
@@ -83,9 +86,8 @@ func GenerateMap() -> void:
 		for i: int in range(0, 20):
 			CurrentData[Vector2i(Radius, -(Depth + i))] = GetRandomStoneTile()
 			CurrentData[Vector2i(-Radius, -(Depth + i))] = GetRandomStoneTile()
-			Depth += 1
 
-		Radius -= 1
+		TotalRadius -= 1
 
 	#New version
 
