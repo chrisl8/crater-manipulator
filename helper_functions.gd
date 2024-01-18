@@ -1,6 +1,10 @@
 extends Node
 
 
+## Print the given string along with the Debug Instance (always 0 for server)
+## and the multiplayer ID (always 1 for the server)
+## The text MUST be a string. Use str() to format non-strings or multiple strings
+## The color is optional and can be used to colorize the text.
 func log_print(text: String, color: String = "white") -> void:
 	if Globals.is_server or OS.is_debug_build():
 		var unique_id: int = -1
