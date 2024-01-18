@@ -165,8 +165,6 @@ func GenerateMap() -> void:
 		if map_coordinate.y > Globals.map_edges.max.y:
 			Globals.map_edges.max.y = map_coordinate.y
 
-	print(Globals.map_edges)
-
 	MapGenerated = true
 
 	'''

@@ -337,11 +337,6 @@ func check_location_and_surroundings(at_position: Vector2) -> bool:
 			!= Vector2i(-1, -1)
 		):
 			position_is_clear = false
-			print(
-				Globals.WorldMap.get_cell_data_at_map_local_position(
-					cell_positions_to_clear_for_player
-				)
-			)
 
 	return position_is_clear
 
@@ -418,7 +413,7 @@ func player_joined(id: int, data: String) -> void:
 
 	# TODO: Retrieve player's saved position, only using this random if that doesn't exist.
 	var potential_player_position: Vector2 = Vector2(0, 15600)
-	print(Globals.WorldMap.get_cell_position_at_global_position(potential_player_position))
+
 	var reached_bottom_of_map: bool = false
 	var last_x_shift_direction: String = "positive"
 	var last_x_shift_count: int = 0
