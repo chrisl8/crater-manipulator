@@ -11,6 +11,9 @@ var CurrentData: Dictionary = {}
 #Local modifications buffered until next sync cycle
 var ChangedData: Dictionary = {}
 
+# CurrentData is the "best" reality for clients to work from and
+# SyncedData is the "best" data for the server to work from
+
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
 const ChunkSize: int = 4000
@@ -34,6 +37,8 @@ var StoredPlayerInventoryDrops: Dictionary = {}
 var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 var server_side_per_player_initial_map_data: Dictionary = {}
+
+@export var TileModificationParticlesController: CPUParticles2D
 
 
 func _ready() -> void:
@@ -154,7 +159,8 @@ func GenerateMap() -> void:
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
 
-	# Save map size
+	# Save initial map "size" before flagging it as "ready"
+	# TODO: Timestamp this and turn it into a function that can be called again for updating
 	for map_coordinate: Vector2i in CurrentData:
 		if map_coordinate.x < Globals.map_edges.min.x:
 			Globals.map_edges.min.x = map_coordinate.x
@@ -471,11 +477,18 @@ func get_cell_position_at_global_position(at_position: Vector2) -> Vector2i:
 
 ## Return the tile data at a given map tile position
 func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
-	if CurrentData.has(at_position):
-		return CurrentData[at_position]
+	# Use the correct data set based on client vs. server
+	# CurrentData is the "best" reality for clients to work from and
+	# SyncedData is the "best" data for the server to work from
+	var map_data_to_use: Dictionary
+	if Globals.is_server:
+		map_data_to_use = SyncedData
 	else:
-		# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
-		return Vector2i(-1, -1)
+		map_data_to_use = CurrentData
+	if map_data_to_use.has(at_position):
+		return map_data_to_use[at_position]
+	# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
+	return Vector2i(-1, -1)
 
 
 ## Return the tile data at a given world position
@@ -566,6 +579,3 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 ## Updates a cells tile from current data
 func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
-
-
-@export var TileModificationParticlesController: CPUParticles2D
