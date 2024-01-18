@@ -55,6 +55,7 @@ func BuildResourcesDictionaries() -> void:
 var Players: Dictionary = {}
 
 var map_edges: Dictionary = {
+	"time_stamp": 0,
 	"min":
 	{
 		"x": 0,

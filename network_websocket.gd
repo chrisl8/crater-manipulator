@@ -311,6 +311,7 @@ var required_player_spawn_block_radius: int = 4
 
 ## Check player's position and surrounding area to ensure it is clear for spawning
 func check_location_and_surroundings(at_position: Vector2) -> bool:
+	Globals.WorldMap.update_map_edges(60)
 	var cell_position_at_player_potential_position: Vector2i = (
 		Globals.WorldMap.get_cell_position_at_global_position(at_position)
 	)
@@ -439,8 +440,10 @@ func player_joined(id: int, data: String) -> void:
 
 		reached_bottom_of_map = false  # reset
 
-		# If position is blocked, set the position to be the same X position but at the highest Y point possible
-		potential_player_position_in_map_coordinates.y = Globals.map_edges.min.y
+		# If position is blocked, set the position to be the same X position but at the highest Y point possible + player's size
+		potential_player_position_in_map_coordinates.y = (
+			Globals.map_edges.min.y - required_player_spawn_block_radius
+		)
 
 		var next_position_down_cell_contents: Vector2i = Vector2i(-1, -1)
 		var descender_counter: int = 0
