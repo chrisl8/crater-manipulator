@@ -32,6 +32,25 @@ func _input(event: InputEvent) -> void:
 			mouse_left_down = true
 		elif event.button_index == 1 and not event.is_pressed():
 			mouse_left_down = false
+		elif event.button_index == 4 and event.pressed:
+			# Zoom In
+			var new_zoom_level_x: float = server_camera.zoom.x + 0.1 * server_camera.zoom.x
+			# if new_zoom_level_x > -0.01:
+			# 	new_zoom_level_x = -0.01
+			var new_zoom_level_y: float = server_camera.zoom.y + 0.1 * server_camera.zoom.y
+			# if new_zoom_level_y > -0.01:
+			# 	new_zoom_level_y = -0.01
+			server_camera.zoom = Vector2(new_zoom_level_x, new_zoom_level_y)
+		elif event.button_index == 5 and event.pressed:
+			# Zoom Out
+			var new_zoom_level_x: float = server_camera.zoom.x - 0.1 * server_camera.zoom.x
+			if new_zoom_level_x < 0.01:
+				new_zoom_level_x = 0.01
+			var new_zoom_level_y: float = server_camera.zoom.y - 0.1 * server_camera.zoom.y
+			if new_zoom_level_y < 0.01:
+				new_zoom_level_y = 0.01
+			server_camera.zoom = Vector2(new_zoom_level_x, new_zoom_level_y)
+
 	if (
 		event is InputEventMouseMotion
 		and mouse_left_down
