@@ -23,6 +23,9 @@ var uuid_util: Resource = preload("res://addons/uuid/uuid.gd")
 
 var ServerCamera: PackedScene = preload("res://Server Camera/Server Camera.tscn")
 
+## Radius of blocks around player spawn point required to consider it safe to spawn at
+var required_player_spawn_block_radius: int = 4
+
 
 func _process(_delta: float) -> void:
 	if not ready_to_connect:
@@ -170,6 +173,11 @@ func player_save_data_filename() -> String:
 	return file_name
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func update_remote_popup_message(message: String) -> void:
+	update_popup_message.emit(message)
+
+
 func _connected_to_server() -> void:
 	Helpers.log_print("I connected to the server!", "cyan")
 	if Globals.shutdown_server:
@@ -305,10 +313,6 @@ func data_received(data: String) -> void:
 	)
 
 
-## Radius of blocks around player spawn point required to consider it safe to spawn at
-var required_player_spawn_block_radius: int = 4
-
-
 ## Check player's position and surrounding area to ensure it is clear for spawning
 func check_location_and_surroundings(at_position: Vector2) -> bool:
 	Globals.WorldMap.update_map_edges(60)
@@ -338,6 +342,14 @@ func check_location_and_surroundings(at_position: Vector2) -> bool:
 			!= Vector2i(-1, -1)
 		):
 			position_is_clear = false
+		else:
+			print(
+				cell_positions_to_clear_for_player,
+				" ",
+				Globals.WorldMap.get_cell_data_at_map_local_position(
+					cell_positions_to_clear_for_player
+				)
+			)
 
 	return position_is_clear
 
@@ -419,7 +431,9 @@ func player_joined(id: int, data: String) -> void:
 	var last_x_shift_direction: String = "positive"
 	var last_x_shift_count: int = 0
 
-	while not check_location_and_surroundings(potential_player_position):
+	update_remote_popup_message.rpc_id(id, "Finding our place in the world...")
+	var clear_and_safe_position_found: bool = false
+	while not clear_and_safe_position_found:
 		var potential_player_position_in_map_coordinates: Vector2i = (
 			Globals.WorldMap.get_cell_position_at_global_position(potential_player_position)
 		)
@@ -440,10 +454,11 @@ func player_joined(id: int, data: String) -> void:
 
 		reached_bottom_of_map = false  # reset
 
-		# If position is blocked, set the position to be the same X position but at the highest Y point possible + player's size
-		potential_player_position_in_map_coordinates.y = (
-			Globals.map_edges.min.y - required_player_spawn_block_radius
-		)
+		if not check_location_and_surroundings(potential_player_position):
+			# If position is blocked, set the position to be the same X position but at the highest Y point possible + player's size
+			potential_player_position_in_map_coordinates.y = (
+				Globals.map_edges.min.y - required_player_spawn_block_radius
+			)
 
 		var next_position_down_cell_contents: Vector2i = Vector2i(-1, -1)
 		var descender_counter: int = 0
@@ -471,6 +486,10 @@ func player_joined(id: int, data: String) -> void:
 					)
 				)
 			)
+			clear_and_safe_position_found = check_location_and_surroundings(
+				potential_player_position
+			)
+			reached_bottom_of_map = true  # If we loop, always force a left/right shift at the next loop.
 		# Otherwise, do not update the potential_player_position and start over
 
 		# TODO: There is nothing to stop this from looping forever in a worse case scenario

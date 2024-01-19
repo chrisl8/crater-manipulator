@@ -1,5 +1,9 @@
 extends TileMap
 
+const ChunkSize: int = 4000
+const SEND_FREQUENCY: float = 0.1
+const re_request_initial_map_data_timeout: float = 2.0
+
 var MapGenerated: bool = false
 
 #No longer using arrays, read/write requires an indexing system which negates the performance benefit of using array index overlap as link. Reading Positions and IDs separately may be faster if staggered separately but can be added later and merged into local dictionaries.
@@ -16,15 +20,11 @@ var ChangedData: Dictionary = {}
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
-const ChunkSize: int = 4000
-
 var IsServer: bool = false
 
 var ServerDataChanged: bool = false
 
 var current_cycle_time: float = 0.0
-const send_frequency: float = 0.1
-const re_request_initial_map_data_timeout: float = 2.0
 var re_request_initial_map_data_timer: float = 0.0
 
 var local_player_initial_map_data_current_chunk_id: int = 0
@@ -211,7 +211,7 @@ func GetRandomOreTile() -> Vector2i:
 
 func _process(delta: float) -> void:
 	current_cycle_time += delta
-	if current_cycle_time > send_frequency:
+	if current_cycle_time > SEND_FREQUENCY:
 		if Globals.is_server:
 			ServerSendBufferedChanges()
 			if MapGenerated:
