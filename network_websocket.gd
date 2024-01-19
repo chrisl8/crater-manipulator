@@ -342,14 +342,6 @@ func check_location_and_surroundings(at_position: Vector2) -> bool:
 			!= Vector2i(-1, -1)
 		):
 			position_is_clear = false
-		else:
-			print(
-				cell_positions_to_clear_for_player,
-				" ",
-				Globals.WorldMap.get_cell_data_at_map_local_position(
-					cell_positions_to_clear_for_player
-				)
-			)
 
 	return position_is_clear
 
