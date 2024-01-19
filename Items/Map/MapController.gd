@@ -585,7 +585,8 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 		return
 	for Key: Vector2i in Data.keys():
 		if (
-			(CurrentData[Key] != Data[Key])
+			CurrentData.has(Key)
+			and CurrentData[Key] != Data[Key]
 			and (Key in CurrentData.keys())
 			and (CurrentData[Key] != Vector2i(-1, -1))
 		):
