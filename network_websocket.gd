@@ -1,8 +1,8 @@
 extends Node
 
 signal reset
-signal close_popup
-signal update_popup_message
+signal close_pre_game_overlay
+signal update_pre_game_overlay_message
 
 enum Message { PLAYER_JOINED, PLAYER_TOKEN, SHUTDOWN_SERVER }
 
@@ -70,7 +70,7 @@ func _process(_delta: float) -> void:
 			load_level.call_deferred(map)
 		elif get_node_or_null("../Main/Map/game_scene"):
 			game_scene_initialized = true
-			close_popup.emit()
+			close_pre_game_overlay.emit()
 		return
 
 	# NOTE: As of 1/9/2024 Spawner does absolutely nothing, but maybe it will someday?
@@ -174,8 +174,8 @@ func player_save_data_filename() -> String:
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func update_remote_popup_message(message: String) -> void:
-	update_popup_message.emit(message)
+func update_remote_pre_game_overlay_message(message: String) -> void:
+	update_pre_game_overlay_message.emit(message)
 
 
 func _connected_to_server() -> void:
@@ -191,7 +191,7 @@ func _connected_to_server() -> void:
 
 	# Wait for map data to load from server before initiating player spawn
 	while not Globals.initial_map_load_finished:
-		update_popup_message.emit("Loading map...")
+		update_pre_game_overlay_message.emit("Loading map...")
 		Helpers.log_print("waiting for map data to finish loading...", "orange")
 		await get_tree().create_timer(0.5).timeout
 
@@ -305,7 +305,7 @@ func data_received(data: String) -> void:
 
 	if parsed_message.type == Message.PLAYER_TOKEN:
 		Helpers.save_data_to_file(player_save_data_filename(), parsed_message.data)
-		close_popup.emit()
+		close_pre_game_overlay.emit()
 		return
 
 	printerr(
@@ -431,7 +431,7 @@ func player_joined(id: int, data: String) -> void:
 	var last_x_shift_direction: String = "positive"
 	var last_x_shift_count: int = 0
 
-	update_remote_popup_message.rpc_id(id, "Finding our place in the world...")
+	update_remote_pre_game_overlay_message.rpc_id(id, "Finding our place in the world...")
 	var clear_and_safe_position_found: bool = false
 	while not clear_and_safe_position_found:
 		var potential_player_position_in_map_coordinates: Vector2i = (
