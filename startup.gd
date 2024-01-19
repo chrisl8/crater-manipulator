@@ -6,9 +6,9 @@ extends Node
 
 @export var capture_mouse_on_startup: bool = false  # This is actually annoying so I never turn it on.
 
-var pop_up_template: Resource = preload("res://menus/pop_up/pop_up.tscn")
+var pre_game_overlay_scene: Resource = preload("res://menus/pre_game_overlay/pre_game_overlay.tscn")
 
-var pop_up: Node
+var pre_game_overlay: Node
 
 var server_config_file_name: String = "user://server_config.dat"
 
@@ -100,7 +100,7 @@ func parse_server_config_file_data(server_config_file_data: String) -> Dictionar
 
 func _ready() -> void:
 	force_open_popup()
-	pop_up.set_msg("Booting Universe...")
+	pre_game_overlay.set_msg("Booting Universe...")
 
 	# Disable auto-quit so that we can catch it ourselves elsewhere
 	# Note that this alone will defeat Windows X or Alt+F4
@@ -189,16 +189,16 @@ func start_connection() -> void:
 	if OS.is_debug_build() and Globals.local_debug_instance_number > 0 and not Globals.is_server:
 		var debug_delay: int = Globals.local_debug_instance_number
 		while debug_delay > 0:
-			pop_up.set_msg("Debug delay " + str(debug_delay))
+			pre_game_overlay.set_msg("Debug delay " + str(debug_delay))
 			debug_delay = debug_delay - 1
-			await get_tree().create_timer(1).timeout
-	pop_up.set_msg("Connecting...")
+			await get_tree().create_timer(0.2).timeout
+	pre_game_overlay.set_msg("Connecting...")
 	Network.ready_to_connect = true
 
 
 func connection_reset(delay: int) -> void:
 	force_open_popup()
-	pop_up.set_msg(
+	pre_game_overlay.set_msg(
 		Globals.connection_failed_message,
 		Color(0.79215687513351, 0.26274511218071, 0.56470590829849)
 	)
@@ -217,7 +217,7 @@ func connection_reset(delay: int) -> void:
 	await get_tree().create_timer(3).timeout
 	var retry_delay: int = delay
 	while retry_delay > 0:
-		pop_up.set_msg("Retrying in " + str(retry_delay))
+		pre_game_overlay.set_msg("Retrying in " + str(retry_delay))
 		retry_delay = retry_delay - 1
 		await get_tree().create_timer(1).timeout
 	if OS.get_name() == "Web":
@@ -242,15 +242,15 @@ func _input(event: InputEvent) -> void:
 
 
 func force_open_popup() -> void:
-	if not pop_up:
-		pop_up = pop_up_template.instantiate()
-		add_child(pop_up)
+	if not pre_game_overlay:
+		pre_game_overlay = pre_game_overlay_scene.instantiate()
+		add_child(pre_game_overlay)
 
 
 func force_close_popup() -> void:
-	if pop_up and is_instance_valid(pop_up):
-		pop_up.queue_free()
-		pop_up = null
+	if pre_game_overlay and is_instance_valid(pre_game_overlay):
+		pre_game_overlay.queue_free()
+		pre_game_overlay = null
 
 
 # Sets player as authority over itself on the client
@@ -280,4 +280,4 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func update_popup_message(message: String) -> void:
-	pop_up.set_msg(message)
+	pre_game_overlay.set_msg(message)
