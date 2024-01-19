@@ -3,6 +3,12 @@ extends Node2D
 const MOVEMENT_SPEED: float = 16.0
 var mouse_left_down: bool = false
 
+var server_camera: Node
+
+
+func _ready() -> void:
+	server_camera = get_node("Camera2D")
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
@@ -32,7 +38,7 @@ func _input(event: InputEvent) -> void:
 		and get_multiplayer_authority() == multiplayer.get_unique_id()
 	):
 		var move: Vector2 = Vector2()
-		move.x = -event.relative.x
-		move.y = -event.relative.y
+		move.x = -event.relative.x / server_camera.zoom.x
+		move.y = -event.relative.y / server_camera.zoom.y
 
 		global_position += move
