@@ -3,9 +3,11 @@
 [ext_resource type="Script" path="res://Server Camera/ServerCameraController.gd" id="1_knfvd"]
 
 [node name="ServerCamera" type="Node2D"]
+position = Vector2(-8, 15000)
 script = ExtResource("1_knfvd")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.1, 0.1)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
