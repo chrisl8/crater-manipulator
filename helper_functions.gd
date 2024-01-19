@@ -91,5 +91,5 @@ func quit_gracefully() -> void:
 			Network.shutdown_server()
 			while Network.peers.size() > 0:
 				print_rich("[color=orange]...server still clearing clients...[/color]")
-				await get_tree().create_timer(1).timeout
+				await get_tree().create_timer(0.5).timeout
 		get_tree().quit()

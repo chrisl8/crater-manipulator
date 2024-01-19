@@ -193,7 +193,7 @@ func _connected_to_server() -> void:
 	while not Globals.initial_map_load_finished:
 		update_popup_message.emit("Loading map...")
 		Helpers.log_print("waiting for map data to finish loading...", "orange")
-		await get_tree().create_timer(1).timeout
+		await get_tree().create_timer(0.5).timeout
 
 	# Server does not spawn our player until we send a "join" message
 	send_data_to(1, Message.PLAYER_JOINED, saved_player_data)
