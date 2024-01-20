@@ -1,8 +1,8 @@
 extends Node
 
 signal reset
-signal close_popup
-signal update_popup_message
+signal close_pre_game_overlay
+signal update_pre_game_overlay_message
 
 enum Message { PLAYER_JOINED, PLAYER_TOKEN, SHUTDOWN_SERVER }
 
@@ -22,6 +22,9 @@ var websocket_multiplayer_peer: WebSocketMultiplayerPeer
 var uuid_util: Resource = preload("res://addons/uuid/uuid.gd")
 
 var ServerCamera: PackedScene = preload("res://Server Camera/Server Camera.tscn")
+
+## Radius of blocks around player spawn point required to consider it safe to spawn at
+var required_player_spawn_block_radius: int = 4
 
 
 func _process(_delta: float) -> void:
@@ -67,7 +70,7 @@ func _process(_delta: float) -> void:
 			load_level.call_deferred(map)
 		elif get_node_or_null("../Main/Map/game_scene"):
 			game_scene_initialized = true
-			close_popup.emit()
+			close_pre_game_overlay.emit()
 		return
 
 	# NOTE: As of 1/9/2024 Spawner does absolutely nothing, but maybe it will someday?
@@ -170,6 +173,11 @@ func player_save_data_filename() -> String:
 	return file_name
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func update_remote_pre_game_overlay_message(message: String) -> void:
+	update_pre_game_overlay_message.emit(message)
+
+
 func _connected_to_server() -> void:
 	Helpers.log_print("I connected to the server!", "cyan")
 	if Globals.shutdown_server:
@@ -183,9 +191,9 @@ func _connected_to_server() -> void:
 
 	# Wait for map data to load from server before initiating player spawn
 	while not Globals.initial_map_load_finished:
-		update_popup_message.emit("Loading map...")
+		update_pre_game_overlay_message.emit("Loading map...")
 		Helpers.log_print("waiting for map data to finish loading...", "orange")
-		await get_tree().create_timer(1).timeout
+		await get_tree().create_timer(0.5).timeout
 
 	# Server does not spawn our player until we send a "join" message
 	send_data_to(1, Message.PLAYER_JOINED, saved_player_data)
@@ -297,7 +305,7 @@ func data_received(data: String) -> void:
 
 	if parsed_message.type == Message.PLAYER_TOKEN:
 		Helpers.save_data_to_file(player_save_data_filename(), parsed_message.data)
-		close_popup.emit()
+		close_pre_game_overlay.emit()
 		return
 
 	printerr(
@@ -305,100 +313,203 @@ func data_received(data: String) -> void:
 	)
 
 
+## Check player's position and surrounding area to ensure it is clear for spawning
+func check_location_and_surroundings(at_position: Vector2) -> bool:
+	Globals.WorldMap.update_map_edges(60)
+	var cell_position_at_player_potential_position: Vector2i = (
+		Globals.WorldMap.get_cell_position_at_global_position(at_position)
+	)
+
+	var all_cell_positions_to_clear_for_player: Array[Vector2i] = []
+
+	var starting_point: Vector2i = Vector2i(
+		cell_position_at_player_potential_position.x - required_player_spawn_block_radius,
+		cell_position_at_player_potential_position.y - required_player_spawn_block_radius
+	)
+
+	# Find out what tiles exist at the player's intended position
+	for x_position: int in range(0, required_player_spawn_block_radius * 2):
+		for y_position: int in range(0, required_player_spawn_block_radius):
+			all_cell_positions_to_clear_for_player.append(
+				Vector2i(starting_point.x + x_position, starting_point.y + y_position)
+			)
+
+	var position_is_clear: bool = true
+
+	for cell_positions_to_clear_for_player: Vector2i in all_cell_positions_to_clear_for_player:
+		if (
+			Globals.WorldMap.get_cell_data_at_map_local_position(cell_positions_to_clear_for_player)
+			!= Vector2i(-1, -1)
+		):
+			position_is_clear = false
+
+	return position_is_clear
+
+
 func player_joined(id: int, data: String) -> void:
-	if Globals.is_server and id > 1:  # I'm not sure this check is necessary
-		var player_uuid: String = ""
-		if data != "":
-			# Validate token and data within
-			# NOTE: At this point an invalid token is merely wiped and rebuilt, as there is no "login",
-			# We are only preventing people from hacking into another player's data.
-			var json: JSON = JSON.new()
-			var error: int = json.parse(data)
-			if error != OK:
-				printerr(
-					"User data JSON Parse Error: ",
-					json.get_error_message(),
-					" in ",
-					data,
-					" at line ",
-					json.get_error_line()
-				)
+	var player_uuid: String = ""
+	if data != "":
+		# Validate token and data within
+		# NOTE: At this point an invalid token is merely wiped and rebuilt, as there is no "login",
+		# We are only preventing people from hacking into another player's data.
+		var json: JSON = JSON.new()
+		var error: int = json.parse(data)
+		if error != OK:
+			printerr(
+				"User data JSON Parse Error: ",
+				json.get_error_message(),
+				" in ",
+				data,
+				" at line ",
+				json.get_error_line()
+			)
+		else:
+			var player_data: Variant = json.data
+			if typeof(player_data) != TYPE_DICTIONARY or not player_data.has("jwt"):
+				printerr("Data error player data from ", id, ": ", player_data)
 			else:
-				var player_data: Variant = json.data
-				if typeof(player_data) != TYPE_DICTIONARY or not player_data.has("jwt"):
-					printerr("Data error player data from ", id, ": ", player_data)
+				var content: Dictionary = validate_and_decode_jwt(
+					Globals.server_config["jwt_secret"], player_data["jwt"]
+				)
+				if content.has("uuid") and Globals.player_save_data.has(content["uuid"]):
+					player_uuid = content["uuid"]
+					Helpers.log_print(str("Player ", id, " uuid is ", player_uuid), "cyan")
 				else:
-					var content: Dictionary = validate_and_decode_jwt(
-						Globals.server_config["jwt_secret"], player_data["jwt"]
+					printerr("----------------------------------------------------")
+					printerr("Player ", id, " joined with bad token content:")
+					printerr(content)
+					printerr("-----")
+					printerr(Globals.player_save_data)
+					printerr("----------------------------------------------------")
+	if player_uuid == "":
+		# If player has no valid UUID, they are new, so set them up with a unique UUID
+		# that we can use to store data against.
+		# Generate UUID for player
+		player_uuid = uuid_util.v4()
+		Globals.player_save_data[player_uuid] = {
+			"uuid": player_uuid,
+		}
+
+	# Save player's UUID to peer list so we can find it later
+	peers[id]["uuid"] = player_uuid
+
+	# Spawn a character/player for the client
+	var character: Node = player_character_template.instantiate()
+	character.player = id  # Set player id.
+
+	# Use saved player position or randomize it around the spawn area
+	# TODO: Reimplement this.
+	# if (
+	# 	Globals.player_save_data[player_uuid].has("position")
+	# 	and Globals.player_save_data[player_uuid]["position"].has("x")
+	# 	and Globals.player_save_data[player_uuid]["position"].has("y")
+	# 	and Globals.player_save_data[player_uuid]["position"].has("z")
+	# ):
+	# 	character.position = Vector3(
+	# 		Globals.player_save_data[player_uuid]["position"]["x"],
+	# 		Globals.player_save_data[player_uuid]["position"]["y"],
+	# 		Globals.player_save_data[player_uuid]["position"]["z"]
+	# 	)
+	# else:
+	# 	# Randomize character position.
+	# 	#var pos: Vector2 = Vector2.from_angle(randf() * 2 * PI)
+	# 	#const SPAWN_RANDOM: float = 2.0
+	# 	character.position = Vector2((randf() - 0.5) * 600.0, randf() * 100.0)
+
+	# TODO: Retrieve player's saved position, only using this random if that doesn't exist.
+	var potential_player_position: Vector2 = Vector2(0, 15600)
+
+	var reached_bottom_of_map: bool = false
+	var last_x_shift_direction: String = "positive"
+	var last_x_shift_count: int = 0
+
+	update_remote_pre_game_overlay_message.rpc_id(id, "Finding our place in the world...")
+	var clear_and_safe_position_found: bool = false
+	while not clear_and_safe_position_found:
+		var potential_player_position_in_map_coordinates: Vector2i = (
+			Globals.WorldMap.get_cell_position_at_global_position(potential_player_position)
+		)
+
+		if reached_bottom_of_map:
+			# We must shift left/right and try again
+			# This should provide a "back and forth" shifting left and right at greater and greater amounts
+			last_x_shift_count += 1
+			if (
+				last_x_shift_direction == "positive"
+				and potential_player_position_in_map_coordinates.x > Globals.map_edges.min.x
+			):
+				last_x_shift_direction = "negative"
+				potential_player_position_in_map_coordinates.x -= last_x_shift_count
+			else:
+				last_x_shift_direction = "positive"
+				potential_player_position_in_map_coordinates.x += last_x_shift_count
+
+		reached_bottom_of_map = false  # reset
+
+		if not check_location_and_surroundings(potential_player_position):
+			# If position is blocked, set the position to be the same X position but at the highest Y point possible + player's size
+			potential_player_position_in_map_coordinates.y = (
+				Globals.map_edges.min.y - required_player_spawn_block_radius
+			)
+
+		var next_position_down_cell_contents: Vector2i = Vector2i(-1, -1)
+		var descender_counter: int = 0
+		while next_position_down_cell_contents == Vector2i(-1, -1) and not reached_bottom_of_map:
+			descender_counter += 1
+			next_position_down_cell_contents = Globals.WorldMap.get_cell_data_at_map_local_position(
+				Vector2i(
+					potential_player_position_in_map_coordinates.x,
+					potential_player_position_in_map_coordinates.y + descender_counter
+				)
+			)
+			reached_bottom_of_map = (
+				potential_player_position_in_map_coordinates.y + descender_counter
+				> Globals.map_edges.max.y
+			)
+
+		if not reached_bottom_of_map:
+			potential_player_position = Globals.WorldMap.get_global_position_at_map_local_position(
+				Vector2i(
+					potential_player_position_in_map_coordinates.x,
+					(
+						potential_player_position_in_map_coordinates.y
+						+ descender_counter
+						- required_player_spawn_block_radius
 					)
-					if content.has("uuid") and Globals.player_save_data.has(content["uuid"]):
-						player_uuid = content["uuid"]
-						Helpers.log_print(str("Player ", id, " uuid is ", player_uuid), "cyan")
-					else:
-						printerr("----------------------------------------------------")
-						printerr("Player ", id, " joined with bad token content:")
-						printerr(content)
-						printerr("-----")
-						printerr(Globals.player_save_data)
-						printerr("----------------------------------------------------")
-		if player_uuid == "":
-			# If player has no valid UUID, they are new, so set them up with a unique UUID
-			# that we can use to store data against.
-			# Generate UUID for player
-			player_uuid = uuid_util.v4()
-			Globals.player_save_data[player_uuid] = {
-				"uuid": player_uuid,
-			}
+				)
+			)
+			clear_and_safe_position_found = check_location_and_surroundings(
+				potential_player_position
+			)
+			reached_bottom_of_map = true  # If we loop, always force a left/right shift at the next loop.
+		# Otherwise, do not update the potential_player_position and start over
 
-		# Save player's UUID to peer list so we can find it later
-		peers[id]["uuid"] = player_uuid
+		# TODO: There is nothing to stop this from looping forever in a worse case scenario
 
-		# Spawn a character/player for the client
-		var character: Node = player_character_template.instantiate()
-		character.player = id  # Set player id.
+	# TODO: Use saved player rotation if it exists
+	#if Globals.player_save_data[player_uuid].has("rotation"):
+	# TODO: Reimplement this.
+	#Helpers.log_print(str("Rotation: ", Globals.player_save_data[player_uuid]["rotation"]))
+	# character.rotation = Vector3(
+	# 	Globals.player_save_data[player_uuid]["rotation"]["x"],
+	# 	Globals.player_save_data[player_uuid]["rotation"]["y"],
+	# 	Globals.player_save_data[player_uuid]["rotation"]["z"]
+	# )
 
-		# Use saved player position or randomize it around the spawn area
-		# TODO: Reimplement this.
-		# if (
-		# 	Globals.player_save_data[player_uuid].has("position")
-		# 	and Globals.player_save_data[player_uuid]["position"].has("x")
-		# 	and Globals.player_save_data[player_uuid]["position"].has("y")
-		# 	and Globals.player_save_data[player_uuid]["position"].has("z")
-		# ):
-		# 	character.position = Vector3(
-		# 		Globals.player_save_data[player_uuid]["position"]["x"],
-		# 		Globals.player_save_data[player_uuid]["position"]["y"],
-		# 		Globals.player_save_data[player_uuid]["position"]["z"]
-		# 	)
-		# else:
-		# 	# Randomize character position.
-		# 	#var pos: Vector2 = Vector2.from_angle(randf() * 2 * PI)
-		# 	#const SPAWN_RANDOM: float = 2.0
-		# 	character.position = Vector2((randf() - 0.5) * 600.0, randf() * 100.0)
+	character.name = str(id)
+	get_node("../Main/Players").add_child(character, true)
+	character.set_multiplayer_authority(character.player)
+	character.set_player_position.rpc_id(id, potential_player_position)
+	Globals.Players[id] = character
 
-		character.position = Vector2((randf() - 0.5) * 2.0 * 400.0, 10 + randf() * 1000.0)
+	# Always update our saved data now in case this is a new player
+	Helpers.save_server_player_save_data_to_file()
 
-		# Use saved player rotation if it exists
-		#if Globals.player_save_data[player_uuid].has("rotation"):
-		# TODO: Reimplement this.
-		#Helpers.log_print(str("Rotation: ", Globals.player_save_data[player_uuid]["rotation"]))
-		# character.rotation = Vector3(
-		# 	Globals.player_save_data[player_uuid]["rotation"]["x"],
-		# 	Globals.player_save_data[player_uuid]["rotation"]["y"],
-		# 	Globals.player_save_data[player_uuid]["rotation"]["z"]
-		# )
-		character.name = str(id)
-		get_node("../Main/Players").add_child(character, true)
-		character.set_multiplayer_authority(character.player)
-		Globals.Players[id] = character
+	# Always send player an updated token, so that their expiration date is updated
+	var new_player_jwt: String = generate_jwt(Globals.server_config["jwt_secret"], player_uuid)
+	var data_for_player: Dictionary = {"jwt": new_player_jwt}
+	send_data_to(id, Message.PLAYER_TOKEN, JSON.stringify(data_for_player))
 
-		# Always update our saved data now in case this is a new player
-		Helpers.save_server_player_save_data_to_file()
-
-		# Always send player an updated token, so that their expiration date is updated
-		var new_player_jwt: String = generate_jwt(Globals.server_config["jwt_secret"], player_uuid)
-		var data_for_player: Dictionary = {"jwt": new_player_jwt}
-		send_data_to(id, Message.PLAYER_TOKEN, JSON.stringify(data_for_player))
-
-		# Clean up initial map data sending data in MapController
-		Globals.WorldMap.server_side_per_player_initial_map_data.erase(id)
+	# Clean up initial map data sending data in MapController to avoid memory leak
+	# and possible corruption if another player joins later and gets the same multiplayer_id
+	Globals.WorldMap.server_side_per_player_initial_map_data.erase(id)

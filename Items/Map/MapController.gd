@@ -1,5 +1,9 @@
 extends TileMap
 
+const ChunkSize: int = 4000
+const SEND_FREQUENCY: float = 0.1
+const re_request_initial_map_data_timeout: float = 2.0
+
 var MapGenerated: bool = false
 
 #No longer using arrays, read/write requires an indexing system which negates the performance benefit of using array index overlap as link. Reading Positions and IDs separately may be faster if staggered separately but can be added later and merged into local dictionaries.
@@ -11,17 +15,16 @@ var CurrentData: Dictionary = {}
 #Local modifications buffered until next sync cycle
 var ChangedData: Dictionary = {}
 
-#NOTE : Godot passes all dictionaries by reference, remember that.
+# CurrentData is the "best" reality for clients to work from and
+# SyncedData is the "best" data for the server to work from
 
-const ChunkSize: int = 4000
+#NOTE : Godot passes all dictionaries by reference, remember that.
 
 var IsServer: bool = false
 
 var ServerDataChanged: bool = false
 
 var current_cycle_time: float = 0.0
-const send_frequency: float = 0.1
-const re_request_initial_map_data_timeout: float = 2.0
 var re_request_initial_map_data_timer: float = 0.0
 
 var local_player_initial_map_data_current_chunk_id: int = 0
@@ -34,6 +37,8 @@ var StoredPlayerInventoryDrops: Dictionary = {}
 var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 var server_side_per_player_initial_map_data: Dictionary = {}
+
+@export var TileModificationParticlesController: CPUParticles2D
 
 
 func _ready() -> void:
@@ -155,6 +160,7 @@ func GenerateMap() -> void:
 
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
+	update_map_edges()
 	MapGenerated = true
 
 	'''
@@ -163,6 +169,37 @@ func GenerateMap() -> void:
 	TileModificationParticlesController.DestroyCells([Vector2i(0, 0),Vector2i(1, 0),Vector2i(0, 1),Vector2i(1, 1),Vector2i(-1, 1)],
 	[CurrentData[Vector2i(0, 0)],CurrentData[Vector2i(1, 0)],CurrentData[Vector2i(0, 1)],CurrentData[Vector2i(1, 1)],CurrentData[Vector2i(-1, 1)]])
 	'''
+
+
+## Update the Global map_edges variable using latest data
+## If an integer is provided, it will only be updated if the last update was more than the given number of seconds ago
+func update_map_edges(time_diff_in_seconds: int = 0) -> void:
+	if (
+		not time_diff_in_seconds
+		or Time.get_ticks_msec() - Globals.map_edges.time_stamp >= (time_diff_in_seconds * 1000)
+	):
+		Helpers.log_print("Updating map_edges")
+		Globals.map_edges.time_stamp = Time.get_ticks_msec()
+		# Use the correct data set based on client vs. server
+		# CurrentData is the "best" reality for clients to work from and
+		# SyncedData is the "best" data for the server to work from
+		var map_data_to_use: Dictionary
+		if Globals.is_server:
+			map_data_to_use = SyncedData
+		else:
+			map_data_to_use = CurrentData
+
+		# Save initial map "size" before flagging it as "ready"
+		# TODO: Timestamp this and turn it into a function that can be called again for updating
+		for map_coordinate: Vector2i in map_data_to_use:
+			if map_coordinate.x < Globals.map_edges.min.x:
+				Globals.map_edges.min.x = map_coordinate.x
+			if map_coordinate.x > Globals.map_edges.max.x:
+				Globals.map_edges.max.x = map_coordinate.x
+			if map_coordinate.y < Globals.map_edges.min.x:
+				Globals.map_edges.min.x = map_coordinate.y
+			if map_coordinate.y > Globals.map_edges.max.y:
+				Globals.map_edges.max.y = map_coordinate.y
 
 
 ## Gets a random valid stone tile ID from the atlas
@@ -176,7 +213,7 @@ func GetRandomOreTile() -> Vector2i:
 
 func _process(delta: float) -> void:
 	current_cycle_time += delta
-	if current_cycle_time > send_frequency:
+	if current_cycle_time > SEND_FREQUENCY:
 		if Globals.is_server:
 			ServerSendBufferedChanges()
 			if MapGenerated:
@@ -269,7 +306,6 @@ func request_initial_map_data() -> void:
 
 
 ## Processes chunked initial states for each client that has requested a world state sync
-## Currently sends out chunks to every client in parallel, but should probably send out data to one client at a time to avoid many simultaneous RPCs if multiple clients join at the same time
 func chunk_and_send_initial_map_data_to_players() -> void:
 	if server_side_per_player_initial_map_data.size():
 		for player_id: int in server_side_per_player_initial_map_data:
@@ -456,23 +492,35 @@ func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
 
 
 ## Return the map tile position at a given world position
-func get_cell_position_at_position(at_position: Vector2) -> Vector2i:
+func get_cell_position_at_global_position(at_position: Vector2) -> Vector2i:
 	return local_to_map(to_local(at_position))
 
 
 ## Return the tile data at a given map tile position
-func get_cell_data_at_local_position(at_position: Vector2i) -> Vector2i:
-	if CurrentData.has(at_position):
-		return CurrentData[at_position]
+func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
+	# Use the correct data set based on client vs. server
+	# CurrentData is the "best" reality for clients to work from and
+	# SyncedData is the "best" data for the server to work from
+	var map_data_to_use: Dictionary
+	if Globals.is_server:
+		map_data_to_use = SyncedData
 	else:
-		# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
-		return Vector2i(-1, -1)
+		map_data_to_use = CurrentData
+	if map_data_to_use.has(at_position):
+		return map_data_to_use[at_position]
+	# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
+	return Vector2i(-1, -1)
 
 
 ## Return the tile data at a given world position
-func get_cell_data_at_position(at_position: Vector2) -> Vector2i:
-	var local_at_position: Vector2i = get_cell_position_at_position(at_position)
-	return get_cell_data_at_local_position(local_at_position)
+func get_cell_data_at_global_position(at_position: Vector2) -> Vector2i:
+	var local_at_position: Vector2i = get_cell_position_at_global_position(at_position)
+	return get_cell_data_at_map_local_position(local_at_position)
+
+
+## Return the global position of a map cell given its map local position
+func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2:
+	return to_global(map_to_local(at_position))
 
 
 ## Place air at a position : TEST TEMP
@@ -539,7 +587,8 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 		return
 	for Key: Vector2i in Data.keys():
 		if (
-			(CurrentData[Key] != Data[Key])
+			CurrentData.has(Key)
+			and CurrentData[Key] != Data[Key]
 			and (Key in CurrentData.keys())
 			and (CurrentData[Key] != Vector2i(-1, -1))
 		):
@@ -552,6 +601,3 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 ## Updates a cells tile from current data
 func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
-
-
-@export var TileModificationParticlesController: CPUParticles2D
