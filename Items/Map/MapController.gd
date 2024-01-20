@@ -545,29 +545,27 @@ func SetCellData(Position: Vector2i, ID: Vector2i) -> void:
 ## Still need to add chunking to this process right here
 func PushChangedData() -> void:
 	if len(ChangedData.keys()) > 0:
-		RPCSendChangedData.rpc(ChangedData)
+		transfer_changed_map_data_to_server.rpc_id(1, ChangedData)
 		ChangedData.clear()
 
 
 ## Sends changes from the client to the server to be processed
 @rpc("any_peer", "call_remote", "reliable")
-func RPCSendChangedData(Data: Dictionary) -> void:
-	if IsServer:
-		var player_id: int = multiplayer.get_remote_sender_id()
-		for Key: Vector2i in Data.keys():
-			if not SyncedData.has(Key) or SyncedData[Key] == Data[Key][0]:
-				ServerBufferedChanges[Key] = Data[Key][1]
-				SyncedData[Key] = Data[Key][1]
+func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
+	var player_id: int = multiplayer.get_remote_sender_id()
+	for key: Vector2i in map_data.keys():
+		if not SyncedData.has(key) or SyncedData[key] == map_data[key][0]:
+			ServerBufferedChanges[key] = map_data[key][1]
+			SyncedData[key] = map_data[key][1]
 
-				if Data[Key][0].y > -1:
-					if player_id not in StoredPlayerInventoryDrops.keys():
-						StoredPlayerInventoryDrops[player_id] = {}
-					if Data[Key][0].y in StoredPlayerInventoryDrops[player_id].keys():
-						StoredPlayerInventoryDrops[player_id][Data[Key][0].y] += 1
-					else:
-						StoredPlayerInventoryDrops[player_id][Data[Key][0].y] = 1
-
-		ServerDataChanged = true
+			if map_data[key][0].y > -1:
+				if player_id not in StoredPlayerInventoryDrops.keys():
+					StoredPlayerInventoryDrops[player_id] = {}
+				if map_data[key][0].y in StoredPlayerInventoryDrops[player_id].keys():
+					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] += 1
+				else:
+					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] = 1
+	ServerDataChanged = true
 
 
 ## Sends changes from the server to clients
