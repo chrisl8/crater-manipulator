@@ -8,10 +8,9 @@ func set_msg(
 	$VBoxContainer/Detail.add_theme_color_override("font_color", _color)
 
 
-func is_button_visible(button_is_visible: bool) -> void:
-	if not button_is_visible:
-		$VBoxContainer/Close.hide()
-
-
-func _on_close_pressed() -> void:
-	queue_free()
+func update_progress_bar(percentage: int = -1) -> void:
+	if percentage >= 0:
+		$VBoxContainer/ProgressBar.value = percentage
+		$VBoxContainer/ProgressBar.visible = true
+	else:
+		$VBoxContainer/ProgressBar.visible = false

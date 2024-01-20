@@ -375,6 +375,28 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 
 				server_side_per_player_initial_map_data[player_id].resend = false
 
+				var percent_complete: int = int(
+					(
+						float(
+							(
+								(
+									server_side_per_player_initial_map_data[player_id]
+									. last_sent_map_data_index
+								)
+								+ 1
+							)
+						)
+						/ float(
+							(
+								server_side_per_player_initial_map_data[player_id]
+								. synced_map_data_snapshot
+								. size()
+							)
+						)
+						* 100
+					)
+				)
+
 				send_initial_map_data_chunk_to_client.rpc_id(
 					player_id,
 					server_side_per_player_initial_map_data[player_id].last_sent_chunk_id,
@@ -390,8 +412,10 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 						. data_array
 						. compress()
 					),
-					server_side_per_player_initial_map_data[player_id].resend
+					server_side_per_player_initial_map_data[player_id].resend,
+					percent_complete
 				)
+
 				server_side_per_player_initial_map_data[player_id].resend = false
 
 
@@ -426,7 +450,11 @@ func acknowledge_received_chunk(chunk_id: int) -> void:
 ## Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
 func send_initial_map_data_chunk_to_client(
-	chunk_id: int, data_size: int, compressed_data: PackedByteArray, resend: bool
+	chunk_id: int,
+	data_size: int,
+	compressed_data: PackedByteArray,
+	resend: bool,
+	percent_complete: int
 ) -> void:
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
 	if not resend:
@@ -453,6 +481,7 @@ func send_initial_map_data_chunk_to_client(
 		CurrentData[map_position] = id
 	SetAllCellData(CurrentData, 0)
 	acknowledge_received_chunk.rpc_id(1, local_player_initial_map_data_current_chunk_id)
+	Network.update_pre_game_overlay.emit("Loading map", percent_complete)
 
 
 #Architecture plan:

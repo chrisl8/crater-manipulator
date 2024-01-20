@@ -281,3 +281,4 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func update_pre_game_overlay(message: String, percentage: int = -1) -> void:
 	pre_game_overlay.set_msg(message)
+	pre_game_overlay.update_progress_bar(percentage)
