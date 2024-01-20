@@ -99,7 +99,7 @@ func parse_server_config_file_data(server_config_file_data: String) -> Dictionar
 
 
 func _ready() -> void:
-	force_open_pre_game_overlay()
+	display_pre_game_overlay()
 	pre_game_overlay.set_msg("Booting Universe...")
 
 	# Disable auto-quit so that we can catch it ourselves elsewhere
@@ -114,8 +114,8 @@ func _ready() -> void:
 		Globals.url = production_server_url
 
 	Network.reset.connect(connection_reset)
-	Network.close_pre_game_overlay.connect(force_close_pre_game_overlay)
-	Network.update_pre_game_overlay_message.connect(update_pre_game_overlay_message)
+	Network.close_pre_game_overlay.connect(hide_pre_game_overlay)
+	Network.update_pre_game_overlay.connect(update_pre_game_overlay)
 	if (
 		!Globals.force_client
 		and OS.is_debug_build()
@@ -185,7 +185,7 @@ func _ready() -> void:
 
 
 func start_connection() -> void:
-	force_open_pre_game_overlay()
+	display_pre_game_overlay()
 	if OS.is_debug_build() and Globals.local_debug_instance_number > 0 and not Globals.is_server:
 		var debug_delay: int = Globals.local_debug_instance_number
 		while debug_delay > 0:
@@ -197,7 +197,7 @@ func start_connection() -> void:
 
 
 func connection_reset(delay: int) -> void:
-	force_open_pre_game_overlay()
+	display_pre_game_overlay()
 	pre_game_overlay.set_msg(
 		Globals.connection_failed_message,
 		Color(0.79215687513351, 0.26274511218071, 0.56470590829849)
@@ -241,13 +241,13 @@ func _input(event: InputEvent) -> void:
 		Helpers.quit_gracefully()
 
 
-func force_open_pre_game_overlay() -> void:
+func display_pre_game_overlay() -> void:
 	if not pre_game_overlay:
 		pre_game_overlay = pre_game_overlay_scene.instantiate()
 		add_child(pre_game_overlay)
 
 
-func force_close_pre_game_overlay() -> void:
+func hide_pre_game_overlay() -> void:
 	if pre_game_overlay and is_instance_valid(pre_game_overlay):
 		pre_game_overlay.queue_free()
 		pre_game_overlay = null
@@ -279,5 +279,5 @@ func _unhandled_input(event: InputEvent) -> void:
 			toast.display()
 
 
-func update_pre_game_overlay_message(message: String) -> void:
+func update_pre_game_overlay(message: String, percentage: int = -1) -> void:
 	pre_game_overlay.set_msg(message)

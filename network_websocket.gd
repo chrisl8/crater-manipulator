@@ -2,7 +2,7 @@ extends Node
 
 signal reset
 signal close_pre_game_overlay
-signal update_pre_game_overlay_message
+signal update_pre_game_overlay
 
 enum Message { PLAYER_JOINED, PLAYER_TOKEN, SHUTDOWN_SERVER }
 
@@ -65,7 +65,6 @@ func _process(_delta: float) -> void:
 	# Initialize the Map if it isn't yet
 	if not game_scene_initialized:
 		if not game_scene_initialize_in_progress:
-			Helpers.log_print("Loading map.", "cyan")
 			game_scene_initialize_in_progress = true
 			load_level.call_deferred(map)
 		elif get_node_or_null("../Main/Map/game_scene"):
@@ -175,7 +174,7 @@ func player_save_data_filename() -> String:
 
 @rpc("any_peer", "call_remote", "reliable")
 func update_remote_pre_game_overlay_message(message: String) -> void:
-	update_pre_game_overlay_message.emit(message)
+	update_pre_game_overlay.emit(message)
 
 
 func _connected_to_server() -> void:
@@ -191,8 +190,6 @@ func _connected_to_server() -> void:
 
 	# Wait for map data to load from server before initiating player spawn
 	while not Globals.initial_map_load_finished:
-		update_pre_game_overlay_message.emit("Loading map...")
-		Helpers.log_print("waiting for map data to finish loading...", "orange")
 		await get_tree().create_timer(0.5).timeout
 
 	# Server does not spawn our player until we send a "join" message

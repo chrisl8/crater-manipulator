@@ -1,8 +1,8 @@
 extends TileMap
 
-const ChunkSize: int = 4000
+const CHUNK_SIZE: int = 4000
 const SEND_FREQUENCY: float = 0.1
-const re_request_initial_map_data_timeout: float = 2.0
+const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
 
 var MapGenerated: bool = false
 
@@ -19,8 +19,6 @@ var ChangedData: Dictionary = {}
 # SyncedData is the "best" data for the server to work from
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
-
-var IsServer: bool = false
 
 var ServerDataChanged: bool = false
 
@@ -48,9 +46,7 @@ func _ready() -> void:
 	# https://github.com/godotengine/godot/issues/82718
 	multiplayer.allow_object_decoding = true
 
-	IsServer = Globals.is_server
-
-	if IsServer:
+	if Globals.is_server:
 		GenerateMap()
 		Globals.initial_map_load_finished = true
 	else:
@@ -225,7 +221,7 @@ func _process(delta: float) -> void:
 			PushChangedData()
 			if not Globals.initial_map_load_finished:
 				re_request_initial_map_data_timer += delta
-				if re_request_initial_map_data_timer > re_request_initial_map_data_timeout:
+				if re_request_initial_map_data_timer > RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT:
 					re_request_initial_map_data_timer = 0.0  # Reset timer
 					printerr("Timeout waiting for map data!")
 					# Acknowledge the last packet again. If they lost the ACK, this will fix that,
@@ -235,7 +231,7 @@ func _process(delta: float) -> void:
 					)
 		current_cycle_time = 0.0
 
-	if IsServer and ServerDataChanged:
+	if Globals.is_server and ServerDataChanged:
 		ServerDataChanged = false
 		SetAllCellData(SyncedData, 0)
 
@@ -243,7 +239,7 @@ func _process(delta: float) -> void:
 ## Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
 func ServerSendBufferedChanges() -> void:
 	if len(ServerBufferedChanges.keys()) > 0:
-		var Count: int = ChunkSize
+		var Count: int = CHUNK_SIZE
 		var ChunkedData: Dictionary = {}
 		while Count > 0 and len(ServerBufferedChanges.keys()) > 0:
 			ChunkedData[ServerBufferedChanges.keys()[0]] = ServerBufferedChanges[
@@ -581,7 +577,7 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 		#Store changes and process after the maps has been fully loaded
 		BufferedChangesReceivedFromServer.append(Data)
 		return
-	if IsServer:
+	if Globals.is_server:
 		return
 	for Key: Vector2i in Data.keys():
 		if (
