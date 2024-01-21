@@ -38,9 +38,6 @@ var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 var server_side_per_player_initial_map_data: Dictionary = {}
 
-@export var TileModificationParticlesController: CPUParticles2D
-
-
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
 	# "Cannot convert argument 1 from Object to Object" on the receiving end
@@ -601,3 +598,6 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 ## Updates a cells tile from current data
 func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
+
+
+@export var TileModificationParticlesController: Node2D
