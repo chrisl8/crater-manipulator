@@ -30,8 +30,8 @@ var InventoryUpdated: bool = false
 func _process(_delta: float) -> void:
 	if InventoryUpdated:
 		StoneBar.scale.y = float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"])
-		print(float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"]))
-		print(StoneBar.scale.y)
+		#print(float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"]))
+		#print(StoneBar.scale.y)
 		InventoryUpdated = false
 
 

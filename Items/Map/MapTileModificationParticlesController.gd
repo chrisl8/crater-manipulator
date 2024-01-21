@@ -12,23 +12,21 @@ var AllocatedNodes = 0
 var InUseNodes = 0
 
 @export var Map: TileMap
-
-var CurrentTime: float = 0.0
+@export var ScaleCurve : Curve
 
 func _process(delta):
 	if(InUseNodes > 0):
 		var Count = 0
 		while(Count < len(ParticleNodes)):
-			ParticleNodeTime[Count] = clamp(ParticleNodeTime[Count]-delta,-1.0,100.0)
 			if(NodesTaken[Count]):
+				ParticleNodeTime[Count] -= delta
 				NodesTaken[Count] = ParticleNodeTime[Count]>0
 				if(!NodesTaken[Count]):
 					InUseNodes-=1
 			Count+=1
 
-
-var ParticleLifetime: float = 1.0
-var ParticlesPerTile: int = 16 * 16
+var ParticleLifetime: float = 0.5
+var ParticlesPerTile: int = 32
 
 
 func DestroyCellLocal(Position: Vector2i, ID: Vector2i):
@@ -55,9 +53,10 @@ func DestroyCellLocal(Position: Vector2i, ID: Vector2i):
 				Position.y * 16.0 + SamplePosition.y + 0.5
 			)
 		)
-		Colors.append(SampleColor)
 
-	return([PointsSampled,Colors])
+		Colors.append(SampleColor)
+	
+	return([Points,Colors])
 
 func DestroyCells(Positions, IDs):
 	var Points = []
@@ -81,19 +80,37 @@ func DestroyCell(Position, ID):
 	
 
 func AddParticalNodeFromProcessing(Points, Colors, Ammount):
-	#if(AllocatedNodes < InUseNodes):
-	#	InUseNodes+=1
-	#else:
+	var TargetParticleNode : CPUParticles2D
+	if(InUseNodes < AllocatedNodes):
+		var Count = AllocatedNodes-1
+		while(Count >= 0):
+			if(!NodesTaken[Count]):
+				TargetParticleNode = ParticleNodes[Count]
+				NodesTaken[Count] = true
+				ParticleNodeTime[Count] = ParticleLifetime
+				break
+			Count-=1
+	else:
+		TargetParticleNode = CPUParticles2D.new()
+		add_child(TargetParticleNode)
+		ParticleNodes.append(TargetParticleNode)
+		ParticleNodeTime.append(ParticleLifetime)
+		NodesTaken.append(true)
+		AllocatedNodes+=1
 
-	var NewParticles = CPUParticles2D.new()
-	add_child(NewParticles)
-	NewParticles.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINTS
-	NewParticles.emission_points = Points
-	NewParticles.emission_colors = Colors
-	NewParticles.amount = Ammount
-	NewParticles.one_shot = true
-	NewParticles.restart()
+	TargetParticleNode.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINTS
+	TargetParticleNode.emission_points = Points
+	TargetParticleNode.emission_colors = Colors
+	TargetParticleNode.amount = Ammount
+	TargetParticleNode.one_shot = true
+	TargetParticleNode.emitting = true
+	TargetParticleNode.explosiveness = 1
+	TargetParticleNode.gravity = Vector2(0,980.0/2.0)
+	TargetParticleNode.direction = Vector2(0,1)
+	TargetParticleNode.spread = 45.0
+	TargetParticleNode.initial_velocity_min = 0.1
+	TargetParticleNode.initial_velocity_max = 20.0
+	TargetParticleNode.scale_amount_curve = ScaleCurve
+	#TargetParticleNode.restart()
 
-	ParticleNodes.append(NewParticles)
-	ParticleNodeTime.append(ParticleLifetime)
-	NodesTaken.append(true)
+	InUseNodes+=1

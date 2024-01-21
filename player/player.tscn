@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/Player Atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/PlayerInventoryManager.gd" id="5_xpvfg"]
 [ext_resource type="Script" path="res://player/skeleton_fixer.gd" id="5_yow5u"]
-[ext_resource type="Script" uid="uid://etrtr0uyvixi" path="res://player/save_map_button.gd" id="6_a1bjq"]
+[ext_resource type="Script" path="res://player/save_map_button.gd" id="6_a1bjq"]
 
 [sub_resource type="GDScript" id="1"]
 
