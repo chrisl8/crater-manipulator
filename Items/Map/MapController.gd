@@ -47,7 +47,8 @@ func _ready() -> void:
 	multiplayer.allow_object_decoding = true
 
 	if Globals.is_server:
-		GenerateMap()
+		if not load_saved_map():
+			generate_map()
 		Globals.initial_map_load_finished = true
 	else:
 		request_initial_map_data.rpc_id(1)
@@ -59,8 +60,36 @@ func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterSca
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
 
+func load_saved_map() -> bool:
+	var success: bool = false
+	var saved_map_data: String = Helpers.load_data_from_file("user://saved_map.dat")
+	if saved_map_data:
+		var json: JSON = JSON.new()
+		var error: int = json.parse(saved_map_data)
+		if error != OK:
+			printerr(
+				"JSON Parse Error: ",
+				json.get_error_message(),
+				" in saved_map.dat at line ",
+				json.get_error_line()
+			)
+			get_tree().quit()  # Quits the game due to bad server config data
+
+		var loaded_map_data: Dictionary = json.data
+		for key: String in loaded_map_data:
+			CurrentData[str_to_var("Vector2i" + key)] = str_to_var(
+				"Vector2i" + loaded_map_data[key]
+			)
+		SetAllCellData(CurrentData, 0)
+		SyncedData = CurrentData
+		update_map_edges()
+		MapGenerated = true
+		success = true
+	return success
+
+
 ## Procedural world generation
-func GenerateMap() -> void:
+func generate_map() -> void:
 	# Desmos Formula:
 	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
 	#x>r
@@ -622,3 +651,9 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 ## Updates a cells tile from current data
 func UpdateCellFromCurrent(Position: Vector2i) -> void:
 	set_cell(0, Position, 0, CurrentData[Position])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func save_map() -> void:
+	Helpers.log_print("Save Map!")
+	Helpers.save_data_to_file("user://saved_map.dat", JSON.stringify(SyncedData))

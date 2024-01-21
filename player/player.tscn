@@ -1,10 +1,11 @@
-[gd_scene load_steps=16 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=17 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/PlayerController.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/PlayerInteractionController.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/Player Atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/PlayerInventoryManager.gd" id="5_xpvfg"]
 [ext_resource type="Script" path="res://player/skeleton_fixer.gd" id="5_yow5u"]
+[ext_resource type="Script" uid="uid://etrtr0uyvixi" path="res://player/save_map_button.gd" id="6_a1bjq"]
 
 [sub_resource type="GDScript" id="1"]
 
@@ -293,3 +294,10 @@ layout_mode = 0
 offset_left = -5.0
 offset_top = -10.0
 offset_right = 5.0
+
+[node name="Save Map" type="Button" parent="CanvasLayer/Control"]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "Save Map"
+script = ExtResource("6_a1bjq")
