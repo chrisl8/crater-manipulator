@@ -394,27 +394,18 @@ func player_joined(id: int, data: String) -> void:
 	var character: Node = player_character_template.instantiate()
 	character.player = id  # Set player id.
 
-	# Use saved player position or randomize it around the spawn area
-	# TODO: Reimplement this.
-	# if (
-	# 	Globals.player_save_data[player_uuid].has("position")
-	# 	and Globals.player_save_data[player_uuid]["position"].has("x")
-	# 	and Globals.player_save_data[player_uuid]["position"].has("y")
-	# 	and Globals.player_save_data[player_uuid]["position"].has("z")
-	# ):
-	# 	character.position = Vector3(
-	# 		Globals.player_save_data[player_uuid]["position"]["x"],
-	# 		Globals.player_save_data[player_uuid]["position"]["y"],
-	# 		Globals.player_save_data[player_uuid]["position"]["z"]
-	# 	)
-	# else:
-	# 	# Randomize character position.
-	# 	#var pos: Vector2 = Vector2.from_angle(randf() * 2 * PI)
-	# 	#const SPAWN_RANDOM: float = 2.0
-	# 	character.position = Vector2((randf() - 0.5) * 600.0, randf() * 100.0)
+	var potential_player_position: Vector2 = Vector2(0, 0)
 
-	# TODO: Retrieve player's saved position, only using this random if that doesn't exist.
-	var potential_player_position: Vector2 = Vector2(0, 15600)
+	# Use saved player position if it exists
+	if (
+		Globals.player_save_data[player_uuid].has("position")
+		and Globals.player_save_data[player_uuid]["position"].has("x")
+		and Globals.player_save_data[player_uuid]["position"].has("y")
+	):
+		potential_player_position = Vector2(
+			Globals.player_save_data[player_uuid]["position"]["x"],
+			Globals.player_save_data[player_uuid]["position"]["y"],
+		)
 
 	var reached_bottom_of_map: bool = false
 	var last_x_shift_direction: String = "positive"
@@ -485,7 +476,7 @@ func player_joined(id: int, data: String) -> void:
 
 	# TODO: Use saved player rotation if it exists
 	#if Globals.player_save_data[player_uuid].has("rotation"):
-	# TODO: Reimplement this.
+	# TODO: Reimplement this for a 2D character.
 	#Helpers.log_print(str("Rotation: ", Globals.player_save_data[player_uuid]["rotation"]))
 	# character.rotation = Vector3(
 	# 	Globals.player_save_data[player_uuid]["rotation"]["x"],
