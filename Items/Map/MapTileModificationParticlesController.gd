@@ -5,35 +5,26 @@ const Height: int = 1000
 var LocalImage: Image
 
 var ParticleNodes = []
+var ParticleNodeTime = []
+var NodesTaken = []
+
 var AllocatedNodes = 0
 var InUseNodes = 0
 
 @export var Map: TileMap
 
-var SpawnedParticleNodes = []
+var CurrentTime: float = 0.0
 
 func _process(delta):
-	if(len(Times) > 0):
-		for Emitter in EmissionFlags:
-			Emitter.emitting = false
-		EmissionFlags.clear()
-		Times[0]-=delta
-		if(Times[0] <= 0):
-			if(len(Times) > 1):
-				Times[1]+=Times[0]
-			Times.remove_at(0)
-			Points = Points.slice(0,len(Points)-Blocks[0])
-			Colors = Colors.slice(0,len(Points)-Blocks[0])
-			ParticleCount-=Blocks[0]*ParticlesPerTile
-
-			while(Blocks[0] > 0):
-				Blocks[0]-=1
-				SpawnedParticleNodes[0].queue_free()
-
-			SpawnedParticleNodes = SpawnedParticleNodes.slice(0,len(Points)-Blocks[0])
-
-			Blocks.remove_at(0)
-	pass
+	if(InUseNodes > 0):
+		var Count = 0
+		while(Count < len(ParticleNodes)):
+			ParticleNodeTime[Count] = clamp(ParticleNodeTime[Count]-delta,-1.0,100.0)
+			if(NodesTaken[Count]):
+				NodesTaken[Count] = ParticleNodeTime[Count]>0
+				if(!NodesTaken[Count]):
+					InUseNodes-=1
+			Count+=1
 
 
 var ParticleLifetime: float = 1.0
@@ -103,4 +94,6 @@ func AddParticalNodeFromProcessing(Points, Colors, Ammount):
 	NewParticles.one_shot = true
 	NewParticles.restart()
 
-	SpawnedParticleNodes.append(NewParticles)
+	ParticleNodes.append(NewParticles)
+	ParticleNodeTime.append(ParticleLifetime)
+	NodesTaken.append(true)
