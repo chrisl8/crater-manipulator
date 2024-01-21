@@ -23,9 +23,6 @@ var uuid_util: Resource = preload("res://addons/uuid/uuid.gd")
 
 var ServerCamera: PackedScene = preload("res://Server Camera/Server Camera.tscn")
 
-## Radius of blocks around player spawn point required to consider it safe to spawn at
-var required_player_spawn_block_radius: int = 4
-
 
 func _process(_delta: float) -> void:
 	if not ready_to_connect:
@@ -320,22 +317,22 @@ func check_location_and_surroundings(at_position: Vector2) -> bool:
 	var all_cell_positions_to_clear_for_player: Array[Vector2i] = []
 
 	var starting_point: Vector2i = Vector2i(
-		cell_position_at_player_potential_position.x - required_player_spawn_block_radius,
-		cell_position_at_player_potential_position.y - required_player_spawn_block_radius
+		cell_position_at_player_potential_position.x - 1,
+		cell_position_at_player_potential_position.y - 3
 	)
 
 	# Find out what tiles exist at the player's intended position
-	for x_position: int in range(0, required_player_spawn_block_radius * 2):
-		for y_position: int in range(0, required_player_spawn_block_radius):
+	for x_position: int in range(0, 2):
+		for y_position: int in range(0, 3):
 			all_cell_positions_to_clear_for_player.append(
 				Vector2i(starting_point.x + x_position, starting_point.y + y_position)
 			)
 
 	var position_is_clear: bool = true
 
-	for cell_positions_to_clear_for_player: Vector2i in all_cell_positions_to_clear_for_player:
+	for cell_position_to_clear_for_player: Vector2i in all_cell_positions_to_clear_for_player:
 		if (
-			Globals.WorldMap.get_cell_data_at_map_local_position(cell_positions_to_clear_for_player)
+			Globals.WorldMap.get_cell_data_at_map_local_position(cell_position_to_clear_for_player)
 			!= Vector2i(-1, -1)
 		):
 			position_is_clear = false
@@ -421,7 +418,8 @@ func player_joined(id: int, data: String) -> void:
 		if reached_bottom_of_map:
 			# We must shift left/right and try again
 			# This should provide a "back and forth" shifting left and right at greater and greater amounts
-			last_x_shift_count += 1
+			# But not on the first round. The first time just try to use the same X position, hence start with 0,
+			# and increment it after.
 			if (
 				last_x_shift_direction == "positive"
 				and potential_player_position_in_map_coordinates.x > Globals.map_edges.min.x
@@ -431,19 +429,13 @@ func player_joined(id: int, data: String) -> void:
 			else:
 				last_x_shift_direction = "positive"
 				potential_player_position_in_map_coordinates.x += last_x_shift_count
+			last_x_shift_count += 1
 
 		reached_bottom_of_map = false  # reset
-
-		if not check_location_and_surroundings(potential_player_position):
-			# If position is blocked, set the position to be the same X position but at the highest Y point possible + player's size
-			potential_player_position_in_map_coordinates.y = (
-				Globals.map_edges.min.y - required_player_spawn_block_radius
-			)
 
 		var next_position_down_cell_contents: Vector2i = Vector2i(-1, -1)
 		var descender_counter: int = 0
 		while next_position_down_cell_contents == Vector2i(-1, -1) and not reached_bottom_of_map:
-			descender_counter += 1
 			next_position_down_cell_contents = Globals.WorldMap.get_cell_data_at_map_local_position(
 				Vector2i(
 					potential_player_position_in_map_coordinates.x,
@@ -454,24 +446,27 @@ func player_joined(id: int, data: String) -> void:
 				potential_player_position_in_map_coordinates.y + descender_counter
 				> Globals.map_edges.max.y
 			)
+			descender_counter += 1
 
 		if not reached_bottom_of_map:
 			potential_player_position = Globals.WorldMap.get_global_position_at_map_local_position(
 				Vector2i(
 					potential_player_position_in_map_coordinates.x,
-					(
-						potential_player_position_in_map_coordinates.y
-						+ descender_counter
-						- required_player_spawn_block_radius
-					)
+					potential_player_position_in_map_coordinates.y + descender_counter - 1
 				)
 			)
 			clear_and_safe_position_found = check_location_and_surroundings(
 				potential_player_position
 			)
 			reached_bottom_of_map = true  # If we loop, always force a left/right shift at the next loop.
+		else:
+			# If we did, then set the position to be the same X position but at the highest Y point possible + player's size
+			potential_player_position = Globals.WorldMap.get_global_position_at_map_local_position(
+				Vector2i(
+					potential_player_position_in_map_coordinates.x, Globals.map_edges.min.y - 4
+				)
+			)
 		# Otherwise, do not update the potential_player_position and start over
-
 		# TODO: There is nothing to stop this from looping forever in a worse case scenario
 
 	# TODO: Use saved player rotation if it exists
