@@ -581,9 +581,10 @@ func MineCellAtPosition(Position: Vector2) -> void:
 		(CompensatedPosition in CurrentData.keys())
 		and (CurrentData[CompensatedPosition] != Vector2i(-1, -1))
 	):
-		TileModificationParticlesController.DestroyCell(
-			CompensatedPosition, CurrentData[CompensatedPosition]
-		)
+		#TileModificationParticlesController.DestroyCell(
+		#	CompensatedPosition, CurrentData[CompensatedPosition]
+		#)
+		pass
 	ModifyCell(CompensatedPosition, Vector2i(-1, -1))
 
 
