@@ -1,8 +1,8 @@
 extends TileMap
 
-const ChunkSize: int = 4000
+const CHUNK_SIZE: int = 4000
 const SEND_FREQUENCY: float = 0.1
-const re_request_initial_map_data_timeout: float = 2.0
+const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
 
 var MapGenerated: bool = false
 
@@ -19,8 +19,6 @@ var ChangedData: Dictionary = {}
 # SyncedData is the "best" data for the server to work from
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
-
-var IsServer: bool = false
 
 var ServerDataChanged: bool = false
 
@@ -45,10 +43,9 @@ func _ready() -> void:
 	# https://github.com/godotengine/godot/issues/82718
 	multiplayer.allow_object_decoding = true
 
-	IsServer = Globals.is_server
-
-	if IsServer:
-		GenerateMap()
+	if Globals.is_server:
+		if not load_saved_map():
+			generate_map()
 		Globals.initial_map_load_finished = true
 	else:
 		request_initial_map_data.rpc_id(1)
@@ -60,8 +57,36 @@ func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterSca
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
 
+func load_saved_map() -> bool:
+	var success: bool = false
+	var saved_map_data: String = Helpers.load_data_from_file("user://saved_map.dat")
+	if saved_map_data:
+		var json: JSON = JSON.new()
+		var error: int = json.parse(saved_map_data)
+		if error != OK:
+			printerr(
+				"JSON Parse Error: ",
+				json.get_error_message(),
+				" in saved_map.dat at line ",
+				json.get_error_line()
+			)
+			get_tree().quit()  # Quits the game due to bad server config data
+
+		var loaded_map_data: Dictionary = json.data
+		for key: String in loaded_map_data:
+			CurrentData[str_to_var("Vector2i" + key)] = str_to_var(
+				"Vector2i" + loaded_map_data[key]
+			)
+		SetAllCellData(CurrentData, 0)
+		SyncedData = CurrentData
+		update_map_edges()
+		MapGenerated = true
+		success = true
+	return success
+
+
 ## Procedural world generation
-func GenerateMap() -> void:
+func generate_map() -> void:
 	# Desmos Formula:
 	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
 	#x>r
@@ -224,7 +249,7 @@ func _process(delta: float) -> void:
 			PushChangedData()
 			if not Globals.initial_map_load_finished:
 				re_request_initial_map_data_timer += delta
-				if re_request_initial_map_data_timer > re_request_initial_map_data_timeout:
+				if re_request_initial_map_data_timer > RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT:
 					re_request_initial_map_data_timer = 0.0  # Reset timer
 					printerr("Timeout waiting for map data!")
 					# Acknowledge the last packet again. If they lost the ACK, this will fix that,
@@ -234,7 +259,7 @@ func _process(delta: float) -> void:
 					)
 		current_cycle_time = 0.0
 
-	if IsServer and ServerDataChanged:
+	if Globals.is_server and ServerDataChanged:
 		ServerDataChanged = false
 		SetAllCellData(SyncedData, 0)
 
@@ -242,7 +267,7 @@ func _process(delta: float) -> void:
 ## Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
 func ServerSendBufferedChanges() -> void:
 	if len(ServerBufferedChanges.keys()) > 0:
-		var Count: int = ChunkSize
+		var Count: int = CHUNK_SIZE
 		var ChunkedData: Dictionary = {}
 		while Count > 0 and len(ServerBufferedChanges.keys()) > 0:
 			ChunkedData[ServerBufferedChanges.keys()[0]] = ServerBufferedChanges[
@@ -378,6 +403,28 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 
 				server_side_per_player_initial_map_data[player_id].resend = false
 
+				var percent_complete: int = int(
+					(
+						float(
+							(
+								(
+									server_side_per_player_initial_map_data[player_id]
+									. last_sent_map_data_index
+								)
+								+ 1
+							)
+						)
+						/ float(
+							(
+								server_side_per_player_initial_map_data[player_id]
+								. synced_map_data_snapshot
+								. size()
+							)
+						)
+						* 100
+					)
+				)
+
 				send_initial_map_data_chunk_to_client.rpc_id(
 					player_id,
 					server_side_per_player_initial_map_data[player_id].last_sent_chunk_id,
@@ -393,8 +440,10 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 						. data_array
 						. compress()
 					),
-					server_side_per_player_initial_map_data[player_id].resend
+					server_side_per_player_initial_map_data[player_id].resend,
+					percent_complete
 				)
+
 				server_side_per_player_initial_map_data[player_id].resend = false
 
 
@@ -429,7 +478,11 @@ func acknowledge_received_chunk(chunk_id: int) -> void:
 ## Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
 func send_initial_map_data_chunk_to_client(
-	chunk_id: int, data_size: int, compressed_data: PackedByteArray, resend: bool
+	chunk_id: int,
+	data_size: int,
+	compressed_data: PackedByteArray,
+	resend: bool,
+	percent_complete: int
 ) -> void:
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
 	if not resend:
@@ -456,6 +509,7 @@ func send_initial_map_data_chunk_to_client(
 		CurrentData[map_position] = id
 	SetAllCellData(CurrentData, 0)
 	acknowledge_received_chunk.rpc_id(1, local_player_initial_map_data_current_chunk_id)
+	Network.update_pre_game_overlay.emit("Loading map", percent_complete)
 
 
 #Architecture plan:
@@ -548,29 +602,27 @@ func SetCellData(Position: Vector2i, ID: Vector2i) -> void:
 ## Still need to add chunking to this process right here
 func PushChangedData() -> void:
 	if len(ChangedData.keys()) > 0:
-		RPCSendChangedData.rpc(ChangedData)
+		transfer_changed_map_data_to_server.rpc_id(1, ChangedData)
 		ChangedData.clear()
 
 
 ## Sends changes from the client to the server to be processed
 @rpc("any_peer", "call_remote", "reliable")
-func RPCSendChangedData(Data: Dictionary) -> void:
-	if IsServer:
-		var player_id: int = multiplayer.get_remote_sender_id()
-		for Key: Vector2i in Data.keys():
-			if not SyncedData.has(Key) or SyncedData[Key] == Data[Key][0]:
-				ServerBufferedChanges[Key] = Data[Key][1]
-				SyncedData[Key] = Data[Key][1]
+func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
+	var player_id: int = multiplayer.get_remote_sender_id()
+	for key: Vector2i in map_data.keys():
+		if not SyncedData.has(key) or SyncedData[key] == map_data[key][0]:
+			ServerBufferedChanges[key] = map_data[key][1]
+			SyncedData[key] = map_data[key][1]
 
-				if Data[Key][0].y > -1:
-					if player_id not in StoredPlayerInventoryDrops.keys():
-						StoredPlayerInventoryDrops[player_id] = {}
-					if Data[Key][0].y in StoredPlayerInventoryDrops[player_id].keys():
-						StoredPlayerInventoryDrops[player_id][Data[Key][0].y] += 1
-					else:
-						StoredPlayerInventoryDrops[player_id][Data[Key][0].y] = 1
-
-		ServerDataChanged = true
+			if map_data[key][0].y > -1:
+				if player_id not in StoredPlayerInventoryDrops.keys():
+					StoredPlayerInventoryDrops[player_id] = {}
+				if map_data[key][0].y in StoredPlayerInventoryDrops[player_id].keys():
+					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] += 1
+				else:
+					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] = 1
+	ServerDataChanged = true
 
 
 ## Sends changes from the server to clients
@@ -580,7 +632,7 @@ func ServerSendChangedData(Data: Dictionary) -> void:
 		#Store changes and process after the maps has been fully loaded
 		BufferedChangesReceivedFromServer.append(Data)
 		return
-	if IsServer:
+	if Globals.is_server:
 		return
 	for Key: Vector2i in Data.keys():
 		if (
@@ -601,3 +653,8 @@ func UpdateCellFromCurrent(Position: Vector2i) -> void:
 
 
 @export var TileModificationParticlesController: Node2D
+
+@rpc("any_peer", "call_remote", "reliable")
+func save_map() -> void:
+	Helpers.log_print("Save Map!")
+	Helpers.save_data_to_file("user://saved_map.dat", JSON.stringify(SyncedData))

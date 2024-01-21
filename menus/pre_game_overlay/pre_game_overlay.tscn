@@ -42,3 +42,7 @@ theme_override_font_sizes/font_size = 48
 text = "Undefined"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
