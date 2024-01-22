@@ -25,6 +25,7 @@ var SpawnedDebugObject: Node2D
 
 @export var Flipped: bool = false
 
+@export var ArmIKController: Node2D
 
 func UpdateMiningParticleLength() -> void:
 	var Extents: Vector3 = MiningParticles.process_material.get("emission_box_extents")
@@ -106,6 +107,7 @@ func _process(_delta: float) -> void:
 	if IsMining:
 		MiningParticles.look_at(MousePosition)
 
+	ArmIKController.Target = MousePosition
 	HeadTarget.global_position = MousePosition
 	MiningParticles.emitting = IsMining
 

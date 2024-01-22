@@ -1,11 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=14 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/PlayerController.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/PlayerInteractionController.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/Player Atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/PlayerInventoryManager.gd" id="5_xpvfg"]
-[ext_resource type="Script" path="res://player/skeleton_fixer.gd" id="5_yow5u"]
 [ext_resource type="Script" path="res://player/save_map_button.gd" id="6_a1bjq"]
+[ext_resource type="Script" path="res://player/EqualTwoSegmentIkController.gd" id="7_g23pf"]
 
 [sub_resource type="GDScript" id="1"]
 
@@ -43,28 +43,6 @@ properties/8/spawn = true
 properties/8/replication_mode = 2
 
 [sub_resource type="QuadMesh" id="QuadMesh_37pga"]
-
-[sub_resource type="SkeletonModification2DTwoBoneIK" id="SkeletonModification2DTwoBoneIK_ag147"]
-resource_local_to_scene = true
-target_nodepath = NodePath("../Arm/Left Hand Target")
-flip_bend_direction = true
-joint_one_bone_idx = 1
-joint_one_bone2d_node = NodePath("Torso/Upper Arm")
-joint_two_bone_idx = 2
-joint_two_bone2d_node = NodePath("Torso/Upper Arm/Lower Arm")
-
-[sub_resource type="SkeletonModification2DLookAt" id="SkeletonModification2DLookAt_nqnbf"]
-resource_local_to_scene = true
-bone_index = 4
-bone2d_node = NodePath("Torso/Neck/Head")
-target_nodepath = NodePath("Head Target")
-
-[sub_resource type="SkeletonModificationStack2D" id="SkeletonModificationStack2D_tbk5s"]
-resource_local_to_scene = true
-enabled = true
-modification_count = 2
-modifications/0 = SubResource("SkeletonModification2DTwoBoneIK_ag147")
-modifications/1 = SubResource("SkeletonModification2DLookAt_nqnbf")
 
 [sub_resource type="Curve" id="Curve_tmffk"]
 _data = [Vector2(0.455729, 0.856713), 0.0, 0.0, 0, 0, Vector2(0.669271, 0.0490983), 0.0, 0.0, 0, 0]
@@ -112,18 +90,14 @@ position = Vector2(0, -31.37)
 zoom = Vector2(2, 2)
 position_smoothing_enabled = true
 
-[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "FlipPoint", "HeadTarget", "ArmTargetPosition")]
+[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("Arm", "MiningParticles", "FlipPoint", "ArmIKController", "HeadTarget", "ArmTargetPosition")]
 script = ExtResource("4_rfuvf")
 Arm = NodePath("../Flip Point/Arm")
-DebugObject = null
-MiningParticles = NodePath("../Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm/GPUParticles2D")
-IsMining = null
-MiningDistance = null
+MiningParticles = NodePath("../IK Rig/Upper/Lower/Lower Left Arm/GPUParticles2D")
 FlipPoint = NodePath("../Flip Point")
-Flipped = null
-HeadTarget = NodePath("../Flip Point/Skeleton2D/Head Target")
+ArmIKController = NodePath("../IK Rig/Upper")
+HeadTarget = NodePath("../Flip Point/Head Target")
 ArmTargetPosition = NodePath("../Flip Point/Arm/Left Hand Target")
-MousePosition = null
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 position = Vector2(3, -25)
@@ -150,7 +124,6 @@ visible = false
 texture_filter = 1
 position = Vector2(-10, -59)
 texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../Skeleton2D")
 polygon = PackedVector2Array(7.07904, 50.4467, 15.1203, 50.1718, 14.9141, 68.3849, 7.42268, 68.4536)
 uv = PackedVector2Array(7.07904, 50.4467, 15.1203, 50.1718, 14.9141, 68.3849, 7.42268, 68.4536)
 
@@ -159,99 +132,10 @@ visible = false
 texture_filter = 1
 position = Vector2(-10, -68)
 texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../Skeleton2D")
 polygon = PackedVector2Array(7.40402, 76.234, 14.6252, 76.1426, 14.9909, 94.9726, 6.94699, 94.7898)
 uv = PackedVector2Array(7.40402, 76.234, 14.6252, 76.1426, 14.9909, 94.9726, 6.94699, 94.7898)
 
-[node name="Skeleton2D" type="Skeleton2D" parent="Flip Point"]
-modification_stack = SubResource("SkeletonModificationStack2D_tbk5s")
-script = ExtResource("5_yow5u")
-apply_all_local = true
-
-[node name="Torso" type="Bone2D" parent="Flip Point/Skeleton2D"]
-position = Vector2(2, -21)
-rest = Transform2D(1, 0, 0, 1, 2, -21)
-auto_calculate_length_and_angle = false
-length = 17.0
-bone_angle = -90.0
-
-[node name="Upper Arm" type="Bone2D" parent="Flip Point/Skeleton2D/Torso"]
-position = Vector2(-2, -18)
-rotation = 0.643471
-scale = Vector2(0.999984, 0.999984)
-rest = Transform2D(0.800005, 0.599967, -0.599967, 0.800005, -2, -18)
-metadata/_local_pose_override_enabled_ = true
-
-[node name="Lower Arm" type="Bone2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm"]
-position = Vector2(15.0002, -6.55681e-07)
-rotation = -2.85776
-scale = Vector2(0.999988, 0.999988)
-rest = Transform2D(-0.959977, -0.280036, 0.280036, -0.959977, 15.0002, -6.55681e-07)
-auto_calculate_length_and_angle = false
-length = 15.0
-bone_angle = 90.0
-metadata/_local_pose_override_enabled_ = true
-
-[node name="Lower Left Arm" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm"]
-z_index = 1
-texture_filter = 1
-position = Vector2(-52.0015, -6.00017)
-texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../../..")
-polygon = PackedVector2Array(49, 6, 55, 6, 55, 21, 49, 21)
-uv = PackedVector2Array(49, 6, 55, 6, 55, 21, 49, 21)
-
-[node name="GPUParticles2D" type="GPUParticles2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm/Lower Arm/Lower Left Arm"]
-position = Vector2(52.0015, 21.0002)
-rotation = 1.20897
-scale = Vector2(1.00011, 1.00011)
-amount = 100
-process_material = SubResource("ParticleProcessMaterial_vd1d2")
-lifetime = 0.5
-collision_base_size = 0.0
-visibility_rect = Rect2(0, -15, 1000, 30)
-
-[node name="Upper Left Arm" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso/Upper Arm"]
-z_index = 2
-texture_filter = 1
-position = Vector2(-6.00028, 40.0019)
-rotation = -1.5708
-texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../..")
-polygon = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
-uv = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
-
-[node name="Body" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso"]
-texture_filter = 1
-position = Vector2(-21, -39)
-texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../..")
-polygon = PackedVector2Array(6, 14, 15, 14, 18, 16, 24, 16, 29, 21, 29, 30, 26, 40, 15, 40, 14, 38, 6, 38)
-uv = PackedVector2Array(6, 14, 15, 14, 15, 18, 26, 18, 29, 21, 29, 30, 26, 40, 15, 40, 14, 38, 6, 38)
-
-[node name="Neck" type="Bone2D" parent="Flip Point/Skeleton2D/Torso"]
-position = Vector2(0, -21)
-rotation = -1.5708
-rest = Transform2D(-3.61999e-06, -1, 1, -3.61999e-06, 0, -21)
-
-[node name="Head" type="Bone2D" parent="Flip Point/Skeleton2D/Torso/Neck"]
-rotation = 1.5708
-scale = Vector2(0.99995, 0.99995)
-rest = Transform2D(-3.50061e-06, 0.99995, -0.99995, -3.50061e-06, 0, 0)
-auto_calculate_length_and_angle = false
-length = 4.0
-bone_angle = 0.0
-metadata/_local_pose_override_enabled_ = true
-
-[node name="Head2" type="Polygon2D" parent="Flip Point/Skeleton2D/Torso/Neck/Head"]
-texture_filter = 1
-position = Vector2(-21.0011, -12.0006)
-texture = ExtResource("5_e4w6p")
-skeleton = NodePath("../../../..")
-polygon = PackedVector2Array(15, 0, 15, 12, 27, 12, 27, 0)
-uv = PackedVector2Array(15, 0, 15, 12, 27, 12, 27, -7.45058e-09)
-
-[node name="Head Target" type="Node2D" parent="Flip Point/Skeleton2D"]
+[node name="Head Target" type="Node2D" parent="Flip Point"]
 position = Vector2(20, -42)
 
 [node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("StoneBar")]
@@ -301,3 +185,54 @@ offset_right = 8.0
 offset_bottom = 8.0
 text = "Save Map"
 script = ExtResource("6_a1bjq")
+
+[node name="Upper Left Arm" type="Polygon2D" parent="."]
+z_index = 2
+texture_filter = 1
+position = Vector2(33.9993, 7.99989)
+rotation = 3.14159
+scale = Vector2(0.999964, 0.999964)
+texture = ExtResource("5_e4w6p")
+polygon = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
+uv = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
+
+[node name="IK Rig" type="Node2D" parent="."]
+
+[node name="Upper" type="Node2D" parent="IK Rig" node_paths=PackedStringArray("UpperSegment", "LowerSegment")]
+position = Vector2(0, -38)
+script = ExtResource("7_g23pf")
+UpperSegment = NodePath(".")
+LowerSegment = NodePath("Lower")
+
+[node name="Upper Left Arm" type="Polygon2D" parent="IK Rig/Upper"]
+z_index = 1
+texture_filter = 1
+position = Vector2(-6, 40)
+rotation = -1.5708
+scale = Vector2(0.99994, 0.99994)
+texture = ExtResource("5_e4w6p")
+polygon = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
+uv = PackedVector2Array(37, 6, 43, 6, 43, 21, 37, 21)
+
+[node name="Lower" type="Node2D" parent="IK Rig/Upper"]
+position = Vector2(15, 0)
+
+[node name="Lower Left Arm" type="Polygon2D" parent="IK Rig/Upper/Lower"]
+z_index = 1
+texture_filter = 1
+position = Vector2(-6, 52)
+rotation = -1.5708
+scale = Vector2(0.99997, 0.99997)
+texture = ExtResource("5_e4w6p")
+polygon = PackedVector2Array(49, 6, 55, 6, 55, 21, 49, 21)
+uv = PackedVector2Array(49, 6, 55, 6, 55, 21, 49, 21)
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="IK Rig/Upper/Lower/Lower Left Arm"]
+position = Vector2(52.0015, 21.0002)
+rotation = 1.20897
+scale = Vector2(1.00011, 1.00011)
+amount = 100
+process_material = SubResource("ParticleProcessMaterial_vd1d2")
+lifetime = 0.5
+collision_base_size = 0.0
+visibility_rect = Rect2(0, -15, 1000, 30)
