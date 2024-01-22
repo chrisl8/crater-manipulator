@@ -36,6 +36,7 @@ var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 var server_side_per_player_initial_map_data: Dictionary = {}
 
+
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
 	# "Cannot convert argument 1 from Object to Object" on the receiving end
@@ -103,8 +104,8 @@ func generate_map() -> void:
 
 	while TotalRadius >= 0:
 		var Radius: float = float(TotalRadius)
-		if(TotalRadius == 0):
-			Radius+=0.00001
+		if TotalRadius == 0:
+			Radius += 0.00001
 		var Depth: int = roundi(
 			GetDepthFunction(
 				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
@@ -527,19 +528,19 @@ func send_initial_map_data_chunk_to_client(
 
 
 ## Modify a cell from the client, checks for finished world load and buffers changes for server accordingly
-func ModifyCell(Position: Vector2i, ID: Vector2i) -> void:
+func modify_cell(at_position: Vector2i, id: Vector2i) -> void:
 	if !Globals.initial_map_load_finished:
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
-	if Position in ChangedData.keys():
-		ChangedData[Position] = [ChangedData[Position][0], ID]
-	elif SyncedData.has(Position):
-		ChangedData[Position] = [SyncedData[Position], ID]
+	if at_position in ChangedData.keys():
+		ChangedData[at_position] = [ChangedData[at_position][0], id]
+	elif SyncedData.has(at_position):
+		ChangedData[at_position] = [SyncedData[at_position], id]
 	else:
-		ChangedData[Position] = [Vector2i(-1, -1), ID]
+		ChangedData[at_position] = [Vector2i(-1, -1), id]
 
-	SetCellData(Position, ID)
+	SetCellData(at_position, id)
 
 
 ## Return the map tile position at a given world position
@@ -584,12 +585,24 @@ func MineCellAtPosition(Position: Vector2) -> void:
 		TileModificationParticlesController.DestroyCell(
 			CompensatedPosition, CurrentData[CompensatedPosition]
 		)
-	ModifyCell(CompensatedPosition, Vector2i(-1, -1))
+	modify_cell(CompensatedPosition, Vector2i(-1, -1))
 
 
 ## Place a standard piece of stone at a position : TEST TEMP
-func PlaceCellAtPosition(Position: Vector2) -> void:
-	ModifyCell(local_to_map(to_local(Position)), GetRandomStoneTile())
+func place_cell_at_position(at_position: Vector2) -> void:
+	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
+	var adjacent_cell_contents: Array = [
+		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
+		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y + 1)),
+		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x - 1, at_cell_position.y)),
+		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x + 1, at_cell_position.y)),
+	]
+	var can_place_cell: bool = false
+	for cell_content: Vector2i in adjacent_cell_contents:
+		if cell_content != Vector2i(-1, -1):
+			can_place_cell = true
+	if can_place_cell:
+		modify_cell(local_to_map(to_local(at_position)), GetRandomStoneTile())
 
 
 ## Set the current data of a cell to a given value

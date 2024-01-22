@@ -71,7 +71,7 @@ func _process(_delta: float) -> void:
 		'''
 
 		if Input.is_action_just_pressed(&"interact"):
-			Globals.WorldMap.ModifyCell(
+			Globals.WorldMap.modify_cell(
 				Vector2i(randi_range(-50, 50), randi_range(0, -50)), Vector2i(1, 1)
 			)
 
@@ -180,5 +180,5 @@ func MineRaycast() -> void:
 
 
 func RightMouseClicked() -> void:
-	Globals.WorldMap.PlaceCellAtPosition(get_global_mouse_position())
+	Globals.WorldMap.place_cell_at_position(get_global_mouse_position())
 	pass
