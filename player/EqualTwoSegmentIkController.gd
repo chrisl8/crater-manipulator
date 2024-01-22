@@ -21,7 +21,7 @@ func _process(delta):
 	var MidPoint = (UpperSegment.global_position+Target)/2.0
 	var UpperIKTarget
 	if(FlipDirection):
-		UpperIKTarget = -MidPoint+UpperSegment.global_transform.y*Height
+		UpperIKTarget = MidPoint-UpperSegment.global_transform.y*Height
 	else:
 		UpperIKTarget = MidPoint+UpperSegment.global_transform.y*Height
 	UpperSegment.look_at(UpperIKTarget)
