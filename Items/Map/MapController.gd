@@ -43,6 +43,8 @@ func _ready() -> void:
 	# and fails.
 	# https://github.com/godotengine/godot/issues/82718
 	multiplayer.allow_object_decoding = true
+	#From Ben : Should check if this is safe to use
+
 
 	if Globals.is_server:
 		if not load_saved_map():
@@ -112,8 +114,8 @@ func generate_map() -> void:
 			)
 		)
 		for i: int in range(0, 20):
-			CurrentData[Vector2i(Radius, -(Depth + i))] = GetRandomStoneTile()
-			CurrentData[Vector2i(-Radius, -(Depth + i))] = GetRandomStoneTile()
+			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
+			CurrentData[Vector2i(roundi(-Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
 
 		TotalRadius -= 1
 
@@ -173,25 +175,10 @@ func generate_map() -> void:
 		CurrentRadius -= 1.0
 	'''
 
-	'''
-	CurrentData[Vector2i(0, 0)] = GetRandomOreTile()
-	CurrentData[Vector2i(1, 0)] = GetRandomOreTile()
-	CurrentData[Vector2i(0, 1)] = GetRandomOreTile()
-	CurrentData[Vector2i(1, 1)] = GetRandomOreTile()
-	CurrentData[Vector2i(-1, 1)] = GetRandomOreTile()
-	'''
-
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
 	update_map_edges()
 	MapGenerated = true
-
-	'''
-	# TileModificationParticlesController.DestroyCells([Vector2i(0, 0)],[CurrentData[Vector2i(0, 0)]])
-
-	TileModificationParticlesController.DestroyCells([Vector2i(0, 0),Vector2i(1, 0),Vector2i(0, 1),Vector2i(1, 1),Vector2i(-1, 1)],
-	[CurrentData[Vector2i(0, 0)],CurrentData[Vector2i(1, 0)],CurrentData[Vector2i(0, 1)],CurrentData[Vector2i(1, 1)],CurrentData[Vector2i(-1, 1)]])
-	'''
 
 
 ## Update the Global map_edges variable using latest data
@@ -259,10 +246,6 @@ func _process(delta: float) -> void:
 						1, local_player_initial_map_data_current_chunk_id
 					)
 		current_cycle_time = 0.0
-
-	if Globals.is_server and ServerDataChanged:
-		ServerDataChanged = false
-		SetAllCellData(SyncedData, 0)
 
 
 ## Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
@@ -623,10 +606,12 @@ func PushChangedData() -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 	var player_id: int = multiplayer.get_remote_sender_id()
+	var TilesToUpdate = {}
 	for key: Vector2i in map_data.keys():
 		if not SyncedData.has(key) or SyncedData[key] == map_data[key][0]:
 			ServerBufferedChanges[key] = map_data[key][1]
 			SyncedData[key] = map_data[key][1]
+			TilesToUpdate[key] = map_data[key][1]
 
 			if map_data[key][0].y > -1:
 				if player_id not in StoredPlayerInventoryDrops.keys():
@@ -635,7 +620,12 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] += 1
 				else:
 					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] = 1
-	ServerDataChanged = true
+	ServeUpdateTilesFromGivenData(TilesToUpdate)
+
+func ServeUpdateTilesFromGivenData(TilesToUpdate):
+	if(len(TilesToUpdate.keys()) > 0):
+		for Key in TilesToUpdate.keys():
+			set_cell(0, Key, 0, TilesToUpdate[Key])
 
 
 ## Sends changes from the server to clients

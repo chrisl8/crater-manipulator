@@ -36,7 +36,7 @@ func UpdateMiningParticleLength() -> void:
 	MiningParticles.look_at(MousePosition)
 
 
-@export var HeadTarget: Node
+@export var Head: Node
 
 
 func Initialize(Local: bool) -> void:
@@ -108,7 +108,7 @@ func _process(_delta: float) -> void:
 		MiningParticles.look_at(MousePosition)
 
 	ArmIKController.Target = MousePosition
-	HeadTarget.global_position = MousePosition
+	Head.look_at(MousePosition)
 	MiningParticles.emitting = IsMining
 
 
