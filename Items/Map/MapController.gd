@@ -67,6 +67,9 @@ func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterSca
 	# r = radius
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
+func GetTopLayerDepth(x: float, Radius: float, MidRelativeDepth: float)->float:
+	#Top curve generation, needs an input intercept radius
+	return(cos(x/(2*Radius)/(3.14159265))*MidRelativeDepth)
 
 func load_saved_map() -> bool:
 	var success: bool = false
@@ -110,7 +113,7 @@ func generate_map() -> void:
 	var AdditionalDepthNoiseScale = 30
 
 	var BarrierDepth = 8 #75
-	var MinimumTopDepth = 16 #30
+	var MinimumTopDepth = 16 #60
 	var RandomDepthOffset = 0
 
 	var CraterGenRadius: int = 1909
@@ -119,8 +122,14 @@ func generate_map() -> void:
 	var CraterScale: float = 2000.0
 	var AdditionalWasteDistance: int = 1000
 
-	var OriginalCrateGenRadius = CraterGenRadius
-	while CraterGenRadius >= -OriginalCrateGenRadius:
+	var FillHeight = 1000
+	var FillMiddleRelativeHeight = -20
+
+
+	#Here be dragons and uncommented code
+
+	var OriginalCraterGenRadius = CraterGenRadius
+	while CraterGenRadius >= -OriginalCraterGenRadius:
 		var Radius: float = float(CraterGenRadius)
 		if CraterGenRadius == 0:
 			Radius += 0.00001
@@ -136,33 +145,36 @@ func generate_map() -> void:
 		for i: int in range(0, BarrierDepth):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
 		
-		for i: int in range(-TopDepth, 20):
-			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
-		
 		#Add top layer
+		for i: int in range(-TopDepth, MinimumTopDepth):
+			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
 
 		CraterGenRadius -= 1
 
 	var EndDepth = GetDepthFunction(
-				float(OriginalCrateGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
+				float(OriginalCraterGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
 			)
 	var OriginalWastDistance = AdditionalWasteDistance
 	while(AdditionalWasteDistance >= -OriginalWastDistance):
-		var Radius = OriginalCrateGenRadius+AdditionalWasteDistance
+		var Radius = OriginalCraterGenRadius+AdditionalWasteDistance
 		if(AdditionalWasteDistance < 0.0):
-			Radius = -OriginalCrateGenRadius+AdditionalWasteDistance
+			Radius = -OriginalCraterGenRadius+AdditionalWasteDistance
 
+		#Add bottom
 		var Depth = EndDepth - roundi(BottomBoundaryNoise.get_noise_1d(Radius)*AdditionalDepthNoiseScale) + randi_range(0,RandomDepthOffset)
 		for i: int in range(0, BarrierDepth):
 			CurrentData[Vector2i((Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
 		
-		for i: int in range(0, 20):
+		#Add top layer
+		for i: int in range(0, MinimumTopDepth):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
 
 		AdditionalWasteDistance-=1
 
+	#Generate top curve
+	#Need intercept radius, aprocimate brute search or add inverse to depth function
+	#Could replace arbitrary radius with peak height for smoother finish and less walls
 
-	#New version
 
 	#Simple version
 	'''
@@ -604,17 +616,18 @@ func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2
 	return to_global(map_to_local(at_position))
 
 
-## Place air at a position : TEST TEMP
+## Place air at a position
 func MineCellAtPosition(Position: Vector2) -> void:
 	var CompensatedPosition: Vector2i = local_to_map(to_local(Position))
 	if (
 		(CompensatedPosition in CurrentData.keys())
 		and (CurrentData[CompensatedPosition] != Vector2i(-1, -1))
 	):
-		TileModificationParticlesController.DestroyCell(
-			CompensatedPosition, CurrentData[CompensatedPosition]
-		)
-	modify_cell(CompensatedPosition, Vector2i(-1, -1))
+		if(Globals.GetIsCellMineable(CurrentData[CompensatedPosition])):
+			TileModificationParticlesController.DestroyCell(
+				CompensatedPosition, CurrentData[CompensatedPosition]
+			)
+			modify_cell(CompensatedPosition, Vector2i(-1, -1))
 
 
 ## Place a standard piece of stone at a position : TEST TEMP

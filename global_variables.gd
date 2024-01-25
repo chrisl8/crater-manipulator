@@ -67,3 +67,7 @@ var map_edges: Dictionary = {
 		"y": 0,
 	}
 }
+
+func GetIsCellMineable(Cell: Vector2i):
+	#In future should check array/dictionary of white or black listed tiles
+	return(Cell.y != 2)
