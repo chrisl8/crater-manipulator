@@ -57,6 +57,14 @@ func _ready() -> void:
 
 
 func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterScale: float) -> float:
+	# Desmos Formula:
+	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
+	#x>r
+	#x<r
+	# d = WidthScale
+	# h = HeightScale
+	# c = CraterScale
+	# r = radius
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
 
@@ -87,37 +95,72 @@ func load_saved_map() -> bool:
 		success = true
 	return success
 
+func RegenerateMap():
+	clear()
+	CurrentData.clear()
+	generate_map()
 
 ## Procedural world generation
 func generate_map() -> void:
-	# Desmos Formula:
-	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
-	#x>r
-	#x<r
-	# d = WidthScale
-	# h = HeightScale
-	# c = CraterScale
-	# r = radius
+	var BottomBoundaryNoise = FastNoiseLite.new()
 
-	var TotalRadius: int = 1909
+	BottomBoundaryNoise.seed = randi()
+	BottomBoundaryNoise.noise_type = 3
+
+	var AdditionalDepthNoiseScale = 30
+
+	var BarrierDepth = 8 #75
+	var MinimumTopDepth = 16 #30
+	var RandomDepthOffset = 0
+
+	var CraterGenRadius: int = 1909
 	var WidthScale: int = 8
 	var HeightScale: int = 1000
 	var CraterScale: float = 2000.0
+	var AdditionalWasteDistance: int = 1000
 
-	while TotalRadius >= 0:
-		var Radius: float = float(TotalRadius)
-		if TotalRadius == 0:
+	var OriginalCrateGenRadius = CraterGenRadius
+	while CraterGenRadius >= -OriginalCrateGenRadius:
+		var Radius: float = float(CraterGenRadius)
+		if CraterGenRadius == 0:
 			Radius += 0.00001
 		var Depth: int = roundi(
 			GetDepthFunction(
 				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
 			)
 		)
+		Depth-=roundi(BottomBoundaryNoise.get_noise_1d(Radius)*AdditionalDepthNoiseScale) + randi_range(0,RandomDepthOffset)
+
+		#Add bottom
+		var TopDepth = randi_range(0,RandomDepthOffset)
+		for i: int in range(0, BarrierDepth):
+			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
+		
+		for i: int in range(-TopDepth, 20):
+			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
+		
+		#Add top layer
+
+		CraterGenRadius -= 1
+
+	var EndDepth = GetDepthFunction(
+				float(OriginalCrateGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
+			)
+	var OriginalWastDistance = AdditionalWasteDistance
+	while(AdditionalWasteDistance >= -OriginalWastDistance):
+		var Radius = OriginalCrateGenRadius+AdditionalWasteDistance
+		if(AdditionalWasteDistance < 0.0):
+			Radius = -OriginalCrateGenRadius+AdditionalWasteDistance
+
+		var Depth = EndDepth - roundi(BottomBoundaryNoise.get_noise_1d(Radius)*AdditionalDepthNoiseScale) + randi_range(0,RandomDepthOffset)
+		for i: int in range(0, BarrierDepth):
+			CurrentData[Vector2i((Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
+		
 		for i: int in range(0, 20):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
-			CurrentData[Vector2i(roundi(-Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
 
-		TotalRadius -= 1
+		AdditionalWasteDistance-=1
+
 
 	#New version
 
@@ -219,6 +262,9 @@ func GetRandomStoneTile() -> Vector2i:
 
 func GetRandomOreTile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 1)
+
+func GetRandomBarrierRockTile() -> Vector2i:
+	return Vector2i(randi_range(0, 9), 2)
 
 
 func _process(delta: float) -> void:

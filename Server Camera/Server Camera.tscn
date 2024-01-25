@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://d2xfjuc84u0r5"]
+[gd_scene load_steps=3 format=3 uid="uid://d2xfjuc84u0r5"]
 
 [ext_resource type="Script" path="res://Server Camera/ServerCameraController.gd" id="1_knfvd"]
+[ext_resource type="Script" path="res://Items/Map/RegenerateMapButton.gd" id="2_on7ub"]
 
 [node name="ServerCamera" type="Node2D"]
 position = Vector2(-8, 15000)
@@ -33,3 +34,23 @@ Press Esc to gracefully disconnect all clients and close Server.
 Move server camera with WASD or hold down left mouse button and drag.
 Use mouse wheel to zoom in/out."
 horizontal_alignment = 1
+
+[node name="Debug Controls" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="Control" type="Control" parent="Debug Controls"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="Regenerate Map" type="Button" parent="Debug Controls/Control"]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "Regenerate Map"
+script = ExtResource("2_on7ub")
