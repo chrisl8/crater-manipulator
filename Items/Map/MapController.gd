@@ -616,7 +616,7 @@ func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2
 	return to_global(map_to_local(at_position))
 
 
-## Place air at a position
+## Place air at a position : TEST TEMP
 func MineCellAtPosition(Position: Vector2) -> void:
 	var CompensatedPosition: Vector2i = local_to_map(to_local(Position))
 	if (
@@ -633,6 +633,8 @@ func MineCellAtPosition(Position: Vector2) -> void:
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
+	if(!Globals.GetIsCellMineable(get_cell_data_at_map_local_position(at_cell_position))):
+		return
 	var adjacent_cell_contents: Array = [
 		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
 		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y + 1)),

@@ -21,7 +21,6 @@ var UpdateSyncedRotation: bool = false
 
 var IsLocal: bool = false
 
-
 func _ready() -> void:
 	# Attempt to fix character getting stuck on tiles as they move parallel to them
 	# https://github.com/godotengine/godot/issues/47148

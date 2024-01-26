@@ -22,6 +22,8 @@ var TimeSinceTargetFound: float = 0.0
 @export var OtherLeg: Node2D
 @export var Grounded: bool = true
 
+@export var Flipped: bool = false
+
 func _ready():
 	pass
 
@@ -51,5 +53,9 @@ func _process(delta):
 			IKController.Target = AirborneIKTarget.global_position - Vector2(0,FootHeight)
 
 	Grounded = TimeSinceTargetFound < MaxAirborneTime
-	Foot.global_rotation = 0
+	if(!Flipped):
+		Foot.global_rotation = 0
+	else:
+		Foot.global_rotation = PI
+
 	pass
