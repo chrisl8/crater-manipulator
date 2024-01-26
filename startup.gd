@@ -202,7 +202,7 @@ func connection_reset(delay: int) -> void:
 		Globals.connection_failed_message,
 		Color(0.79215687513351, 0.26274511218071, 0.56470590829849)
 	)
-	if OS.is_debug_build() and OS.get_name() != "Web":
+	if OS.is_debug_build() and Globals.has_connected_once and OS.get_name() != "Web":
 		# Exit when the server closes in debug mode
 		# except in web mode, where "exit" has no meaning.
 		Helpers.log_print(

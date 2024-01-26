@@ -1,3 +1,4 @@
+@uid("uid://dke1l2n6h1fdw") # Generated automatically, do not modify.
 extends Node
 
 var server_config: Dictionary = {}
@@ -13,6 +14,9 @@ var url: String
 var click_mode: bool = false
 var last_click_handled_time: int = 0
 var shutdown_in_progress: bool = false
+
+## Used to know if the client has ever connected before when performing a retry
+var has_connected_once: bool = false
 
 var connection_failed_message: String = "Connection Failed!"
 

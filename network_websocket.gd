@@ -175,6 +175,7 @@ func update_remote_pre_game_overlay_message(message: String) -> void:
 
 
 func _connected_to_server() -> void:
+	Globals.has_connected_once = true
 	Helpers.log_print("I connected to the server!", "cyan")
 	if Globals.shutdown_server:
 		print_rich("[color=blue]Sending SHUTDOWN_SERVER message.[/color]")
