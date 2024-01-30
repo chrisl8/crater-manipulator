@@ -112,8 +112,8 @@ func generate_map() -> void:
 
 	var AdditionalDepthNoiseScale = 30
 
-	var BarrierDepth = 8 #75
-	var MinimumTopDepth = 16 #60
+	var BarrierDepth = 2 #75
+	var MinimumTopDepth = 4 #60
 	var RandomDepthOffset = 0
 
 	var CraterGenRadius: int = 1909
