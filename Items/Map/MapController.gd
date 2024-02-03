@@ -1,7 +1,7 @@
 extends TileMap
 
 const CHUNK_SIZE: int = 4000
-const SEND_FREQUENCY: float = 0.1
+const SEND_FREQUENCY: float = 0.01
 const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
 
 var MapGenerated: bool = false
@@ -36,6 +36,9 @@ var BufferedChangesReceivedFromServer: Array[Dictionary] = []
 
 var server_side_per_player_initial_map_data: Dictionary = {}
 
+var map_download_finished: bool = false
+var map_initialization_started: bool = false
+
 
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
@@ -49,6 +52,7 @@ func _ready() -> void:
 		if not load_saved_map():
 			generate_map()
 		Globals.initial_map_load_finished = true
+		map_download_finished = true
 	else:
 		request_initial_map_data.rpc_id(1)
 
@@ -289,20 +293,27 @@ func GetRandomBarrierRockTile() -> Vector2i:
 
 
 func _process(delta: float) -> void:
-	current_cycle_time += delta
-	if current_cycle_time > SEND_FREQUENCY:
-		if Globals.is_server:
-			ServerSendBufferedChanges()
-			if MapGenerated:
-				chunk_and_send_initial_map_data_to_players()
-
-				if len(StoredPlayerInventoryDrops):
-					for Key: int in StoredPlayerInventoryDrops.keys():
-						Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
-					StoredPlayerInventoryDrops.clear()
-		else:
-			PushChangedData()
-			if not Globals.initial_map_load_finished:
+	# Initial map data send/receive is rate limited by client ack, so no need to rate limit it otherwise.
+	if Globals.is_server:
+		if MapGenerated:
+			chunk_and_send_initial_map_data_to_players()
+	else:
+		if not Globals.initial_map_load_finished:
+			if map_download_finished:
+				if not map_initialization_started:
+					# Derpy method to update the overlay before running the SetAllCellData function, which can be slow
+					Network.update_pre_game_overlay.emit("Initializing map...")
+					map_initialization_started = true
+				else:
+					if len(BufferedChangesReceivedFromServer) > 0:
+						for BufferedChange: Dictionary in BufferedChangesReceivedFromServer:
+							for Key: Vector2i in BufferedChange.keys():
+								SyncedData[Key] = BufferedChange[Key]
+								CurrentData[Key] = BufferedChange[Key]
+					BufferedChangesReceivedFromServer.clear()
+					SetAllCellData(CurrentData, 0)
+					Globals.initial_map_load_finished = true
+			else:
 				re_request_initial_map_data_timer += delta
 				if re_request_initial_map_data_timer > RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT:
 					re_request_initial_map_data_timer = 0.0  # Reset timer
@@ -312,6 +323,19 @@ func _process(delta: float) -> void:
 					acknowledge_received_chunk.rpc_id(
 						1, local_player_initial_map_data_current_chunk_id
 					)
+
+	# Rate limited stuff
+	current_cycle_time += delta
+	if current_cycle_time > SEND_FREQUENCY:
+		if Globals.is_server:
+			ServerSendBufferedChanges()
+			if MapGenerated:
+				if len(StoredPlayerInventoryDrops):
+					for Key: int in StoredPlayerInventoryDrops.keys():
+						Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
+					StoredPlayerInventoryDrops.clear()
+		else:
+			PushChangedData()
 		current_cycle_time = 0.0
 
 
@@ -334,6 +358,7 @@ func SetAllCellData(Data: Dictionary, Layer: int) -> void:
 	clear_layer(Layer)
 	for Key: Vector2i in Data.keys():
 		set_cell(Layer, Key, 0, Data[Key])
+	Network.update_pre_game_overlay.emit("Map initialization done.")
 
 
 ## Get the positions of every cell in the tile map
@@ -500,15 +525,7 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 
 @rpc("authority", "call_remote", "reliable")
 func tell_client_initial_map_data_send_is_finished() -> void:
-	if len(BufferedChangesReceivedFromServer) > 0:
-		for BufferedChange: Dictionary in BufferedChangesReceivedFromServer:
-			for Key: Vector2i in BufferedChange.keys():
-				SyncedData[Key] = BufferedChange[Key]
-				CurrentData[Key] = BufferedChange[Key]
-	BufferedChangesReceivedFromServer.clear()
-	SetAllCellData(CurrentData, 0)
-
-	Globals.initial_map_load_finished = true
+	map_download_finished = true
 
 
 @rpc("any_peer", "call_remote", "reliable")
