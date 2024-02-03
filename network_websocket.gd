@@ -225,7 +225,10 @@ func reset_connection() -> void:
 	peer_count = -1
 	Globals.user_name = ""
 	peers.clear()
-	reset.emit(5)
+	var retry_timeout: int = 5
+	if OS.is_debug_build():
+		retry_timeout = 1
+	reset.emit(retry_timeout)
 
 
 func init_network() -> void:
