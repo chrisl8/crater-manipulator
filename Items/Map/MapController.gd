@@ -115,8 +115,8 @@ func generate_map() -> void:
 
 	var AdditionalDepthNoiseScale = 30
 
-	var BarrierDepth = 2  #75
-	var MinimumTopDepth = 4  #60
+	var BarrierDepth = 75
+	var MinimumTopDepth = 60
 	var RandomDepthOffset = 0
 
 	var CraterGenRadius: int = 1909
@@ -506,6 +506,7 @@ func tell_client_initial_map_data_send_is_finished() -> void:
 				SyncedData[Key] = BufferedChange[Key]
 				CurrentData[Key] = BufferedChange[Key]
 	BufferedChangesReceivedFromServer.clear()
+	SetAllCellData(CurrentData, 0)
 
 	Globals.initial_map_load_finished = true
 
@@ -558,7 +559,6 @@ func send_initial_map_data_chunk_to_client(
 		var id: Vector2i = Vector2i(data.get_16(), data.get_16())
 		SyncedData[map_position] = id
 		CurrentData[map_position] = id
-	SetAllCellData(CurrentData, 0)
 	acknowledge_received_chunk.rpc_id(1, local_player_initial_map_data_current_chunk_id)
 	Network.update_pre_game_overlay.emit("Loading map", percent_complete)
 
