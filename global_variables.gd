@@ -1,4 +1,3 @@
-@uid("uid://dke1l2n6h1fdw") # Generated automatically, do not modify.
 extends Node
 
 var server_config: Dictionary = {}
@@ -72,6 +71,7 @@ var map_edges: Dictionary = {
 	}
 }
 
+
 func GetIsCellMineable(Cell: Vector2i):
 	#In future should check array/dictionary of white or black listed tiles
-	return(Cell.y != 2)
+	return Cell.y != 2
