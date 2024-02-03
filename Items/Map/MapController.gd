@@ -45,7 +45,6 @@ func _ready() -> void:
 	multiplayer.allow_object_decoding = true
 	#From Ben : Should check if this is safe to use
 
-
 	if Globals.is_server:
 		if not load_saved_map():
 			generate_map()
@@ -67,9 +66,11 @@ func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterSca
 	# r = radius
 	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
 
-func GetTopLayerDepth(x: float, Radius: float, MidRelativeDepth: float)->float:
+
+func GetTopLayerDepth(x: float, Radius: float, MidRelativeDepth: float) -> float:
 	#Top curve generation, needs an input intercept radius
-	return(cos(x/(2*Radius)/(3.14159265))*MidRelativeDepth)
+	return cos(x / (2 * Radius) / (3.14159265)) * MidRelativeDepth
+
 
 func load_saved_map() -> bool:
 	var success: bool = false
@@ -98,10 +99,12 @@ func load_saved_map() -> bool:
 		success = true
 	return success
 
+
 func RegenerateMap():
 	clear()
 	CurrentData.clear()
 	generate_map()
+
 
 ## Procedural world generation
 func generate_map() -> void:
@@ -112,8 +115,8 @@ func generate_map() -> void:
 
 	var AdditionalDepthNoiseScale = 30
 
-	var BarrierDepth = 2 #75
-	var MinimumTopDepth = 4 #60
+	var BarrierDepth = 2  #75
+	var MinimumTopDepth = 4  #60
 	var RandomDepthOffset = 0
 
 	var CraterGenRadius: int = 1909
@@ -124,7 +127,6 @@ func generate_map() -> void:
 
 	var FillHeight = 1000
 	var FillMiddleRelativeHeight = -20
-
 
 	#Here be dragons and uncommented code
 
@@ -138,13 +140,16 @@ func generate_map() -> void:
 				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
 			)
 		)
-		Depth-=roundi(BottomBoundaryNoise.get_noise_1d(Radius)*AdditionalDepthNoiseScale) + randi_range(0,RandomDepthOffset)
+		Depth -= (
+			roundi(BottomBoundaryNoise.get_noise_1d(Radius) * AdditionalDepthNoiseScale)
+			+ randi_range(0, RandomDepthOffset)
+		)
 
 		#Add bottom
-		var TopDepth = randi_range(0,RandomDepthOffset)
+		var TopDepth = randi_range(0, RandomDepthOffset)
 		for i: int in range(0, BarrierDepth):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
-		
+
 		#Add top layer
 		for i: int in range(-TopDepth, MinimumTopDepth):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
@@ -152,29 +157,32 @@ func generate_map() -> void:
 		CraterGenRadius -= 1
 
 	var EndDepth = GetDepthFunction(
-				float(OriginalCraterGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
-			)
+		float(OriginalCraterGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
+	)
 	var OriginalWastDistance = AdditionalWasteDistance
-	while(AdditionalWasteDistance >= -OriginalWastDistance):
-		var Radius = OriginalCraterGenRadius+AdditionalWasteDistance
-		if(AdditionalWasteDistance < 0.0):
-			Radius = -OriginalCraterGenRadius+AdditionalWasteDistance
+	while AdditionalWasteDistance >= -OriginalWastDistance:
+		var Radius = OriginalCraterGenRadius + AdditionalWasteDistance
+		if AdditionalWasteDistance < 0.0:
+			Radius = -OriginalCraterGenRadius + AdditionalWasteDistance
 
 		#Add bottom
-		var Depth = EndDepth - roundi(BottomBoundaryNoise.get_noise_1d(Radius)*AdditionalDepthNoiseScale) + randi_range(0,RandomDepthOffset)
+		var Depth = (
+			EndDepth
+			- roundi(BottomBoundaryNoise.get_noise_1d(Radius) * AdditionalDepthNoiseScale)
+			+ randi_range(0, RandomDepthOffset)
+		)
 		for i: int in range(0, BarrierDepth):
-			CurrentData[Vector2i((Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
-		
+			CurrentData[Vector2i(Radius, roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
+
 		#Add top layer
 		for i: int in range(0, MinimumTopDepth):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
 
-		AdditionalWasteDistance-=1
+		AdditionalWasteDistance -= 1
 
 	#Generate top curve
 	#Need intercept radius, aprocimate brute search or add inverse to depth function
 	#Could replace arbitrary radius with peak height for smoother finish and less walls
-
 
 	#Simple version
 	'''
@@ -274,6 +282,7 @@ func GetRandomStoneTile() -> Vector2i:
 
 func GetRandomOreTile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 1)
+
 
 func GetRandomBarrierRockTile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 2)
@@ -623,7 +632,7 @@ func MineCellAtPosition(Position: Vector2) -> void:
 		(CompensatedPosition in CurrentData.keys())
 		and (CurrentData[CompensatedPosition] != Vector2i(-1, -1))
 	):
-		if(Globals.GetIsCellMineable(CurrentData[CompensatedPosition])):
+		if Globals.GetIsCellMineable(CurrentData[CompensatedPosition]):
 			TileModificationParticlesController.DestroyCell(
 				CompensatedPosition, CurrentData[CompensatedPosition]
 			)
@@ -633,7 +642,7 @@ func MineCellAtPosition(Position: Vector2) -> void:
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
-	if(!Globals.GetIsCellMineable(get_cell_data_at_map_local_position(at_cell_position))):
+	if !Globals.GetIsCellMineable(get_cell_data_at_map_local_position(at_cell_position)):
 		return
 	var adjacent_cell_contents: Array = [
 		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
@@ -683,8 +692,9 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] = 1
 	ServeUpdateTilesFromGivenData(TilesToUpdate)
 
+
 func ServeUpdateTilesFromGivenData(TilesToUpdate):
-	if(len(TilesToUpdate.keys()) > 0):
+	if len(TilesToUpdate.keys()) > 0:
 		for Key in TilesToUpdate.keys():
 			set_cell(0, Key, 0, TilesToUpdate[Key])
 
