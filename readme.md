@@ -177,3 +177,42 @@ If you would like to ask questions or talk about this code specifically jump ove
 Do not use upper case letters in file or folder names, because this causes odd problems across operating systems such as Linux and Windows.
 
 File and Folder names should be in snake_case, which is the [Godot 4 standard](https://gdquest.gitbook.io/gdquests-guidelines/godot-gdscript-guidelines).
+
+## "Objects"
+I am a JavaScript developer, so I tend to use Object Literals, which in JavaScript are really the same as "classes". However Godot is a "pythonesque" language built on C++.  
+In Godot a Dictionary is really a hash map, as it would be in C++ or Python.  
+The way I use them in JavaScript would more properly be a Struct.
+
+Do NOT do this:
+```
+var map_edges: Dictionary = {
+	"min":
+	{
+		"x": -10000,
+		"y": -10000,
+	},
+	"max":
+	{
+		"x": 10000,
+		"y": 10000,
+	}
+}
+```
+
+DO do this:
+```
+## Map Edges - A static variable defining the maximum map size
+## Used by functions to find a safe place to place a player and to de-spawn objects that fall or fly out of the map.
+class MapEdges:
+	## Lowest x and y position of any possible occupied tile space
+	class Min:
+		static var x: int = -1
+		static var y: int = -1
+
+	## Highest x and y position of any possible occupied tile space
+	class Max:
+		static var x: int = 100000
+		static var y: int = 100000
+```
+
+Both will work, but the class example is more "Godot" proper and also you can type every variable and your IDE will like you better.

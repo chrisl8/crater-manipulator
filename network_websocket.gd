@@ -425,7 +425,7 @@ func player_joined(id: int, data: String) -> void:
 			# and increment it after.
 			if (
 				last_x_shift_direction == "positive"
-				and potential_player_position_in_map_coordinates.x > Globals.map_edges.min.x
+				and potential_player_position_in_map_coordinates.x > Globals.MapEdges.Min.x
 			):
 				last_x_shift_direction = "negative"
 				potential_player_position_in_map_coordinates.x -= last_x_shift_count
@@ -447,7 +447,7 @@ func player_joined(id: int, data: String) -> void:
 			)
 			reached_bottom_of_map = (
 				potential_player_position_in_map_coordinates.y + descender_counter
-				> Globals.map_edges.max.y
+				> Globals.MapEdges.Max.y
 			)
 			descender_counter += 1
 
@@ -465,9 +465,7 @@ func player_joined(id: int, data: String) -> void:
 		else:
 			# If we did, then set the position to be the same X position but at the highest Y point possible + player's size
 			potential_player_position = Globals.WorldMap.get_global_position_at_map_local_position(
-				Vector2i(
-					potential_player_position_in_map_coordinates.x, Globals.map_edges.min.y - 4
-				)
+				Vector2i(potential_player_position_in_map_coordinates.x, Globals.MapEdges.Min.y - 4)
 			)
 		# Otherwise, do not update the potential_player_position and start over
 		# TODO: There is nothing to stop this from looping forever in a worse case scenario

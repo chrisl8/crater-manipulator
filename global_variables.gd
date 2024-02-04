@@ -34,6 +34,24 @@ var initial_map_load_finished: bool = false
 var ResourceIDs: Dictionary = {"Stone": 0, "Red Ore": 1}
 var ResourceNames: Dictionary = {}
 
+var HasBuiltResourcesDictionary: bool = false
+
+var Players: Dictionary = {}
+
+
+## Map Edges - A static variable defining the maximum map size
+## Used by functions to find a safe place to place a player and to de-spawn objects that fall or fly out of the map.
+class MapEdges:
+	## Lowest x and y position of any possible occupied tile space
+	class Min:
+		static var x: int = -1
+		static var y: int = -1
+
+	## Highest x and y position of any possible occupied tile space
+	class Max:
+		static var x: int = 100000
+		static var y: int = 100000
+
 
 func GetResourceName(ID: int) -> String:
 	BuildResourcesDictionaries()
@@ -45,31 +63,11 @@ func GetResourceID(Name: String) -> Array:
 	return ResourceIDs[Name]
 
 
-var HasBuiltResourcesDictionary: bool = false
-
-
 func BuildResourcesDictionaries() -> void:
 	if !HasBuiltResourcesDictionary:
 		for Key: String in ResourceIDs.keys():
 			ResourceNames[ResourceIDs[Key]] = Key
 		HasBuiltResourcesDictionary = true
-
-
-var Players: Dictionary = {}
-
-var map_edges: Dictionary = {
-	"time_stamp": 0,
-	"min":
-	{
-		"x": -10000,
-		"y": -10000,
-	},
-	"max":
-	{
-		"x": 10000,
-		"y": 10000,
-	}
-}
 
 
 func GetIsCellMineable(Cell: Vector2i):

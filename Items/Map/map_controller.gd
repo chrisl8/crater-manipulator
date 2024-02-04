@@ -184,7 +184,7 @@ func generate_map() -> void:
 		AdditionalWasteDistance -= 1
 
 	#Generate top curve
-	#Need intercept radius, aprocimate brute search or add inverse to depth function
+	#Need intercept radius, approximate brute search or add inverse to depth function
 	#Could replace arbitrary radius with peak height for smoother finish and less walls
 
 	#Simple version

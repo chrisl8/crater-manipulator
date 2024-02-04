@@ -21,6 +21,7 @@ var UpdateSyncedRotation: bool = false
 
 var IsLocal: bool = false
 
+
 func _ready() -> void:
 	# Attempt to fix character getting stuck on tiles as they move parallel to them
 	# https://github.com/godotengine/godot/issues/47148
@@ -138,3 +139,9 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 func AddInventoryData(Data: Dictionary) -> void:
 	if IsLocal:
 		InventoryManager.AddData(Data)
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ball"):
+		Helpers.log_print("BALL!")
+		Spawner.thing.rpc_id(1, "Ball", Vector2(position.x, position.y - 100))
