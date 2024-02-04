@@ -6,7 +6,7 @@ var CurrentTool: int = 1
 
 const InteractRange: float = 200.0
 
-@export var DebugObject: Resource = preload("res://player/Debug Object.tscn")
+@export var DebugObject: Resource = preload("res://player/debug_object.tscn")
 
 @export var MiningParticles: GPUParticles2D
 
@@ -25,6 +25,7 @@ var SpawnedDebugObject: Node2D
 
 @export var ArmIKController: Node2D
 
+
 func UpdateMiningParticleLength() -> void:
 	var Extents: Vector3 = MiningParticles.process_material.get("emission_box_extents")
 	Extents.x = MiningDistance
@@ -37,6 +38,7 @@ func UpdateMiningParticleLength() -> void:
 @export var Head: Node2D
 
 @export var LegsManager: Node2D
+
 
 func Initialize(Local: bool) -> void:
 	IsLocal = Local
@@ -63,7 +65,7 @@ func _process(_delta: float) -> void:
 		MousePosition = get_global_mouse_position()
 
 		Flipped = MousePosition.x < global_position.x
-		if(Flipped):
+		if Flipped:
 			FlipPoint.scale.x = -1
 		else:
 			FlipPoint.scale.x = 1
@@ -79,7 +81,7 @@ func _process(_delta: float) -> void:
 		IsMining = mouse_left_down
 
 	else:
-		if(Flipped):
+		if Flipped:
 			FlipPoint.scale.x = -1
 		else:
 			FlipPoint.scale.x = 1
@@ -93,8 +95,10 @@ func _process(_delta: float) -> void:
 	Head.look_at(MousePosition)
 	MiningParticles.emitting = IsMining
 
+
 #Re-add when arms sometimes need to target other locations
 #@export var ArmTargetPosition: Vector2
+
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://crq02yhbdcyw7"
-path="res://.godot/imported/Mouse Cursor.png-e86b29219af2a199e970aafafd0d4593.ctex"
+uid="uid://cgoy7vka18x5b"
+path="res://.godot/imported/player_atlas.png-0bb7753a7238fd5b42b87abfc0a810d3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Items/Mouse Cursor.png"
-dest_files=["res://.godot/imported/Mouse Cursor.png-e86b29219af2a199e970aafafd0d4593.ctex"]
+source_file="res://player/player_atlas.png"
+dest_files=["res://.godot/imported/player_atlas.png-0bb7753a7238fd5b42b87abfc0a810d3.ctex"]
 
 [params]
 

@@ -170,3 +170,10 @@ The best place to get help with Godot in real time is the [Godot Discord Server]
 If you would like to ask questions or talk about this code specifically jump over to the [Discussions](https://github.com/chrisl8/crater-manipulator/discussions) tab at the top and start a new thread. I'll see it and try to respond as soon as I have time. I'm always happy to chat about my code.
 
 # Attributions
+
+# Style and Naming Conventions
+
+## File and Folder Names
+Do not use upper case letters in file or folder names, because this causes odd problems across operating systems such as Linux and Windows.
+
+File and Folder names should be in snake_case, which is the [Godot 4 standard](https://gdquest.gitbook.io/gdquests-guidelines/godot-gdscript-guidelines).

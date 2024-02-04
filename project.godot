@@ -13,7 +13,6 @@ config_version=5
 config/name="Crater Manipulator"
 run/main_scene="res://startup.tscn"
 config/features=PackedStringArray("4.2")
-config/icon="res://icon.svg"
 
 [autoload]
 
@@ -32,7 +31,7 @@ gdscript/warnings/integer_division=0
 
 window/size/viewport_width=576
 window/size/always_on_top=true
-mouse_cursor/custom_image="res://Items/Mouse Cursor.png"
+mouse_cursor/custom_image="res://items/mouse_cursor.png"
 
 [editor_plugins]
 

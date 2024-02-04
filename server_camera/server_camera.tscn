@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://d2xfjuc84u0r5"]
 
-[ext_resource type="Script" path="res://Server Camera/ServerCameraController.gd" id="1_knfvd"]
-[ext_resource type="Script" path="res://Items/Map/RegenerateMapButton.gd" id="2_on7ub"]
+[ext_resource type="Script" path="res://server_camera/server_camera_controller.gd" id="1_knfvd"]
+[ext_resource type="Script" path="res://items/map/regenerate_map_button.gd" id="2_on7ub"]
 
 [node name="ServerCamera" type="Node2D"]
 position = Vector2(-8, 15000)

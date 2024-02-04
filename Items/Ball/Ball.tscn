@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://bggbm2s34068s"]
 
-[ext_resource type="Script" path="res://Items/Ball/BallController.gd" id="1_gygkt"]
-[ext_resource type="Texture2D" uid="uid://bbok3i4ro1u0s" path="res://Items/Ball/Ball.png" id="2_g63ac"]
+[ext_resource type="Script" path="res://items/ball/ball_controller.gd" id="1_gygkt"]
+[ext_resource type="Texture2D" uid="uid://bbok3i4ro1u0s" path="res://items/ball/ball.png" id="2_g63ac"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_t2dte"]
 
