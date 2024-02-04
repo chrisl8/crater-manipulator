@@ -313,7 +313,6 @@ func data_received(data: String) -> void:
 
 ## Check player's position and surrounding area to ensure it is clear for spawning
 func check_location_and_surroundings(at_position: Vector2) -> bool:
-	Globals.WorldMap.update_map_edges(60)
 	var cell_position_at_player_potential_position: Vector2i = (
 		Globals.WorldMap.get_cell_position_at_global_position(at_position)
 	)

@@ -98,7 +98,6 @@ func load_saved_map() -> bool:
 			)
 		SetAllCellData(CurrentData, 0)
 		SyncedData = CurrentData
-		update_map_edges()
 		MapGenerated = true
 		success = true
 	return success
@@ -244,39 +243,7 @@ func generate_map() -> void:
 
 	SetAllCellData(CurrentData, 0)
 	SyncedData = CurrentData
-	update_map_edges()
 	MapGenerated = true
-
-
-## Update the Global map_edges variable using latest data
-## If an integer is provided, it will only be updated if the last update was more than the given number of seconds ago
-func update_map_edges(time_diff_in_seconds: int = 0) -> void:
-	if (
-		not time_diff_in_seconds
-		or Time.get_ticks_msec() - Globals.map_edges.time_stamp >= (time_diff_in_seconds * 1000)
-	):
-		Helpers.log_print("Updating map_edges")
-		Globals.map_edges.time_stamp = Time.get_ticks_msec()
-		# Use the correct data set based on client vs. server
-		# CurrentData is the "best" reality for clients to work from and
-		# SyncedData is the "best" data for the server to work from
-		var map_data_to_use: Dictionary
-		if Globals.is_server:
-			map_data_to_use = SyncedData
-		else:
-			map_data_to_use = CurrentData
-
-		# Save initial map "size" before flagging it as "ready"
-		# TODO: Timestamp this and turn it into a function that can be called again for updating
-		for map_coordinate: Vector2i in map_data_to_use:
-			if map_coordinate.x < Globals.map_edges.min.x:
-				Globals.map_edges.min.x = map_coordinate.x
-			if map_coordinate.x > Globals.map_edges.max.x:
-				Globals.map_edges.max.x = map_coordinate.x
-			if map_coordinate.y < Globals.map_edges.min.x:
-				Globals.map_edges.min.x = map_coordinate.y
-			if map_coordinate.y > Globals.map_edges.max.y:
-				Globals.map_edges.max.y = map_coordinate.y
 
 
 ## Gets a random valid stone tile ID from the atlas
