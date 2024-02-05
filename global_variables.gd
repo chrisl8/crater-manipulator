@@ -44,8 +44,8 @@ var Players: Dictionary = {}
 class MapEdges:
 	## Lowest x and y position of any possible occupied tile space
 	class Min:
-		static var x: int = -1
-		static var y: int = -1
+		static var x: int = -100000
+		static var y: int = -100000
 
 	## Highest x and y position of any possible occupied tile space
 	class Max:
@@ -70,6 +70,6 @@ func BuildResourcesDictionaries() -> void:
 		HasBuiltResourcesDictionary = true
 
 
-func GetIsCellMineable(Cell: Vector2i):
+func GetIsCellMineable(Cell: Vector2i) -> bool:
 	#In future should check array/dictionary of white or black listed tiles
 	return Cell.y != 2
