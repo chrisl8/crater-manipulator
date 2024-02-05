@@ -38,27 +38,6 @@ func unselect(other_name: String) -> void:
 	$SpotLight3D.visible = false
 
 
-@rpc("any_peer", "call_remote")
-func grab() -> void:
-	Helpers.log_print(
-		str(
-			"I (",
-			name,
-			") was grabbed by ",
-			multiplayer.get_remote_sender_id(),
-			" Deleting myself now"
-		),
-		"saddlebrown"
-	)
-	# Delete myself if someone grabbed me
-	queue_free()
-	# Once that is done, tell the player node that grabbed me to spawn a "held" version
-	var player_spawner_node: Node = get_node("/root/Main/Players")
-	var player: Node = player_spawner_node.get_node_or_null(str(multiplayer.get_remote_sender_id()))
-	if player and player.has_method("spawn_player_held_thing"):
-		player.spawn_player_held_thing.rpc(name)
-
-
 func my_name() -> String:
 	return get_parent().name
 
