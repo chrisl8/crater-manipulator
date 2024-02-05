@@ -32,15 +32,16 @@ func _process(delta: float) -> void:
 			count += 1
 
 
-#Calculate points and colors for single tile, repeat this for multiple tiles and combine results to create a block particle
+## Calculate points and colors for single tile, repeat this for multiple tiles and combine results to create a block particle
 func destroy_cell_local(at_position: Vector2i, id: Vector2i) -> Array:
-	print("destroy_cell_local ", at_position, " ", id)
 	var points: Array = []
 	var colors: Array = []
 
 	#Extract atlas image at tile, used for color sampling
 	var atlas: TileSetAtlasSource = map.tile_set.get_source(0)
 	var atlas_image: Image = atlas.texture.get_image()
+	if id == Vector2i(-1, -1):
+		id = Vector2i(0, 0)
 	var tile_image: Image = atlas_image.get_region(atlas.get_tile_texture_region(id))
 
 	var points_to_sample: int = particles_per_tile
@@ -69,7 +70,6 @@ func destroy_cell_local(at_position: Vector2i, id: Vector2i) -> Array:
 
 ## Collects tile data for each tile and combines into a single block particle
 func destroy_cells(positions: Array, ids: Array) -> void:
-	Helpers.log_print(str("destroy_cells ", positions, " ", ids))
 	var points: Array = []
 	var colors: Array = []
 	var amount: int = len(positions) * particles_per_tile
