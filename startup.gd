@@ -99,9 +99,6 @@ func parse_server_config_file_data(server_config_file_data: String) -> Dictionar
 
 
 func _ready() -> void:
-	display_pre_game_overlay()
-	pre_game_overlay.set_msg("Booting Universe...")
-
 	# Disable auto-quit so that we can catch it ourselves elsewhere
 	# Note that this alone will defeat Windows X or Alt+F4
 	# See helper_functions.gd quit_gracefully()
@@ -180,6 +177,10 @@ func _ready() -> void:
 		# No need to ever display this in web, as people just close the tab to end the game,
 		# and nothing we do can change that.
 		Globals.how_to_end_game_text = ""
+
+	if OS.is_debug_build() and !Globals.is_server:
+		# Delay before connecting to give server a chance to start up
+		await get_tree().create_timer(2.0).timeout
 
 	start_connection()
 
