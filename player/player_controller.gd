@@ -2,24 +2,20 @@ extends RigidBody2D
 
 @export var player: int = -1
 @export var player_spawn_point: Vector2 = Vector2(4, 1.5)
-
-@export var SyncedPosition: Vector2 = Vector2(0, 0):
+@export var synced_position: Vector2 = Vector2(0, 0):
 	set(new_value):
-		SyncedPosition = new_value
-		UpdateSyncedPosition = !IsLocal
-var UpdateSyncedPosition: bool = false
-
-@export var SyncedRotation: float = 0:
+		synced_position = new_value
+		update_synced_position = !player == multiplayer.get_unique_id()
+@export var synced_rotation: float = 0:
 	set(new_value):
-		SyncedRotation = new_value
-		UpdateSyncedRotation = !IsLocal
-var UpdateSyncedRotation: bool = false
-
+		synced_rotation = new_value
+		update_synced_rotation = !player == multiplayer.get_unique_id()
 @export var camera: Node
+@export var interaction_controller: Node2D
+@export var inventory_manager: Node2D
 
-@export var InteractionController: Node2D
-
-var IsLocal: bool = false
+var update_synced_position: bool = false
+var update_synced_rotation: bool = false
 
 
 func _ready() -> void:
@@ -36,16 +32,14 @@ func _ready() -> void:
 		space, PhysicsServer2D.SPACE_PARAM_CONTACT_MAX_ALLOWED_PENETRATION, 0.0
 	)
 
-	IsLocal = player == multiplayer.get_unique_id()
+	interaction_controller.initialize(player == multiplayer.get_unique_id())
+	inventory_manager.initialize(player == multiplayer.get_unique_id())
 
-	InteractionController.Initialize(IsLocal)
-	InventoryManager.Initialize(IsLocal)
+	set_process(player == multiplayer.get_unique_id())
+	set_physics_process(player == multiplayer.get_unique_id())
+	set_process_input(player == multiplayer.get_unique_id())
 
-	set_process(IsLocal)
-	set_physics_process(IsLocal)
-	set_process_input(IsLocal)
-
-	if IsLocal:
+	if player == multiplayer.get_unique_id():
 		camera.make_current()
 		Globals.my_camera = camera
 	else:
@@ -79,34 +73,34 @@ func _physics_process(delta: float) -> void:
 	'''
 
 	### Movement
-	var MoveInput: Vector2 = relative_input()
-	var Speed: float = 200.0
+	var move_input: Vector2 = relative_input()
+	var speed: float = 200.0
 
-	var Velocity: Vector2 = linear_velocity
-	if abs(MoveInput.x) > 0.1:
-		Velocity = Vector2(MoveInput.x * Speed, Velocity.y)
+	var velocity: Vector2 = linear_velocity
+	if abs(move_input.x) > 0.1:
+		velocity = Vector2(move_input.x * speed, velocity.y)
 	else:
-		var Damp: float = 5000.0
-		var Dampening: float = Velocity.x
-		if Velocity.x < 0.0:
-			Dampening = Velocity.x - (Damp * delta) * (Velocity.x / abs(Velocity.x))
-			Dampening = clamp(Dampening, Velocity.x, 0.0)
-		elif Velocity.x > 0:
-			Dampening = Velocity.x - (Damp * delta) * (Velocity.x / abs(Velocity.x))
-			Dampening = clamp(Dampening, 0.0, Velocity.x)
+		var damp: float = 5000.0
+		var dampening: float = velocity.x
+		if velocity.x < 0.0:
+			dampening = velocity.x - (damp * delta) * (velocity.x / abs(velocity.x))
+			dampening = clamp(dampening, velocity.x, 0.0)
+		elif velocity.x > 0:
+			dampening = velocity.x - (damp * delta) * (velocity.x / abs(velocity.x))
+			dampening = clamp(dampening, 0.0, velocity.x)
 
-		Velocity = Vector2(Dampening, Velocity.y)
-	if abs(MoveInput.y) > 0.1:
-		Velocity = Vector2(Velocity.x, MoveInput.y * Speed)
+		velocity = Vector2(dampening, velocity.y)
+	if abs(move_input.y) > 0.1:
+		velocity = Vector2(velocity.x, move_input.y * speed)
 
-	linear_velocity = Velocity
-	SyncedPosition = position
-	SyncedRotation = rotation
+	linear_velocity = velocity
+	synced_position = position
+	synced_rotation = rotation
 
 
 # Get movement vector based on input, relative to the player's head transform
 func relative_input() -> Vector2:
-	# Initialize the movement vector
+	# initialize the movement vector
 	var move: Vector2 = Vector2()
 	# Get cumulative input on axes
 	var input: Vector3 = Vector3()
@@ -122,23 +116,21 @@ func relative_input() -> Vector2:
 
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
-	if !IsLocal:
-		if UpdateSyncedPosition and UpdateSyncedRotation:
-			state.transform = Transform2D(SyncedRotation, SyncedPosition)
-		elif UpdateSyncedPosition:
-			state.transform = Transform2D(state.transform.get_rotation(), SyncedPosition)
-		elif UpdateSyncedRotation:
-			state.transform = Transform2D(SyncedRotation, state.origin)
-		UpdateSyncedPosition = false
-		UpdateSyncedRotation = false
+	if !player == multiplayer.get_unique_id():
+		if update_synced_position and update_synced_rotation:
+			state.transform = Transform2D(synced_rotation, synced_position)
+		elif update_synced_position:
+			state.transform = Transform2D(state.transform.get_rotation(), synced_position)
+		elif update_synced_rotation:
+			state.transform = Transform2D(synced_rotation, state.origin)
+		update_synced_position = false
+		update_synced_rotation = false
 
-
-@export var InventoryManager: Node2D
 
 @rpc("any_peer", "call_remote", "reliable")
-func AddInventoryData(Data: Dictionary) -> void:
-	if IsLocal:
-		InventoryManager.AddData(Data)
+func add_inventory_data(data: Dictionary) -> void:
+	if player == multiplayer.get_unique_id():
+		inventory_manager.add_data(data)
 
 
 func _input(event: InputEvent) -> void:

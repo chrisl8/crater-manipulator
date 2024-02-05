@@ -1,99 +1,93 @@
 extends Node2D
 
-var IsLocal: bool = false
+const INTERACT_RANGE: float = 200.0
 
-var CurrentTool: int = 1
-
-const InteractRange: float = 200.0
-
-@export var DebugObject: Resource = preload("res://player/debug_object.tscn")
-
-@export var MiningParticles: GPUParticles2D
-
-@export var IsMining: bool = false
-
-@export var MiningDistance: float = 0.0:
+@export var debug_object: Resource = preload("res://player/debug_object.tscn")
+@export var mining_particles: GPUParticles2D
+@export var is_mining: bool = false
+@export var mining_distance: float = 0.0:
 	set(new_value):
-		MiningDistance = new_value
-		UpdateMiningParticleLength()
+		mining_distance = new_value
+		update_mining_particle_length()
+@export var flip_point: Node2D
+@export var flipped: bool = false
+@export var arm_id_controller: Node2D
+@export var head: Node2D
+@export var legs_manager: Node2D
+@export var mouse_position: Vector2
 
-@export var FlipPoint: Node2D
-
-var SpawnedDebugObject: Node2D
-
-@export var Flipped: bool = false
-
-@export var ArmIKController: Node2D
-
-
-func UpdateMiningParticleLength() -> void:
-	var Extents: Vector3 = MiningParticles.process_material.get("emission_box_extents")
-	Extents.x = MiningDistance
-
-	MiningParticles.process_material.set("emission_box_extents", Extents)
-	MiningParticles.process_material.set("emission_shape_offset", Vector3(MiningDistance, 0.0, 0.0))
-	MiningParticles.look_at(MousePosition)
+var is_local: bool = false
+var current_tool: int = 1
+var spawned_debug_object: Node2D
+var max_hand_distance: float = 25.0
+var mouse_left_down: bool
+var mine_cast: RayCast2D
+var mining_speed: float = 0.1
+var current_mining_time: float = 100
 
 
-@export var Head: Node2D
+func update_mining_particle_length() -> void:
+	var extents: Vector3 = mining_particles.process_material.get("emission_box_extents")
+	extents.x = mining_distance
 
-@export var LegsManager: Node2D
+	mining_particles.process_material.set("emission_box_extents", extents)
+	mining_particles.process_material.set(
+		"emission_shape_offset", Vector3(mining_distance, 0.0, 0.0)
+	)
+	mining_particles.look_at(mouse_position)
 
 
-func Initialize(Local: bool) -> void:
-	IsLocal = Local
-	#set_process(IsLocal)
+func initialize(local: bool) -> void:
+	is_local = local
+	#set_process(is_local)
 
 	#
-	set_process_input(IsLocal)
-	set_process_internal(IsLocal)
-	set_process_unhandled_input(IsLocal)
-	set_process_unhandled_key_input(IsLocal)
-	set_physics_process(IsLocal)
-	set_physics_process_internal(IsLocal)
+	set_process_input(is_local)
+	set_process_internal(is_local)
+	set_process_unhandled_input(is_local)
+	set_process_unhandled_key_input(is_local)
+	set_physics_process(is_local)
+	set_physics_process_internal(is_local)
 	#
 
-	#SpawnedDebugObject = DebugObject.instantiate()
-	#get_node("/root").add_child(SpawnedDebugObject)
-
-
-var MaxHandDistance: float = 25.0
+	#spawned_debug_object = debug_object.instantiate()
+	#get_node("/root").add_child(spawned_debug_object)
 
 
 func _process(_delta: float) -> void:
-	if IsLocal:
-		MousePosition = get_global_mouse_position()
+	if is_local:
+		mouse_position = get_global_mouse_position()
 
-		Flipped = MousePosition.x < global_position.x
-		if Flipped:
-			FlipPoint.scale.x = -1
+		flipped = mouse_position.x < global_position.x
+		if flipped:
+			flip_point.scale.x = -1
 		else:
-			FlipPoint.scale.x = 1
+			flip_point.scale.x = 1
 
 		if Input.is_action_just_pressed(&"interact"):
-			Globals.WorldMap.modify_cell(
+			Globals.world_map.modify_cell(
 				Vector2i(randi_range(-50, 50), randi_range(0, -50)), Vector2i(1, 1)
 			)
 
-		CurrentMiningTime = clamp(CurrentMiningTime + _delta, 0.0, 100.0)
+		current_mining_time = clamp(current_mining_time + _delta, 0.0, 100.0)
 		if mouse_left_down:
-			MineRaycast()
-		IsMining = mouse_left_down
+			mine_raycast()
+		is_mining = mouse_left_down
 
 	else:
-		if Flipped:
-			FlipPoint.scale.x = -1
+		if flipped:
+			flip_point.scale.x = -1
 		else:
-			FlipPoint.scale.x = 1
+			flip_point.scale.x = 1
 
-	LegsManager.Flipped = Flipped
+	legs_manager.flipped = flipped
 
-	if IsMining:
-		MiningParticles.look_at(MousePosition)
+	if is_mining:
+		mining_particles.look_at(mouse_position)
 
-	ArmIKController.Target = MousePosition
-	Head.look_at(MousePosition)
-	MiningParticles.emitting = IsMining
+	arm_id_controller.target = mouse_position
+	head.look_at(mouse_position)
+	mining_particles.emitting = is_mining
 
 
 #Re-add when arms sometimes need to target other locations
@@ -104,68 +98,57 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
 			if !mouse_left_down:
-				LeftMouseClicked()
+				left_mouse_clicked()
 			mouse_left_down = true
 		elif event.button_index == 1 and not event.is_pressed():
 			mouse_left_down = false
 		elif event.button_index == 2 and event.is_pressed():
-			RightMouseClicked()
+			right_mouse_clicked()
 
 
-var mouse_left_down: bool
-@export var MousePosition: Vector2
-
-var MineCast: RayCast2D
-
-var MiningSpeed: float = 0.1
-var CurrentMiningTime: float = 100
-
-
-func LeftMouseClicked() -> void:
-	if CurrentTool == 1:
+func left_mouse_clicked() -> void:
+	if current_tool == 1:
 		pass
-	pass
 
 
-func MineRaycast() -> void:
-	if CurrentMiningTime > MiningSpeed:
-		CurrentMiningTime = 0.0
+func mine_raycast() -> void:
+	if current_mining_time > mining_speed:
+		current_mining_time = 0.0
 		var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 
-		#var SpawnedDebugObject = DebugObject.instantiate()
-		#get_node("/root").add_child(SpawnedDebugObject)
-		#SpawnedDebugObject.global_position = Arm.global_position
+		#var spawned_debug_object = debug_object.instantiate()
+		#get_node("/root").add_child(spawned_debug_object)
+		#spawned_debug_object.global_position = Arm.global_position
 
-		var ArmPosition: Vector2 = ArmIKController.global_position
-		var MiningParticleDistance: float = (
+		var arm_position: Vector2 = arm_id_controller.global_position
+		var mining_particle_distance: float = (
 			clamp(
-				clamp(ArmPosition.distance_to(MousePosition), 0, InteractRange),
+				clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE),
 				0.0,
-				MiningParticles.global_position.distance_to(MousePosition)
+				mining_particles.global_position.distance_to(mouse_position)
 			)
 			/ 2.0
 		)
 		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			ArmPosition,
+			arm_position,
 			(
-				ArmPosition
+				arm_position
 				+ (
-					ArmIKController.global_transform.x
-					* clamp(ArmPosition.distance_to(MousePosition), 0, InteractRange)
+					arm_id_controller.global_transform.x
+					* clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
 				)
 			)
 		)
 		query.exclude = [self]
 		var result: Dictionary = space_state.intersect_ray(query)
 		if result.size() > 0:
-			var HitPoint: Vector2 = result["position"]
+			var hit_point: Vector2 = result["position"]
 			if result["collider"] is TileMap:
-				Globals.WorldMap.MineCellAtPosition(HitPoint - result["normal"])
-			MiningParticleDistance = MiningParticles.global_position.distance_to(HitPoint) / 2.0
+				Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
+			mining_particle_distance = mining_particles.global_position.distance_to(hit_point) / 2.0
 
-		MiningDistance = MiningParticleDistance
+		mining_distance = mining_particle_distance
 
 
-func RightMouseClicked() -> void:
-	Globals.WorldMap.place_cell_at_position(get_global_mouse_position())
-	pass
+func right_mouse_clicked() -> void:
+	Globals.world_map.place_cell_at_position(get_global_mouse_position())

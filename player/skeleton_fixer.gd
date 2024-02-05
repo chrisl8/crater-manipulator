@@ -12,9 +12,9 @@ extends Skeleton2D
 func _apply_all_skeleton_modifier_set_local_to_scene(
 	stack: SkeletonModificationStack2D, boo: bool, level: int
 ) -> void:
-	var indent: String = ""
-	for k: int in range(0, level):
-		indent += "  "
+	# var indent: String = ""
+	# for k: int in range(0, level):
+	# 	indent += "  "
 
 	if !stack:
 		#print("%sStack empty" % [indent])

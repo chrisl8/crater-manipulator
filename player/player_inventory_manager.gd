@@ -1,38 +1,37 @@
 extends Node2D
 
-var PowderResources: Dictionary = {}
+const MAX_STONE: int = 100
+const MAX_BAR_SCALE: float = 4
 
-@export var StoneBar: Control
-const MaxStone: int = 100
-const MaxBarScale: float = 4
+@export var stone_bar: Control
+
+var powder_resources: Dictionary = {}
+var is_local: bool = false
+var inventory_updated: bool = false
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	#Round about because names dictionary isn't defined till request
-	for Key: String in Globals.ResourceIDs.keys():
-		PowderResources[Key] = 0
+	for key: String in Globals.resource_ids.keys():
+		powder_resources[key] = 0
 
 
-var IsLocal: bool = false
-
-
-func Initialize(NewIsLocal: bool) -> void:
-	IsLocal = NewIsLocal
-	set_process(IsLocal)
-	InventoryUpdated = true
-
-
-var InventoryUpdated: bool = false
+func initialize(new_is_local: bool) -> void:
+	is_local = new_is_local
+	set_process(is_local)
+	inventory_updated = true
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	if InventoryUpdated:
-		StoneBar.scale.y = float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"])
-		#print(float(MaxBarScale) / float(MaxStone) * float(PowderResources["Stone"]))
-		#print(StoneBar.scale.y)
-		InventoryUpdated = false
+	if inventory_updated:
+		stone_bar.scale.y = (
+			float(MAX_BAR_SCALE) / float(MAX_STONE) * float(powder_resources["Stone"])
+		)
+		#print(float(MAX_BAR_SCALE) / float(MAX_STONE) * float(powder_resources["Stone"]))
+		#print(stone_bar.scale.y)
+		inventory_updated = false
 
 
 #func AddResource(ID: Vector2i, Amount: int):
@@ -40,12 +39,12 @@ func _process(_delta: float) -> void:
 #		pass
 
 
-func AddData(Data: Dictionary) -> void:
-	for Key: int in Data.keys():
-		var Extra: int = PowderResources[Globals.GetResourceName(Key)] + Data[Key] - MaxStone
-		if Extra <= 0:
-			PowderResources[Globals.GetResourceName(Key)] += Data[Key]
+func add_data(data: Dictionary) -> void:
+	for key: int in data.keys():
+		var extra: int = powder_resources[Globals.get_resource_name(key)] + data[key] - MAX_STONE
+		if extra <= 0:
+			powder_resources[Globals.get_resource_name(key)] += data[key]
 		else:
 			#Too much stone, delete extra for now
-			PowderResources[Globals.GetResourceName(Key)] = MaxStone
-	InventoryUpdated = true
+			powder_resources[Globals.get_resource_name(key)] = MAX_STONE
+	inventory_updated = true

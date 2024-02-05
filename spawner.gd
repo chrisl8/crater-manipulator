@@ -38,22 +38,3 @@ func thing(thing_name: String, spawn_position: Vector2 = Vector2.ZERO, id: int =
 			new_thing.spawn_position = spawn_position
 		Helpers.log_print(str("spawning ", thing_name_to_spawn), "yellow")
 		things_spawning_node.add_child(new_thing)
-
-
-# This is ONLY called on the server instance
-# This is called on EVERY update in the _process() function in network_websocket.gd
-func things() -> void:
-	# Various Things that respawn if lost
-	# The way things get lost is physics yeets them out of the rooms
-	# and then they fall past the boundary where they are deleted
-	# by their own code
-
-	# Nothing left here, so this comment is an example
-	#thing("Ball", 1, Vector2(4, 1, -2))
-
-	# Things to only spawn once, even if they go away
-	# Things that can be picked up will disappear when picked up,
-	# so they must not respawn then.
-	if not done_once:
-		done_once = true
-		#thing("Whatever", 1, Vector2(0, 0, 0))

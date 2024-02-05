@@ -4,23 +4,25 @@ const CHUNK_SIZE: int = 4000
 const SEND_FREQUENCY: float = 0.01
 const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
 
-var MapGenerated: bool = false
+@export var tile_modification_particles_controller: Node2D
+
+var map_generated: bool = false
 
 #No longer using arrays, read/write requires an indexing system which negates the performance benefit of using array index overlap as link. Reading Positions and IDs separately may be faster if staggered separately but can be added later and merged into local dictionaries.
 
 #Last change from server, considered highest authority on accuracy
-var SyncedData: Dictionary = {}
+var synced_data: Dictionary = {}
 #Current map state, presumably faster than reading tilemap again
-var CurrentData: Dictionary = {}
+var current_data: Dictionary = {}
 #Local modifications buffered until next sync cycle
-var ChangedData: Dictionary = {}
+var changed_data: Dictionary = {}
 
-# CurrentData is the "best" reality for clients to work from and
-# SyncedData is the "best" data for the server to work from
+# current_data is the "best" reality for clients to work from and
+# synced_data is the "best" data for the server to work from
 
 #NOTE : Godot passes all dictionaries by reference, remember that.
 
-var ServerDataChanged: bool = false
+var server_data_changed: bool = false
 
 var current_cycle_time: float = 0.0
 var re_request_initial_map_data_timer: float = 0.0
@@ -28,11 +30,11 @@ var re_request_initial_map_data_timer: float = 0.0
 var local_player_initial_map_data_current_chunk_id: int = 0
 
 #Changes the server has received and accepted, and is waiting to send back to all clients later
-var ServerBufferedChanges: Dictionary = {}
+var server_buffered_changes: Dictionary = {}
 
-var StoredPlayerInventoryDrops: Dictionary = {}
+var stored_player_inventory_drops: Dictionary = {}
 
-var BufferedChangesReceivedFromServer: Array[Dictionary] = []
+var buffered_changes_received_from_server: Array[Dictionary] = []
 
 var server_side_per_player_initial_map_data: Dictionary = {}
 
@@ -56,24 +58,28 @@ func _ready() -> void:
 	else:
 		request_initial_map_data.rpc_id(1)
 
-	Globals.WorldMap = self
+	Globals.world_map = self
 
 
-func GetDepthFunction(x: float, WidthScale: float, HeightScale: float, CraterScale: float) -> float:
+func get_depth_function(
+	x: float, width_scale: float, height_scale: float, crater_scale: float
+) -> float:
 	# Desmos Formula:
 	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
 	#x>r
 	#x<r
-	# d = WidthScale
-	# h = HeightScale
-	# c = CraterScale
+	# d = width_scale
+	# h = height_scale
+	# c = crater_scale
 	# r = radius
-	return -1.0 * sin(x * WidthScale / CraterScale) / (x * WidthScale / CraterScale) * HeightScale
+	return (
+		-1.0 * sin(x * width_scale / crater_scale) / (x * width_scale / crater_scale) * height_scale
+	)
 
 
-func GetTopLayerDepth(x: float, Radius: float, MidRelativeDepth: float) -> float:
+func get_top_layer_depth(x: float, radius: float, mid_relative_depth: float) -> float:
 	#Top curve generation, needs an input intercept radius
-	return cos(x / (2 * Radius) / (3.14159265)) * MidRelativeDepth
+	return cos(x / (2 * radius) / (3.14159265)) * mid_relative_depth
 
 
 func load_saved_map() -> bool:
@@ -93,90 +99,93 @@ func load_saved_map() -> bool:
 
 		var loaded_map_data: Dictionary = json.data
 		for key: String in loaded_map_data:
-			CurrentData[str_to_var("Vector2i" + key)] = str_to_var(
+			current_data[str_to_var("Vector2i" + key)] = str_to_var(
 				"Vector2i" + loaded_map_data[key]
 			)
-		SetAllCellData(CurrentData, 0)
-		SyncedData = CurrentData
-		MapGenerated = true
+		set_all_cell_data(current_data, 0)
+		synced_data = current_data
+		map_generated = true
 		success = true
 	return success
 
 
-func RegenerateMap() -> void:
+func regenerate_map() -> void:
 	clear()
-	CurrentData.clear()
+	current_data.clear()
 	generate_map()
 
 
 ## Procedural world generation
 func generate_map() -> void:
-	var BottomBoundaryNoise: FastNoiseLite = FastNoiseLite.new()
+	var bottom_boundary_noise: FastNoiseLite = FastNoiseLite.new()
 
-	BottomBoundaryNoise.seed = randi()
-	BottomBoundaryNoise.noise_type = FastNoiseLite.TYPE_PERLIN
+	bottom_boundary_noise.seed = randi()
+	bottom_boundary_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 
-	var AdditionalDepthNoiseScale: int = 30
+	var additional_depth_noise_scale: int = 30
 
-	var BarrierDepth: int = 75
-	var MinimumTopDepth: int = 60
-	var RandomDepthOffset: int = 0
+	var barrier_depth: int = 75
+	var minimum_top_depth: int = 60
+	var random_depth_offset: int = 0
 
-	var CraterGenRadius: int = 1909
-	var WidthScale: int = 8
-	var HeightScale: int = 1000
-	var CraterScale: float = 2000.0
-	var AdditionalWasteDistance: int = 1000
+	var crater_generate_radius: int = 1909
+	var width_scale: int = 8
+	var height_scale: int = 1000
+	var crater_scale: float = 2000.0
+	var additional_waste_distance: int = 1000
 
-	var OriginalCraterGenRadius: int = CraterGenRadius
-	while CraterGenRadius >= -OriginalCraterGenRadius:
-		var Radius: float = float(CraterGenRadius)
-		if CraterGenRadius == 0:
-			Radius += 0.00001
-		var Depth: int = roundi(
-			GetDepthFunction(
-				float(Radius), float(WidthScale), float(HeightScale), float(CraterScale)
+	var original_crater_generate_radius: int = crater_generate_radius
+	while crater_generate_radius >= -original_crater_generate_radius:
+		var radius: float = float(crater_generate_radius)
+		if crater_generate_radius == 0:
+			radius += 0.00001
+		var depth: int = roundi(
+			get_depth_function(
+				float(radius), float(width_scale), float(height_scale), float(crater_scale)
 			)
 		)
-		Depth -= (
-			roundi(BottomBoundaryNoise.get_noise_1d(Radius) * AdditionalDepthNoiseScale)
-			+ randi_range(0, RandomDepthOffset)
+		depth -= (
+			roundi(bottom_boundary_noise.get_noise_1d(radius) * additional_depth_noise_scale)
+			+ randi_range(0, random_depth_offset)
 		)
 
 		#Add bottom
-		var TopDepth: int = randi_range(0, RandomDepthOffset)
-		for i: int in range(0, BarrierDepth):
-			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
+		var top_depth: int = randi_range(0, random_depth_offset)
+		for i: int in range(0, barrier_depth):
+			current_data[Vector2i(roundi(radius), roundi(-(depth - i)))] = get_random_barrier_rock_tile()
 
 		#Add top layer
-		for i: int in range(-TopDepth, MinimumTopDepth):
-			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
+		for i: int in range(-top_depth, minimum_top_depth):
+			current_data[Vector2i(roundi(radius), roundi(-(depth + i)))] = get_random_stone_tile()
 
-		CraterGenRadius -= 1
+		crater_generate_radius -= 1
 
-	var EndDepth: float = GetDepthFunction(
-		float(OriginalCraterGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
+	var end_depth: float = get_depth_function(
+		float(original_crater_generate_radius),
+		float(width_scale),
+		float(height_scale),
+		float(crater_scale)
 	)
-	var OriginalWastDistance: int = AdditionalWasteDistance
-	while AdditionalWasteDistance >= -OriginalWastDistance:
-		var Radius: int = OriginalCraterGenRadius + AdditionalWasteDistance
-		if AdditionalWasteDistance < 0:
-			Radius = -OriginalCraterGenRadius + AdditionalWasteDistance
+	var original_waste_distance: int = additional_waste_distance
+	while additional_waste_distance >= -original_waste_distance:
+		var radius: int = original_crater_generate_radius + additional_waste_distance
+		if additional_waste_distance < 0:
+			radius = -original_crater_generate_radius + additional_waste_distance
 
 		#Add bottom
-		var Depth: float = (
-			EndDepth
-			- roundi(BottomBoundaryNoise.get_noise_1d(Radius) * AdditionalDepthNoiseScale)
-			+ randi_range(0, RandomDepthOffset)
+		var depth: float = (
+			end_depth
+			- roundi(bottom_boundary_noise.get_noise_1d(radius) * additional_depth_noise_scale)
+			+ randi_range(0, random_depth_offset)
 		)
-		for i: int in range(0, BarrierDepth):
-			CurrentData[Vector2i(Radius, roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
+		for i: int in range(0, barrier_depth):
+			current_data[Vector2i(radius, roundi(-(depth - i)))] = get_random_barrier_rock_tile()
 
 		#Add top layer
-		for i: int in range(0, MinimumTopDepth):
-			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth + i)))] = GetRandomStoneTile()
+		for i: int in range(0, minimum_top_depth):
+			current_data[Vector2i(roundi(radius), roundi(-(depth + i)))] = get_random_stone_tile()
 
-		AdditionalWasteDistance -= 1
+		additional_waste_distance -= 1
 
 	#Generate top curve
 	#Need intercept radius, approximate brute search or add inverse to depth function
@@ -185,23 +194,23 @@ func generate_map() -> void:
 	#Simple version
 	'''
 	var Diameter = 400
-	var CurrentRadius = Diameter / 2
-	var Radius = Diameter / 2
+	var current_radius = Diameter / 2
+	var radius = Diameter / 2
 
 	var TopCenter = -10
 	var BottomCenter = -130
 	var TopEdge = 5
 	var BottomEdge = -10
 
-	while CurrentRadius >= 0:
-		var RadialMultiplier = 1.0 - cos(3.14159265 / Radius * CurrentRadius / 2.0)
+	while current_radius >= 0:
+		var RadialMultiplier = 1.0 - cos(3.14159265 / radius * current_radius / 2.0)
 		var TopHeight = roundi(
 			(
 				float(TopCenter)
 				+ (
 					(float(TopEdge) - float(TopCenter))
-					/ float(Radius)
-					* float(CurrentRadius)
+					/ float(radius)
+					* float(current_radius)
 					* float(RadialMultiplier)
 				)
 			)
@@ -211,8 +220,8 @@ func generate_map() -> void:
 				float(BottomCenter)
 				+ (
 					(float(BottomEdge) - float(BottomCenter))
-					/ float(Radius)
-					* float(CurrentRadius)
+					/ float(radius)
+					* float(current_radius)
 					* float(RadialMultiplier)
 				)
 			)
@@ -223,57 +232,57 @@ func generate_map() -> void:
 
 		for Level in range(BottomHeightA, TopHeight, 1):
 			if randf() > 0.98:
-				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomOreTile()
+				current_data[Vector2i(current_radius, -Level)] = get_random_ore_tile()
 			else:
-				CurrentData[Vector2i(CurrentRadius, -Level)] = GetRandomStoneTile()
+				current_data[Vector2i(current_radius, -Level)] = get_random_stone_tile()
 
 		for Level in range(BottomHeightB, TopHeight, 1):
 			if randf() > 0.98:
-				CurrentData[Vector2i(-CurrentRadius, -Level)] = GetRandomOreTile()
+				current_data[Vector2i(-current_radius, -Level)] = get_random_ore_tile()
 			else:
-				CurrentData[Vector2i(-CurrentRadius, -Level)] = GetRandomStoneTile()
+				current_data[Vector2i(-current_radius, -Level)] = get_random_stone_tile()
 
-		CurrentRadius -= 1.0
+		current_radius -= 1.0
 	'''
 
-	SetAllCellData(CurrentData, 0)
-	SyncedData = CurrentData
-	MapGenerated = true
+	set_all_cell_data(current_data, 0)
+	synced_data = current_data
+	map_generated = true
 
 
 ## Gets a random valid stone tile ID from the atlas
-func GetRandomStoneTile() -> Vector2i:
+func get_random_stone_tile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 0)
 
 
-func GetRandomOreTile() -> Vector2i:
+func get_random_ore_tile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 1)
 
 
-func GetRandomBarrierRockTile() -> Vector2i:
+func get_random_barrier_rock_tile() -> Vector2i:
 	return Vector2i(randi_range(0, 9), 2)
 
 
 func _process(delta: float) -> void:
 	# Initial map data send/receive is rate limited by client ack, so no need to rate limit it otherwise.
 	if Globals.is_server:
-		if MapGenerated:
+		if map_generated:
 			chunk_and_send_initial_map_data_to_players()
 	else:
 		if not Globals.initial_map_load_finished:
 			if map_download_finished:
 				if not map_initialization_started:
-					# Derpy method to update the overlay before running the SetAllCellData function, which can be slow
+					# Derpy method to update the overlay before running the set_all_cell_data function, which can be slow
 					Network.update_pre_game_overlay.emit("Initializing map...")
 					map_initialization_started = true
 				else:
-					if len(BufferedChangesReceivedFromServer) > 0:
-						for BufferedChange: Dictionary in BufferedChangesReceivedFromServer:
-							for Key: Vector2i in BufferedChange.keys():
-								SyncedData[Key] = BufferedChange[Key]
-								CurrentData[Key] = BufferedChange[Key]
-					BufferedChangesReceivedFromServer.clear()
-					SetAllCellData(CurrentData, 0)
+					if len(buffered_changes_received_from_server) > 0:
+						for buffered_change: Dictionary in buffered_changes_received_from_server:
+							for key: Vector2i in buffered_change.keys():
+								synced_data[key] = buffered_change[key]
+								current_data[key] = buffered_change[key]
+					buffered_changes_received_from_server.clear()
+					set_all_cell_data(current_data, 0)
 					Globals.initial_map_load_finished = true
 			else:
 				re_request_initial_map_data_timer += delta
@@ -290,53 +299,55 @@ func _process(delta: float) -> void:
 	current_cycle_time += delta
 	if current_cycle_time > SEND_FREQUENCY:
 		if Globals.is_server:
-			ServerSendBufferedChanges()
-			if MapGenerated:
-				if len(StoredPlayerInventoryDrops):
-					for Key: int in StoredPlayerInventoryDrops.keys():
-						Globals.Players[Key].AddInventoryData.rpc(StoredPlayerInventoryDrops[Key])
-					StoredPlayerInventoryDrops.clear()
+			server_send_buffered_changes()
+			if map_generated:
+				if len(stored_player_inventory_drops):
+					for key: int in stored_player_inventory_drops.keys():
+						Globals.players[key].add_inventory_data.rpc(
+							stored_player_inventory_drops[key]
+						)
+					stored_player_inventory_drops.clear()
 		else:
-			PushChangedData()
+			push_changed_data()
 		current_cycle_time = 0.0
 
 
 ## Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
-func ServerSendBufferedChanges() -> void:
-	if len(ServerBufferedChanges.keys()) > 0:
-		var Count: int = CHUNK_SIZE
-		var ChunkedData: Dictionary = {}
-		while Count > 0 and len(ServerBufferedChanges.keys()) > 0:
-			ChunkedData[ServerBufferedChanges.keys()[0]] = ServerBufferedChanges[
-				ServerBufferedChanges.keys()[0]
+func server_send_buffered_changes() -> void:
+	if len(server_buffered_changes.keys()) > 0:
+		var count: int = CHUNK_SIZE
+		var chunked_data: Dictionary = {}
+		while count > 0 and len(server_buffered_changes.keys()) > 0:
+			chunked_data[server_buffered_changes.keys()[0]] = server_buffered_changes[
+				server_buffered_changes.keys()[0]
 			]
-			ServerBufferedChanges.erase(ServerBufferedChanges.keys()[0])
-			Count -= 1
-		ServerSendChangedData.rpc(ChunkedData)
+			server_buffered_changes.erase(server_buffered_changes.keys()[0])
+			count -= 1
+		server_send_changed_data.rpc(chunked_data)
 
 
 ## Set the tile map to the given values at given cells. Clears the tile map before doing so. Meant for complete map refreshes, not for incremental changes
-func SetAllCellData(Data: Dictionary, Layer: int) -> void:
-	clear_layer(Layer)
-	for Key: Vector2i in Data.keys():
-		set_cell(Layer, Key, 0, Data[Key])
+func set_all_cell_data(data: Dictionary, layer: int) -> void:
+	clear_layer(layer)
+	for key: Vector2i in data.keys():
+		set_cell(layer, key, 0, data[key])
 	Network.update_pre_game_overlay.emit("Map initialization done.")
 
 
 ## Get the positions of every cell in the tile map
-func GetCellPositions(Layer: int) -> Array[Vector2i]:
-	var Positions: Array[Vector2i] = get_used_cells(Layer)
-	return Positions
+func get_cell_positions(layer: int) -> Array[Vector2i]:
+	var positions: Array[Vector2i] = get_used_cells(layer)
+	return positions
 
 
 ## Get the tile IDs of every cell in the tile map
-func GetCellIDs(Layer: int) -> Array:
-	var IDs: Array[Vector2i] = []
-	var Positions: Array[Vector2i] = get_used_cells(Layer)
+func get_cell_ids(layer: int) -> Array:
+	var ids: Array[Vector2i] = []
+	var positions: Array[Vector2i] = get_used_cells(layer)
 
-	for Position: Vector2i in Positions:
-		IDs.append(get_cell_atlas_coords(Layer, Position))
-	return IDs
+	for at_position: Vector2i in positions:
+		ids.append(get_cell_atlas_coords(layer, at_position))
+	return ids
 
 
 ## Requests a world state sync from the server, this is an initial request only sent when a client first joins
@@ -358,8 +369,8 @@ func request_initial_map_data() -> void:
 	# It is required that we convert the Dictionary to an Array,
 	# because we cannot iterate over a Dictionary in "chunks" in different frames,
 	# because there is no defined order for a Dictionary.
-	for key: Vector2i in SyncedData:
-		var value: Vector2i = SyncedData[key]
+	for key: Vector2i in synced_data:
+		var value: Vector2i = synced_data[key]
 		server_side_per_player_initial_map_data[player_id].synced_map_data_snapshot.append(
 			[key, value]
 		)
@@ -383,10 +394,10 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 				)
 			):
 				if not server_side_per_player_initial_map_data[player_id].resend:
-					var StreamData: StreamPeerBuffer = StreamPeerBuffer.new()
+					var stream_data: StreamPeerBuffer = StreamPeerBuffer.new()
 
 					while (
-						StreamData.get_size() < 64000  # Should this relate to the setting used in network_websocket?
+						stream_data.get_size() < 64000  # Should this relate to the setting used in network_websocket?
 						and (
 							(
 								server_side_per_player_initial_map_data[player_id]
@@ -414,10 +425,10 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 							server_side_per_player_initial_map_data[player_id]
 							. synced_map_data_snapshot[next_map_index]
 						)
-						StreamData.put_16(map_entry[0][0])
-						StreamData.put_16(map_entry[0][1])
-						StreamData.put_16(map_entry[1][0])
-						StreamData.put_16(map_entry[1][1])
+						stream_data.put_16(map_entry[0][0])
+						stream_data.put_16(map_entry[0][1])
+						stream_data.put_16(map_entry[1][0])
+						stream_data.put_16(map_entry[1][1])
 						server_side_per_player_initial_map_data[player_id].last_sent_map_data_index = next_map_index
 
 					server_side_per_player_initial_map_data[player_id].last_sent_chunk_id += 1
@@ -436,7 +447,7 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 						server_side_per_player_initial_map_data[player_id].finished_sending = true
 
 					server_side_per_player_initial_map_data[player_id].last_sent_stream_buffer = (
-						StreamData.duplicate()
+						stream_data.duplicate()
 					)
 
 				server_side_per_player_initial_map_data[player_id].resend = false
@@ -536,8 +547,8 @@ func send_initial_map_data_chunk_to_client(
 	while data.get_available_bytes() >= 8:
 		var map_position: Vector2i = Vector2i(data.get_16(), data.get_16())
 		var id: Vector2i = Vector2i(data.get_16(), data.get_16())
-		SyncedData[map_position] = id
-		CurrentData[map_position] = id
+		synced_data[map_position] = id
+		current_data[map_position] = id
 	acknowledge_received_chunk.rpc_id(1, local_player_initial_map_data_current_chunk_id)
 	Network.update_pre_game_overlay.emit("Loading map", percent_complete)
 
@@ -562,14 +573,14 @@ func modify_cell(at_position: Vector2i, id: Vector2i) -> void:
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
-	if at_position in ChangedData.keys():
-		ChangedData[at_position] = [ChangedData[at_position][0], id]
-	elif SyncedData.has(at_position):
-		ChangedData[at_position] = [SyncedData[at_position], id]
+	if at_position in changed_data.keys():
+		changed_data[at_position] = [changed_data[at_position][0], id]
+	elif synced_data.has(at_position):
+		changed_data[at_position] = [synced_data[at_position], id]
 	else:
-		ChangedData[at_position] = [Vector2i(-1, -1), id]
+		changed_data[at_position] = [Vector2i(-1, -1), id]
 
-	SetCellData(at_position, id)
+	set_cell_data(at_position, id)
 
 
 ## Return the map tile position at a given world position
@@ -580,13 +591,13 @@ func get_cell_position_at_global_position(at_position: Vector2) -> Vector2i:
 ## Return the tile data at a given map tile position
 func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
 	# Use the correct data set based on client vs. server
-	# CurrentData is the "best" reality for clients to work from and
-	# SyncedData is the "best" data for the server to work from
+	# current_data is the "best" reality for clients to work from and
+	# synced_data is the "best" data for the server to work from
 	var map_data_to_use: Dictionary
 	if Globals.is_server:
-		map_data_to_use = SyncedData
+		map_data_to_use = synced_data
 	else:
-		map_data_to_use = CurrentData
+		map_data_to_use = current_data
 	if map_data_to_use.has(at_position):
 		return map_data_to_use[at_position]
 	# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
@@ -605,23 +616,23 @@ func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2
 
 
 ## Place air at a position : TEST TEMP
-func MineCellAtPosition(Position: Vector2) -> void:
-	var CompensatedPosition: Vector2i = local_to_map(to_local(Position))
+func mine_cell_at_position(at_position: Vector2) -> void:
+	var compensated_position: Vector2i = local_to_map(to_local(at_position))
 	if (
-		(CompensatedPosition in CurrentData.keys())
-		and (CurrentData[CompensatedPosition] != Vector2i(-1, -1))
+		(compensated_position in current_data.keys())
+		and (current_data[compensated_position] != Vector2i(-1, -1))
 	):
-		if Globals.GetIsCellMineable(CurrentData[CompensatedPosition]):
-			TileModificationParticlesController.DestroyCell(
-				CompensatedPosition, CurrentData[CompensatedPosition]
+		if Globals.get_is_cell_mineable(current_data[compensated_position]):
+			tile_modification_particles_controller.destroy_cell(
+				compensated_position, current_data[compensated_position]
 			)
-			modify_cell(CompensatedPosition, Vector2i(-1, -1))
+			modify_cell(compensated_position, Vector2i(-1, -1))
 
 
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
-	if !Globals.GetIsCellMineable(get_cell_data_at_map_local_position(at_cell_position)):
+	if !Globals.get_is_cell_mineable(get_cell_data_at_map_local_position(at_cell_position)):
 		return
 	var adjacent_cell_contents: Array = [
 		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
@@ -634,80 +645,78 @@ func place_cell_at_position(at_position: Vector2) -> void:
 		if cell_content != Vector2i(-1, -1):
 			can_place_cell = true
 	if can_place_cell:
-		modify_cell(local_to_map(to_local(at_position)), GetRandomStoneTile())
+		modify_cell(local_to_map(to_local(at_position)), get_random_stone_tile())
 
 
 ## Set the current data of a cell to a given value
-func SetCellData(Position: Vector2i, ID: Vector2i) -> void:
-	CurrentData[Position] = ID
-	set_cell(0, Position, 0, ID)
+func set_cell_data(at_position: Vector2i, id: Vector2i) -> void:
+	current_data[at_position] = id
+	set_cell(0, at_position, 0, id)
 
 
 ## Push change data stored on the client to the server, if there is any
 ## Still need to add chunking to this process right here
-func PushChangedData() -> void:
-	if len(ChangedData.keys()) > 0:
-		transfer_changed_map_data_to_server.rpc_id(1, ChangedData)
-		ChangedData.clear()
+func push_changed_data() -> void:
+	if len(changed_data.keys()) > 0:
+		transfer_changed_map_data_to_server.rpc_id(1, changed_data)
+		changed_data.clear()
 
 
 ## Sends changes from the client to the server to be processed
 @rpc("any_peer", "call_remote", "reliable")
 func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 	var player_id: int = multiplayer.get_remote_sender_id()
-	var TilesToUpdate: Dictionary = {}
+	var tiles_to_update: Dictionary = {}
 	for key: Vector2i in map_data.keys():
-		if not SyncedData.has(key) or SyncedData[key] == map_data[key][0]:
-			ServerBufferedChanges[key] = map_data[key][1]
-			SyncedData[key] = map_data[key][1]
-			TilesToUpdate[key] = map_data[key][1]
+		if not synced_data.has(key) or synced_data[key] == map_data[key][0]:
+			server_buffered_changes[key] = map_data[key][1]
+			synced_data[key] = map_data[key][1]
+			tiles_to_update[key] = map_data[key][1]
 
 			if map_data[key][0].y > -1:
-				if player_id not in StoredPlayerInventoryDrops.keys():
-					StoredPlayerInventoryDrops[player_id] = {}
-				if map_data[key][0].y in StoredPlayerInventoryDrops[player_id].keys():
-					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] += 1
+				if player_id not in stored_player_inventory_drops.keys():
+					stored_player_inventory_drops[player_id] = {}
+				if map_data[key][0].y in stored_player_inventory_drops[player_id].keys():
+					stored_player_inventory_drops[player_id][map_data[key][0].y] += 1
 				else:
-					StoredPlayerInventoryDrops[player_id][map_data[key][0].y] = 1
-	ServeUpdateTilesFromGivenData(TilesToUpdate)
+					stored_player_inventory_drops[player_id][map_data[key][0].y] = 1
+	serve_update_tiles_from_given_data(tiles_to_update)
 
 
-func ServeUpdateTilesFromGivenData(TilesToUpdate: Dictionary) -> void:
-	if len(TilesToUpdate.keys()) > 0:
-		for Key: Vector2i in TilesToUpdate.keys():
-			set_cell(0, Key, 0, TilesToUpdate[Key])
+func serve_update_tiles_from_given_data(tiles_to_update: Dictionary) -> void:
+	if len(tiles_to_update.keys()) > 0:
+		for key: Vector2i in tiles_to_update.keys():
+			set_cell(0, key, 0, tiles_to_update[key])
 
 
 ## Sends changes from the server to clients
 @rpc("authority", "call_remote", "reliable")
-func ServerSendChangedData(Data: Dictionary) -> void:
+func server_send_changed_data(data: Dictionary) -> void:
 	if !Globals.initial_map_load_finished:
 		#Store changes and process after the maps has been fully loaded
-		BufferedChangesReceivedFromServer.append(Data)
+		buffered_changes_received_from_server.append(data)
 		return
 	if Globals.is_server:
 		return
-	for Key: Vector2i in Data.keys():
+	for key: Vector2i in data.keys():
 		if (
-			CurrentData.has(Key)
-			and CurrentData[Key] != Data[Key]
-			and (Key in CurrentData.keys())
-			and (CurrentData[Key] != Vector2i(-1, -1))
+			current_data.has(key)
+			and current_data[key] != data[key]
+			and (key in current_data.keys())
+			and (current_data[key] != Vector2i(-1, -1))
 		):
-			TileModificationParticlesController.DestroyCell(Key, Data[Key])
-		SyncedData[Key] = Data[Key]
-		CurrentData[Key] = Data[Key]
-		UpdateCellFromCurrent(Key)
+			tile_modification_particles_controller.destroy_cell(key, data[key])
+		synced_data[key] = data[key]
+		current_data[key] = data[key]
+		update_cell_from_current(key)
 
 
 ## Updates a cells tile from current data
-func UpdateCellFromCurrent(Position: Vector2i) -> void:
-	set_cell(0, Position, 0, CurrentData[Position])
+func update_cell_from_current(at_position: Vector2i) -> void:
+	set_cell(0, at_position, 0, current_data[at_position])
 
-
-@export var TileModificationParticlesController: Node2D
 
 @rpc("any_peer", "call_remote", "reliable")
 func save_map() -> void:
 	Helpers.log_print("Save Map!")
-	Helpers.save_data_to_file("user://saved_map.dat", JSON.stringify(SyncedData))
+	Helpers.save_data_to_file("user://saved_map.dat", JSON.stringify(synced_data))

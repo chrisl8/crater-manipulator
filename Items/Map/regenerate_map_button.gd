@@ -6,4 +6,4 @@ func _ready() -> void:
 
 
 func _button_pressed() -> void:
-	Globals.WorldMap.RegenerateMap()
+	Globals.world_map.regenerate_map()

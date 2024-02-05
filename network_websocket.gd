@@ -69,9 +69,6 @@ func _process(_delta: float) -> void:
 			close_pre_game_overlay.emit()
 		return
 
-	# NOTE: As of 1/9/2024 Spawner does absolutely nothing, but maybe it will someday?
-	Spawner.things()
-
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_peer_connected)
@@ -314,7 +311,7 @@ func data_received(data: String) -> void:
 ## Check player's position and surrounding area to ensure it is clear for spawning
 func check_location_and_surroundings(at_position: Vector2) -> bool:
 	var cell_position_at_player_potential_position: Vector2i = (
-		Globals.WorldMap.get_cell_position_at_global_position(at_position)
+		Globals.world_map.get_cell_position_at_global_position(at_position)
 	)
 
 	var all_cell_positions_to_clear_for_player: Array[Vector2i] = []
@@ -335,7 +332,7 @@ func check_location_and_surroundings(at_position: Vector2) -> bool:
 
 	for cell_position_to_clear_for_player: Vector2i in all_cell_positions_to_clear_for_player:
 		if (
-			Globals.WorldMap.get_cell_data_at_map_local_position(cell_position_to_clear_for_player)
+			Globals.world_map.get_cell_data_at_map_local_position(cell_position_to_clear_for_player)
 			!= Vector2i(-1, -1)
 		):
 			position_is_clear = false
@@ -411,11 +408,11 @@ func player_joined(id: int, data: String) -> void:
 	var last_x_shift_direction: String = "positive"
 	var last_x_shift_count: int = 0
 
-	update_remote_pre_game_overlay_message.rpc_id(id, "Finding our place in the world...")
+	update_remote_pre_game_overlay_message.rpc_id(id, "Finding our place\nin the world...")
 	var clear_and_safe_position_found: bool = false
 	while not clear_and_safe_position_found:
 		var potential_player_position_in_map_coordinates: Vector2i = (
-			Globals.WorldMap.get_cell_position_at_global_position(potential_player_position)
+			Globals.world_map.get_cell_position_at_global_position(potential_player_position)
 		)
 
 		if reached_bottom_of_map:
@@ -439,10 +436,14 @@ func player_joined(id: int, data: String) -> void:
 		var next_position_down_cell_contents: Vector2i = Vector2i(-1, -1)
 		var descender_counter: int = 0
 		while next_position_down_cell_contents == Vector2i(-1, -1) and not reached_bottom_of_map:
-			next_position_down_cell_contents = Globals.WorldMap.get_cell_data_at_map_local_position(
-				Vector2i(
-					potential_player_position_in_map_coordinates.x,
-					potential_player_position_in_map_coordinates.y + descender_counter
+			next_position_down_cell_contents = (
+				Globals
+				. world_map
+				. get_cell_data_at_map_local_position(
+					Vector2i(
+						potential_player_position_in_map_coordinates.x,
+						potential_player_position_in_map_coordinates.y + descender_counter
+					)
 				)
 			)
 			reached_bottom_of_map = (
@@ -452,7 +453,7 @@ func player_joined(id: int, data: String) -> void:
 			descender_counter += 1
 
 		if not reached_bottom_of_map:
-			potential_player_position = Globals.WorldMap.get_global_position_at_map_local_position(
+			potential_player_position = Globals.world_map.get_global_position_at_map_local_position(
 				Vector2i(
 					potential_player_position_in_map_coordinates.x,
 					potential_player_position_in_map_coordinates.y + descender_counter - 1
@@ -464,7 +465,7 @@ func player_joined(id: int, data: String) -> void:
 			reached_bottom_of_map = true  # If we loop, always force a left/right shift at the next loop.
 		else:
 			# If we did, then set the position to be the same X position but at the highest Y point possible + player's size
-			potential_player_position = Globals.WorldMap.get_global_position_at_map_local_position(
+			potential_player_position = Globals.world_map.get_global_position_at_map_local_position(
 				Vector2i(potential_player_position_in_map_coordinates.x, Globals.MapEdges.Min.y - 4)
 			)
 		# Otherwise, do not update the potential_player_position and start over
@@ -484,7 +485,7 @@ func player_joined(id: int, data: String) -> void:
 	get_node("../Main/Players").add_child(character, true)
 	character.set_multiplayer_authority(character.player)
 	character.set_player_position.rpc_id(id, potential_player_position)
-	Globals.Players[id] = character
+	Globals.players[id] = character
 
 	# Always update our saved data now in case this is a new player
 	Helpers.save_server_player_save_data_to_file()
@@ -496,4 +497,4 @@ func player_joined(id: int, data: String) -> void:
 
 	# Clean up initial map data sending data in MapController to avoid memory leak
 	# and possible corruption if another player joins later and gets the same multiplayer_id
-	Globals.WorldMap.server_side_per_player_initial_map_data.erase(id)
+	Globals.world_map.server_side_per_player_initial_map_data.erase(id)

@@ -26,22 +26,22 @@ properties/1/replication_mode = 2
 properties/2/path = NodePath(".:player")
 properties/2/spawn = true
 properties/2/replication_mode = 0
-properties/3/path = NodePath(".:SyncedPosition")
+properties/3/path = NodePath(".:synced_position")
 properties/3/spawn = true
 properties/3/replication_mode = 1
-properties/4/path = NodePath(".:SyncedRotation")
+properties/4/path = NodePath(".:synced_rotation")
 properties/4/spawn = true
 properties/4/replication_mode = 1
-properties/5/path = NodePath("Interaction Controller:MousePosition")
+properties/5/path = NodePath("Interaction Controller:mouse_position")
 properties/5/spawn = true
 properties/5/replication_mode = 2
-properties/6/path = NodePath("Interaction Controller:IsMining")
+properties/6/path = NodePath("Interaction Controller:is_mining")
 properties/6/spawn = true
 properties/6/replication_mode = 2
-properties/7/path = NodePath("Interaction Controller:MiningDistance")
+properties/7/path = NodePath("Interaction Controller:mining_distance")
 properties/7/spawn = true
 properties/7/replication_mode = 2
-properties/8/path = NodePath("Interaction Controller:Flipped")
+properties/8/path = NodePath("Interaction Controller:flipped")
 properties/8/spawn = true
 properties/8/replication_mode = 2
 
@@ -65,7 +65,7 @@ emission_curve = SubResource("CurveTexture_qpmck")
 hue_variation_min = -0.13
 hue_variation_max = 0.1
 
-[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "InteractionController", "InventoryManager") groups=["players"]]
+[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "interaction_controller", "inventory_manager") groups=["players"]]
 collision_layer = 2
 collision_mask = 11
 physics_material_override = SubResource("PhysicsMaterial_qk016")
@@ -80,8 +80,8 @@ angular_damp = 0.5
 script = ExtResource("1_ntq5g")
 player_spawn_point = Vector2(0, 0)
 camera = NodePath("Camera2D")
-InteractionController = NodePath("Interaction Controller")
-InventoryManager = NodePath("Inventory Manager")
+interaction_controller = NodePath("Interaction Controller")
+inventory_manager = NodePath("Inventory Manager")
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_ir062")
@@ -91,17 +91,17 @@ position = Vector2(0, -31.37)
 zoom = Vector2(3, 3)
 position_smoothing_enabled = true
 
-[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("MiningParticles", "FlipPoint", "ArmIKController", "Head", "LegsManager")]
+[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("mining_particles", "flip_point", "arm_id_controller", "head", "legs_manager")]
 script = ExtResource("4_rfuvf")
-MiningParticles = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper/Lower/GPUParticles2D")
-FlipPoint = NodePath("../Flip Point")
-ArmIKController = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper")
-Head = NodePath("../Flip Point/Player Rig/Head")
-LegsManager = NodePath("../Flip Point/Player Rig/IK Rig/Legs")
+mining_particles = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper/Lower/GPUParticles2D")
+flip_point = NodePath("../Flip Point")
+arm_id_controller = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper")
+head = NodePath("../Flip Point/Player Rig/Head")
+legs_manager = NodePath("../Flip Point/Player Rig/IK Rig/Legs")
 
-[node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("StoneBar")]
+[node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("stone_bar")]
 script = ExtResource("5_xpvfg")
-StoneBar = NodePath("../CanvasLayer/Control/Control")
+stone_bar = NodePath("../CanvasLayer/Control/Control")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -159,33 +159,33 @@ polygon = PackedVector2Array(10, -33, -16, -33, -16, 3, -3, 23, 10, 3)
 z_index = 1
 z_as_relative = false
 
-[node name="Legs" type="Node2D" parent="Flip Point/Player Rig/IK Rig" node_paths=PackedStringArray("RotPoint", "LeftLeg", "RightLeg")]
+[node name="Legs" type="Node2D" parent="Flip Point/Player Rig/IK Rig" node_paths=PackedStringArray("rot_point", "left_leg", "right_leg")]
 position = Vector2(1, -1)
 script = ExtResource("5_h6bhr")
-RotPoint = NodePath("Rot Point")
-RotSpeed = 2.0
-LeftLeg = NodePath("Left Leg")
-RightLeg = NodePath("Right Leg")
+rot_point = NodePath("Rot Point")
+rot_speed = 2.0
+left_leg = NodePath("Left Leg")
+right_leg = NodePath("Right Leg")
 
-[node name="Right Leg" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs" node_paths=PackedStringArray("IKController", "IKTarget", "UpperSegment", "Foot", "IdleIKTarget", "AirborneIKTarget", "OtherLeg")]
+[node name="Right Leg" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs" node_paths=PackedStringArray("ik_controller", "ik_target", "upper_segment", "foot", "idle_ik_target", "airborne_ik_target", "other_leg")]
 z_index = 1
 script = ExtResource("6_dfoja")
-IKController = NodePath("Upper")
-IKTarget = NodePath("../Rot Point/IK Target 1")
-UpperSegment = NodePath("Upper")
-Foot = NodePath("Upper/Lower/Foot")
-FootHeight = 5.0
-IdleIKTarget = NodePath("Idle IK Target")
-AirborneIKTarget = NodePath("Airborne IK Target")
-OtherLeg = NodePath("../Left Leg")
+ik_controller = NodePath("Upper")
+ik_target = NodePath("../Rot Point/IK Target 1")
+upper_segment = NodePath("Upper")
+foot = NodePath("Upper/Lower/Foot")
+foot_height = 5.0
+idle_ik_target = NodePath("Idle IK Target")
+airborne_ik_target = NodePath("Airborne IK Target")
+other_leg = NodePath("../Left Leg")
 
-[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Right Leg" node_paths=PackedStringArray("UpperSegment", "LowerSegment")]
+[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Right Leg" node_paths=PackedStringArray("upper_segment", "lower_segment")]
 position = Vector2(-1, -35)
 rotation = 1.5708
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
-LowerSegment = NodePath("Lower")
-FlipDirection = true
+upper_segment = NodePath(".")
+lower_segment = NodePath("Lower")
+flip_direction = true
 
 [node name="Upper" type="Polygon2D" parent="Flip Point/Player Rig/IK Rig/Legs/Right Leg/Upper"]
 z_index = 1
@@ -230,25 +230,25 @@ position = Vector2(0, 25)
 [node name="Airborne IK Target" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Right Leg"]
 position = Vector2(0, -15)
 
-[node name="Left Leg" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs" node_paths=PackedStringArray("IKController", "IKTarget", "UpperSegment", "Foot", "IdleIKTarget", "AirborneIKTarget", "OtherLeg")]
+[node name="Left Leg" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs" node_paths=PackedStringArray("ik_controller", "ik_target", "upper_segment", "foot", "idle_ik_target", "airborne_ik_target", "other_leg")]
 z_index = 1
 script = ExtResource("6_dfoja")
-IKController = NodePath("Upper")
-IKTarget = NodePath("../Rot Point/IK Target 2")
-UpperSegment = NodePath("Upper")
-Foot = NodePath("Upper/Lower/Foot")
-FootHeight = 5.0
-IdleIKTarget = NodePath("Idle IK Target")
-AirborneIKTarget = NodePath("Airborne IK Target")
-OtherLeg = NodePath("../Right Leg")
+ik_controller = NodePath("Upper")
+ik_target = NodePath("../Rot Point/IK Target 2")
+upper_segment = NodePath("Upper")
+foot = NodePath("Upper/Lower/Foot")
+foot_height = 5.0
+idle_ik_target = NodePath("Idle IK Target")
+airborne_ik_target = NodePath("Airborne IK Target")
+other_leg = NodePath("../Right Leg")
 
-[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left Leg" node_paths=PackedStringArray("UpperSegment", "LowerSegment")]
+[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left Leg" node_paths=PackedStringArray("upper_segment", "lower_segment")]
 position = Vector2(-1, -35)
 rotation = 1.5708
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
-LowerSegment = NodePath("Lower")
-FlipDirection = true
+upper_segment = NodePath(".")
+lower_segment = NodePath("Lower")
+flip_direction = true
 
 [node name="Upper" type="Polygon2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left Leg/Upper"]
 z_index = 1
@@ -293,25 +293,25 @@ position = Vector2(0, 25)
 [node name="Airborne IK Target" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left Leg"]
 position = Vector2(0, -14)
 
-[node name="Left leg OLD" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs" node_paths=PackedStringArray("IKController", "IKTarget", "UpperSegment", "Foot", "IdleIKTarget", "AirborneIKTarget", "OtherLeg")]
+[node name="Left leg OLD" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs" node_paths=PackedStringArray("ik_controller", "ik_target", "upper_segment", "foot", "idle_ik_target", "airborne_ik_target", "other_leg")]
 visible = false
 script = ExtResource("6_dfoja")
-IKController = NodePath("Upper")
-IKTarget = NodePath("../Rot Point/IK Target 2")
-UpperSegment = NodePath("Upper")
-Foot = NodePath("Upper/Lower/Foot")
-FootHeight = 5.0
-IdleIKTarget = NodePath("Idle IK Target")
-AirborneIKTarget = NodePath("Airborne IK Target")
-OtherLeg = NodePath("../Right Leg")
+ik_controller = NodePath("Upper")
+ik_target = NodePath("../Rot Point/IK Target 2")
+upper_segment = NodePath("Upper")
+foot = NodePath("Upper/Lower/Foot")
+foot_height = 5.0
+idle_ik_target = NodePath("Idle IK Target")
+airborne_ik_target = NodePath("Airborne IK Target")
+other_leg = NodePath("../Right Leg")
 
-[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left leg OLD" node_paths=PackedStringArray("UpperSegment", "LowerSegment")]
+[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left leg OLD" node_paths=PackedStringArray("upper_segment", "lower_segment")]
 position = Vector2(0, -21)
 rotation = 1.5708
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
-LowerSegment = NodePath("Lower")
-FlipDirection = true
+upper_segment = NodePath(".")
+lower_segment = NodePath("Lower")
+flip_direction = true
 
 [node name="Upper" type="Polygon2D" parent="Flip Point/Player Rig/IK Rig/Legs/Left leg OLD/Upper"]
 z_index = 1
@@ -367,10 +367,10 @@ position = Vector2(0, 16)
 [node name="Arm" type="Node2D" parent="Flip Point/Player Rig/IK Rig"]
 position = Vector2(0, -48)
 
-[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Arm" node_paths=PackedStringArray("UpperSegment", "LowerSegment")]
+[node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Arm" node_paths=PackedStringArray("upper_segment", "lower_segment")]
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
-LowerSegment = NodePath("Lower")
+upper_segment = NodePath(".")
+lower_segment = NodePath("Lower")
 
 [node name="Upper Left Arm" type="Polygon2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper"]
 z_index = 3

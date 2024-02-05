@@ -16,27 +16,19 @@ var shutdown_in_progress: bool = false
 
 ## Used to know if the client has ever connected before when performing a retry
 var has_connected_once: bool = false
-
 var connection_failed_message: String = "Connection Failed!"
-
 # Text for use in game
 var release_mouse_text: String = "ESC to Release Mouse"
 var how_to_end_game_text: String = "END key to Close Game"
 var exit_click_mode_text: String = "Press q to exit 'Click Mode' and control camera again."
-var WorldMap: Node
-
+var world_map: Node
 var my_camera: Camera2D
 var last_toast: String = ""
-
 var initial_map_load_finished: bool = false
-
-#Resources
-var ResourceIDs: Dictionary = {"Stone": 0, "Red Ore": 1}
-var ResourceNames: Dictionary = {}
-
-var HasBuiltResourcesDictionary: bool = false
-
-var Players: Dictionary = {}
+var resource_ids: Dictionary = {"Stone": 0, "Red Ore": 1}
+var resource_names: Dictionary = {}
+var has_built_resources_dictionary: bool = false
+var players: Dictionary = {}
 
 
 ## Map Edges - A static variable defining the maximum map size
@@ -53,23 +45,23 @@ class MapEdges:
 		static var y: int = 100000
 
 
-func GetResourceName(ID: int) -> String:
-	BuildResourcesDictionaries()
-	return ResourceNames[ID]
+func get_resource_name(id: int) -> String:
+	build_resources_dictionaries()
+	return resource_names[id]
 
 
-func GetResourceID(Name: String) -> Array:
-	BuildResourcesDictionaries()
-	return ResourceIDs[Name]
+func get_resource_id(resource_name: String) -> Array:
+	build_resources_dictionaries()
+	return resource_ids[resource_name]
 
 
-func BuildResourcesDictionaries() -> void:
-	if !HasBuiltResourcesDictionary:
-		for Key: String in ResourceIDs.keys():
-			ResourceNames[ResourceIDs[Key]] = Key
-		HasBuiltResourcesDictionary = true
+func build_resources_dictionaries() -> void:
+	if !has_built_resources_dictionary:
+		for key: String in resource_ids.keys():
+			resource_names[resource_ids[key]] = key
+		has_built_resources_dictionary = true
 
 
-func GetIsCellMineable(Cell: Vector2i) -> bool:
+func get_is_cell_mineable(cell: Vector2i) -> bool:
 	#In future should check array/dictionary of white or black listed tiles
-	return Cell.y != 2
+	return cell.y != 2

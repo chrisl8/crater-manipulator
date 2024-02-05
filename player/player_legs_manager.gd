@@ -1,29 +1,28 @@
 extends Node2D
 
-@export var RotPoint: Node2D
-@export var RotSpeed: float = 10.0
+@export var rot_point: Node2D
+@export var rot_speed: float = 10.0
+@export var left_leg: Node2D
+@export var right_leg: Node2D
 
-@export var LeftLeg: Node2D
-@export var RightLeg: Node2D
-
-var Lastposition: Vector2
-
-@export var Flipped: bool = false:
+@export var flipped: bool = false:
 	set(new_value):
-		Flipped = new_value
-		LeftLeg.Flipped = Flipped
-		RightLeg.Flipped = Flipped
+		flipped = new_value
+		left_leg.flipped = flipped
+		right_leg.flipped = flipped
+
+var last_position: Vector2
 
 
 func _ready() -> void:
-	Lastposition = global_position
+	last_position = global_position
 
 
 func _process(delta: float) -> void:
-	var Distance: float = global_position.x - Lastposition.x
-	var Move: bool = abs(Distance) > 0.0
-	if Move:
-		RotPoint.rotate(Distance * delta * RotSpeed * (-1.0 if Flipped else 1.0))
-	LeftLeg.Move = Move
-	RightLeg.Move = Move
-	Lastposition = global_position
+	var distance: float = global_position.x - last_position.x
+	var move: bool = abs(distance) > 0.0
+	if move:
+		rot_point.rotate(distance * delta * rot_speed * (-1.0 if flipped else 1.0))
+	left_leg.move = move
+	right_leg.move = move
+	last_position = global_position

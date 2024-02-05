@@ -6,4 +6,4 @@ func _ready() -> void:
 
 
 func _button_pressed() -> void:
-	Globals.WorldMap.save_map.rpc_id(1)
+	Globals.world_map.save_map.rpc_id(1)

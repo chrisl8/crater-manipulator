@@ -172,7 +172,7 @@ z_index = 1
 script = ExtResource("6_dfoja")
 IKController = NodePath("Upper")
 IKTarget = NodePath("../Rot Point/IK Target 1")
-UpperSegment = NodePath("Upper")
+upper_segment = NodePath("Upper")
 Foot = NodePath("Upper/Lower/Foot")
 FootHeight = 5.0
 IdleIKTarget = NodePath("Idle IK Target")
@@ -183,7 +183,7 @@ OtherLeg = NodePath("../Left Leg")
 position = Vector2(-1, -35)
 rotation = 1.5708
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
+upper_segment = NodePath(".")
 LowerSegment = NodePath("Lower")
 FlipDirection = true
 
@@ -235,7 +235,7 @@ z_index = 1
 script = ExtResource("6_dfoja")
 IKController = NodePath("Upper")
 IKTarget = NodePath("../Rot Point/IK Target 2")
-UpperSegment = NodePath("Upper")
+upper_segment = NodePath("Upper")
 Foot = NodePath("Upper/Lower/Foot")
 FootHeight = 5.0
 IdleIKTarget = NodePath("Idle IK Target")
@@ -246,7 +246,7 @@ OtherLeg = NodePath("../Right Leg")
 position = Vector2(-1, -35)
 rotation = 1.5708
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
+upper_segment = NodePath(".")
 LowerSegment = NodePath("Lower")
 FlipDirection = true
 
@@ -298,7 +298,7 @@ visible = false
 script = ExtResource("6_dfoja")
 IKController = NodePath("Upper")
 IKTarget = NodePath("../Rot Point/IK Target 2")
-UpperSegment = NodePath("Upper")
+upper_segment = NodePath("Upper")
 Foot = NodePath("Upper/Lower/Foot")
 FootHeight = 5.0
 IdleIKTarget = NodePath("Idle IK Target")
@@ -309,7 +309,7 @@ OtherLeg = NodePath("../Right Leg")
 position = Vector2(0, -21)
 rotation = 1.5708
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
+upper_segment = NodePath(".")
 LowerSegment = NodePath("Lower")
 FlipDirection = true
 
@@ -369,7 +369,7 @@ position = Vector2(0, -48)
 
 [node name="Upper" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Arm" node_paths=PackedStringArray("UpperSegment", "LowerSegment")]
 script = ExtResource("7_g23pf")
-UpperSegment = NodePath(".")
+upper_segment = NodePath(".")
 LowerSegment = NodePath("Lower")
 
 [node name="Upper Left Arm" type="Polygon2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper"]
