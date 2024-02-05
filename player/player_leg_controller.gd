@@ -4,9 +4,6 @@ extends Node2D
 @export var IKTarget: Node2D
 
 @export var UpperSegment: Node2D
-#@export var LowerSegment: Node2D
-
-var Length
 
 @export var Foot: Node2D
 @export var FootHeight: float = 1.0
@@ -24,38 +21,33 @@ var TimeSinceTargetFound: float = 0.0
 
 @export var Flipped: bool = false
 
-func _ready():
-	pass
-
 const MaxAirborneTime: float = 0.7
-func _process(delta):
 
 
-	var CurrentIKTarget = IdleIKTarget.global_position
-	if(Move):
+func _process(delta: float) -> void:
+	var CurrentIKTarget: Vector2 = IdleIKTarget.global_position
+	if Move:
 		CurrentIKTarget = IKTarget.global_position
 
 	var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			UpperSegment.global_position,CurrentIKTarget
-		)
+		UpperSegment.global_position, CurrentIKTarget
+	)
 	query.exclude = [self]
 	var result: Dictionary = space_state.intersect_ray(query)
 	if result.size() > 0:
 		TimeSinceTargetFound = 0.0
 		var HitPoint: Vector2 = result["position"]
-		IKController.Target = HitPoint - Vector2(0,FootHeight)
+		IKController.Target = HitPoint - Vector2(0, FootHeight)
 	else:
-		TimeSinceTargetFound+=delta
-		if(Grounded or OtherLeg.Grounded):
-			IKController.Target = CurrentIKTarget - Vector2(0,FootHeight)
+		TimeSinceTargetFound += delta
+		if Grounded or OtherLeg.Grounded:
+			IKController.Target = CurrentIKTarget - Vector2(0, FootHeight)
 		else:
-			IKController.Target = AirborneIKTarget.global_position - Vector2(0,FootHeight)
+			IKController.Target = AirborneIKTarget.global_position - Vector2(0, FootHeight)
 
 	Grounded = TimeSinceTargetFound < MaxAirborneTime
-	if(!Flipped):
+	if !Flipped:
 		Foot.global_rotation = 0
 	else:
 		Foot.global_rotation = PI
-
-	pass

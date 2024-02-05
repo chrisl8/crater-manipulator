@@ -103,7 +103,7 @@ func load_saved_map() -> bool:
 	return success
 
 
-func RegenerateMap():
+func RegenerateMap() -> void:
 	clear()
 	CurrentData.clear()
 	generate_map()
@@ -111,16 +111,16 @@ func RegenerateMap():
 
 ## Procedural world generation
 func generate_map() -> void:
-	var BottomBoundaryNoise = FastNoiseLite.new()
+	var BottomBoundaryNoise: FastNoiseLite = FastNoiseLite.new()
 
 	BottomBoundaryNoise.seed = randi()
-	BottomBoundaryNoise.noise_type = 3
+	BottomBoundaryNoise.noise_type = FastNoiseLite.TYPE_PERLIN
 
-	var AdditionalDepthNoiseScale = 30
+	var AdditionalDepthNoiseScale: int = 30
 
-	var BarrierDepth = 75
-	var MinimumTopDepth = 60
-	var RandomDepthOffset = 0
+	var BarrierDepth: int = 75
+	var MinimumTopDepth: int = 60
+	var RandomDepthOffset: int = 0
 
 	var CraterGenRadius: int = 1909
 	var WidthScale: int = 8
@@ -128,12 +128,7 @@ func generate_map() -> void:
 	var CraterScale: float = 2000.0
 	var AdditionalWasteDistance: int = 1000
 
-	var FillHeight = 1000
-	var FillMiddleRelativeHeight = -20
-
-	#Here be dragons and uncommented code
-
-	var OriginalCraterGenRadius = CraterGenRadius
+	var OriginalCraterGenRadius: int = CraterGenRadius
 	while CraterGenRadius >= -OriginalCraterGenRadius:
 		var Radius: float = float(CraterGenRadius)
 		if CraterGenRadius == 0:
@@ -149,7 +144,7 @@ func generate_map() -> void:
 		)
 
 		#Add bottom
-		var TopDepth = randi_range(0, RandomDepthOffset)
+		var TopDepth: int = randi_range(0, RandomDepthOffset)
 		for i: int in range(0, BarrierDepth):
 			CurrentData[Vector2i(roundi(Radius), roundi(-(Depth - i)))] = GetRandomBarrierRockTile()
 
@@ -159,17 +154,17 @@ func generate_map() -> void:
 
 		CraterGenRadius -= 1
 
-	var EndDepth = GetDepthFunction(
+	var EndDepth: float = GetDepthFunction(
 		float(OriginalCraterGenRadius), float(WidthScale), float(HeightScale), float(CraterScale)
 	)
-	var OriginalWastDistance = AdditionalWasteDistance
+	var OriginalWastDistance: int = AdditionalWasteDistance
 	while AdditionalWasteDistance >= -OriginalWastDistance:
-		var Radius = OriginalCraterGenRadius + AdditionalWasteDistance
-		if AdditionalWasteDistance < 0.0:
+		var Radius: int = OriginalCraterGenRadius + AdditionalWasteDistance
+		if AdditionalWasteDistance < 0:
 			Radius = -OriginalCraterGenRadius + AdditionalWasteDistance
 
 		#Add bottom
-		var Depth = (
+		var Depth: float = (
 			EndDepth
 			- roundi(BottomBoundaryNoise.get_noise_1d(Radius) * AdditionalDepthNoiseScale)
 			+ randi_range(0, RandomDepthOffset)
@@ -660,7 +655,7 @@ func PushChangedData() -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 	var player_id: int = multiplayer.get_remote_sender_id()
-	var TilesToUpdate = {}
+	var TilesToUpdate: Dictionary = {}
 	for key: Vector2i in map_data.keys():
 		if not SyncedData.has(key) or SyncedData[key] == map_data[key][0]:
 			ServerBufferedChanges[key] = map_data[key][1]
@@ -677,9 +672,9 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 	ServeUpdateTilesFromGivenData(TilesToUpdate)
 
 
-func ServeUpdateTilesFromGivenData(TilesToUpdate):
+func ServeUpdateTilesFromGivenData(TilesToUpdate: Dictionary) -> void:
 	if len(TilesToUpdate.keys()) > 0:
-		for Key in TilesToUpdate.keys():
+		for Key: Vector2i in TilesToUpdate.keys():
 			set_cell(0, Key, 0, TilesToUpdate[Key])
 
 

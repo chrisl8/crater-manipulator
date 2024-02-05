@@ -4,40 +4,42 @@ const Width: int = 1000
 const Height: int = 1000
 var LocalImage: Image
 
-var ParticleNodes = []
-var ParticleNodeTime = []
-var NodesTaken = []
+var ParticleNodes: Array = []
+var ParticleNodeTime: Array = []
+var NodesTaken: Array = []
 
 #Allocated particles are particle nodes that have been created and childed to this component, they are ALL the particles currently available
-var AllocatedNodes = 0
+var AllocatedNodes: int = 0
 #In use particles are particles that are currently emitting and have not been returned to the free pool
-var InUseNodes = 0
+var InUseNodes: int = 0
 
 @export var Map: TileMap
-@export var ScaleCurve : Curve
+@export var ScaleCurve: Curve
 
-func _process(delta):
+
+func _process(delta: float) -> void:
 	#Loop over nodes and return expired ones to the pool
-	if(InUseNodes > 0):
-		var Count = 0
-		while(Count < len(ParticleNodes)):
-			if(NodesTaken[Count]):
+	if InUseNodes > 0:
+		var Count: int = 0
+		while Count < len(ParticleNodes):
+			if NodesTaken[Count]:
 				#Node is taken, apply time
 				ParticleNodeTime[Count] -= delta
 				NodesTaken[Count] = ParticleNodeTime[Count] > 0
-				if(!NodesTaken[Count]):
+				if !NodesTaken[Count]:
 					#Node is no longer taken, decrement in use count so allocator function knows to look for free allocated particles
-					InUseNodes-=1
-			Count+=1
+					InUseNodes -= 1
+			Count += 1
+
 
 var ParticleLifetime: float = 0.5
 var ParticlesPerTile: int = 32
 
 
 #Calculate points and colors for single tile, repeat this for multiple tiles and combine results to create a block particle
-func DestroyCellLocal(Position: Vector2i, ID: Vector2i):
-	var Points = []
-	var Colors = []
+func DestroyCellLocal(Position: Vector2i, ID: Vector2i) -> Array:
+	var Points: Array = []
+	var Colors: Array = []
 
 	#Extract atlas image at tile, used for color sampling
 	var Atlas: TileSetAtlasSource = Map.tile_set.get_source(0)
@@ -64,45 +66,44 @@ func DestroyCellLocal(Position: Vector2i, ID: Vector2i):
 		)
 
 		Colors.append(SampleColor)
-	
-	return([Points,Colors])
+
+	return [Points, Colors]
+
 
 #Collects tile data for each tile and combines into a single block particle
-func DestroyCells(Positions, IDs):
-	var Points = []
-	var Colors = []
-	var Ammount = len(Positions)*ParticlesPerTile
+func DestroyCells(Positions: Array, IDs: Array) -> void:
+	var Points: Array = []
+	var Colors: Array = []
+	var Amount: int = len(Positions) * ParticlesPerTile
 
-	var Count = len(Positions)-1
-	while(Count >= 0):
-		var Output = DestroyCellLocal(Positions[Count],IDs[Count])
+	var Count: int = len(Positions) - 1
+	while Count >= 0:
+		var Output: Array = DestroyCellLocal(Positions[Count], IDs[Count])
 		Points.append_array(Output[0])
 		Colors.append_array(Output[1])
-		Count-=1
+		Count -= 1
 
-	AddParticalNodeFromProcessing(Points,Colors,Ammount)
-	
-	
+	AddParticalNodeFromProcessing(Points, Colors, Amount)
 
-func DestroyCell(Position, ID):
+
+func DestroyCell(Position: Vector2i, ID: Vector2i) -> void:
 	#This function is here for convenience
-	DestroyCells([Position],[ID])
+	DestroyCells([Position], [ID])
 
-	
+
 #Creates particle for given data
-func AddParticalNodeFromProcessing(Points, Colors, Ammount):
-
-	var TargetParticleNode : CPUParticles2D
-	if(InUseNodes < AllocatedNodes):
+func AddParticalNodeFromProcessing(Points: Array, Colors: Array, Amount: int) -> void:
+	var TargetParticleNode: CPUParticles2D
+	if InUseNodes < AllocatedNodes:
 		#If there are free allocated particles, select one
-		var Count = AllocatedNodes-1
-		while(Count >= 0):
-			if(!NodesTaken[Count]):
+		var Count: int = AllocatedNodes - 1
+		while Count >= 0:
+			if !NodesTaken[Count]:
 				TargetParticleNode = ParticleNodes[Count]
 				NodesTaken[Count] = true
 				ParticleNodeTime[Count] = ParticleLifetime
 				break
-			Count-=1
+			Count -= 1
 	else:
 		#If no allocated particles are free, create one and add it to the pool
 		TargetParticleNode = CPUParticles2D.new()
@@ -110,22 +111,22 @@ func AddParticalNodeFromProcessing(Points, Colors, Ammount):
 		ParticleNodes.append(TargetParticleNode)
 		ParticleNodeTime.append(ParticleLifetime)
 		NodesTaken.append(true)
-		AllocatedNodes+=1
+		AllocatedNodes += 1
 
-	#Configure particle sustem, some of this only needs to be performed on newly spawned particles
+	#Configure particle system, some of this only needs to be performed on newly spawned particles
 	TargetParticleNode.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINTS
 	TargetParticleNode.emission_points = Points
 	TargetParticleNode.emission_colors = Colors
-	TargetParticleNode.amount = Ammount
+	TargetParticleNode.amount = Amount
 	TargetParticleNode.one_shot = true
 	TargetParticleNode.emitting = true
 	TargetParticleNode.explosiveness = 1
-	TargetParticleNode.gravity = Vector2(0,980.0/2.0)
-	TargetParticleNode.direction = Vector2(0,1)
+	TargetParticleNode.gravity = Vector2(0, 980.0 / 2.0)
+	TargetParticleNode.direction = Vector2(0, 1)
 	TargetParticleNode.spread = 45.0
 	TargetParticleNode.initial_velocity_min = 0.1
 	TargetParticleNode.initial_velocity_max = 20.0
 	TargetParticleNode.scale_amount_curve = ScaleCurve
 	#TargetParticleNode.restart()
 
-	InUseNodes+=1
+	InUseNodes += 1
