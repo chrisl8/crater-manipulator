@@ -59,15 +59,16 @@ func _process(_delta: float) -> void:
 		)
 		Helpers.quit_gracefully()
 
-	# Initialize the Map if it isn't yet
+	# Initialize the Map Scene if it isn't yet
 	if not game_scene_initialized:
 		if not game_scene_initialize_in_progress:
 			game_scene_initialize_in_progress = true
 			load_level.call_deferred(map)
 		elif get_node_or_null("../Main/Map/game_scene"):
 			game_scene_initialized = true
-			close_pre_game_overlay.emit()
 		return
+		# There is no real need for game_scene_initialized and game_scene_initialize_in_progress if there is no code below this point,
+		# but if/when there is, then it becomes important
 
 
 func _ready() -> void:
@@ -141,20 +142,12 @@ func _peer_disconnected(id: int) -> void:
 			player_uuid,
 			" disconnected while at position ",
 			player.position,
-			" rotation ",
-			player.rotation,
 			"[/color]"
 		)
-		if (
-			player_uuid != ""
-			and player.position.x != NAN
-			and player.position.y != NAN
-			and player.rotation != NAN
-		):
+		if player_uuid != "" and player.position.x != NAN and player.position.y != NAN:
 			Globals.player_save_data[player_uuid]["position"] = {
 				"x": player.position.x, "y": player.position.y
 			}
-			Globals.player_save_data[player_uuid]["rotation"] = player.rotation
 			Helpers.save_server_player_save_data_to_file()
 		player.queue_free()
 
@@ -220,7 +213,6 @@ func reset_connection() -> void:
 	multiplayer.multiplayer_peer = null
 	websocket_multiplayer_peer = null
 	peer_count = -1
-	Globals.user_name = ""
 	peers.clear()
 	var retry_timeout: int = 5
 	if OS.is_debug_build():
@@ -255,7 +247,7 @@ func send_data_to(id: int, msg_type: Message, data: String) -> void:
 			}
 		)
 	)
-	rpc_id(id, "data_received", send_data)
+	data_received.rpc_id(id, send_data)
 
 
 @rpc("any_peer")
@@ -470,16 +462,6 @@ func player_joined(id: int, data: String) -> void:
 			)
 		# Otherwise, do not update the potential_player_position and start over
 		# TODO: There is nothing to stop this from looping forever in a worse case scenario
-
-	# TODO: Use saved player rotation if it exists
-	#if Globals.player_save_data[player_uuid].has("rotation"):
-	# TODO: Reimplement this for a 2D character.
-	#Helpers.log_print(str("Rotation: ", Globals.player_save_data[player_uuid]["rotation"]))
-	# character.rotation = Vector3(
-	# 	Globals.player_save_data[player_uuid]["rotation"]["x"],
-	# 	Globals.player_save_data[player_uuid]["rotation"]["y"],
-	# 	Globals.player_save_data[player_uuid]["rotation"]["z"]
-	# )
 
 	character.name = str(id)
 	get_node("../Main/Players").add_child(character, true)

@@ -6,7 +6,6 @@ var player_save_data: Dictionary = {}
 var is_server: bool = false
 var force_client: bool = false
 var shutdown_server: bool = false
-var user_name: String = ""
 var local_debug_instance_number: int = -1
 var intro_music_has_played: bool = false
 var url: String
