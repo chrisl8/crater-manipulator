@@ -56,6 +56,7 @@ func _ready() -> void:
 		Globals.initial_map_load_finished = true
 		map_download_finished = true
 	else:
+		visible = false
 		request_initial_map_data.rpc_id(1)
 
 	Globals.world_map = self
@@ -284,6 +285,7 @@ func _process(delta: float) -> void:
 					buffered_changes_received_from_server.clear()
 					set_all_cell_data(current_data, 0)
 					Globals.initial_map_load_finished = true
+					visible = true
 			else:
 				re_request_initial_map_data_timer += delta
 				if re_request_initial_map_data_timer > RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT:
