@@ -66,6 +66,7 @@ func _process(_delta: float) -> void:
 			load_level.call_deferred(map)
 		elif get_node_or_null("../Main/Map/game_scene"):
 			game_scene_initialized = true
+			close_pre_game_overlay.emit()
 		return
 		# There is no real need for game_scene_initialized and game_scene_initialize_in_progress if there is no code below this point,
 		# but if/when there is, then it becomes important
