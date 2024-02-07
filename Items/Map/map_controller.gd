@@ -147,7 +147,7 @@ func generate_map() -> void:
 	var additional_depth_noise_scale: int = 30
 
 	var barrier_depth: int = 75
-	var minimum_top_depth: int = 60
+	var minimum_top_depth: int = 245
 	var random_depth_offset: int = 0
 
 	var crater_generate_radius: int = 1909
@@ -547,6 +547,7 @@ func send_initial_map_data_chunk_to_client(
 	resend: bool,
 	percent_complete: int
 ) -> void:
+	Helpers.log_print(str(data_size, " ", compressed_data.size()))
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
 	if not resend:
 		local_player_initial_map_data_current_chunk_id += 1
