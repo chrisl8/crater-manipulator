@@ -4,6 +4,27 @@ const CHUNK_SIZE: int = 4000
 const SEND_FREQUENCY: float = 0.01
 const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
 
+# Map transfer compression mode and maximum uncompressed data size.
+# This size is a bit of a guess, hoping the compression
+# works to keep it under the buffer size limit, which is a gamble
+# Worst case from testing for each type is:
+# COMPRESSION_FASTLZ  - 110696 compresses to 65006
+# COMPRESSION_DEFLATE  - 170000 compresses to 61283
+# COMPRESSION_ZSTD - 160000 compresses to 62934
+
+# COMPRESSION_FASTLZ uses less CPU/is faster but compresses less It is meant for when speed and low CPU load is more important than bandwidth
+# COMPRESSION_ZSTD is supposed to be a lot faster than 1 at the expense of just a little compression
+# COMPRESSION_DEFLATE doesn't really offer any benefit unless maximum compression is paramount
+# COMPRESSION_GZIP is not better than any other option. It is just available for compatibility.
+# COMPRESSION_BROTLI  only supports decompression.
+
+# So for a given compression type, I set these to:
+# COMPRESSION_FASTLZ - 110000
+# COMPRESSION_DEFLATE  - 170000
+# COMPRESSION_ZSTD - 160000
+const MAP_TRANSFER_MAX_UNCOMPRESSED_DATA_SIZE: int = 165000
+const MAP_TRANSFER_COMPRESSION_MODE: int = FileAccess.COMPRESSION_ZSTD
+
 @export var tile_modification_particles_controller: Node2D
 
 var map_generated: bool = false
@@ -126,7 +147,7 @@ func generate_map() -> void:
 	var additional_depth_noise_scale: int = 30
 
 	var barrier_depth: int = 75
-	var minimum_top_depth: int = 60
+	var minimum_top_depth: int = 245
 	var random_depth_offset: int = 0
 
 	var crater_generate_radius: int = 1909
@@ -364,7 +385,6 @@ func request_initial_map_data() -> void:
 		"last_acknowledged_chunk_id": 0,
 		"last_sent_map_data_index": -1,
 		"finished_sending": false,
-		"received_ack_for_finish": false,
 		"resend": false,
 	}
 
@@ -397,9 +417,8 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 			):
 				if not server_side_per_player_initial_map_data[player_id].resend:
 					var stream_data: StreamPeerBuffer = StreamPeerBuffer.new()
-
 					while (
-						stream_data.get_size() < 64000  # Should this relate to the setting used in network_websocket?
+						stream_data.get_size() < MAP_TRANSFER_MAX_UNCOMPRESSED_DATA_SIZE
 						and (
 							(
 								server_side_per_player_initial_map_data[player_id]
@@ -489,7 +508,7 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 						server_side_per_player_initial_map_data[player_id]
 						. last_sent_stream_buffer
 						. data_array
-						. compress()
+						. compress(MAP_TRANSFER_COMPRESSION_MODE)
 					),
 					server_side_per_player_initial_map_data[player_id].resend,
 					percent_complete
@@ -528,6 +547,7 @@ func send_initial_map_data_chunk_to_client(
 	resend: bool,
 	percent_complete: int
 ) -> void:
+	Helpers.log_print(str(data_size, " ", compressed_data.size()))
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
 	if not resend:
 		local_player_initial_map_data_current_chunk_id += 1
@@ -544,7 +564,7 @@ func send_initial_map_data_chunk_to_client(
 
 	# Decompress data from stream buffer
 	var data: StreamPeerBuffer = StreamPeerBuffer.new()
-	data.data_array = compressed_data.decompress(data_size)
+	data.data_array = compressed_data.decompress(data_size, MAP_TRANSFER_COMPRESSION_MODE)
 
 	while data.get_available_bytes() >= 8:
 		var map_position: Vector2i = Vector2i(data.get_16(), data.get_16())
