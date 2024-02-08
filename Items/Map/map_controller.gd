@@ -353,7 +353,7 @@ func server_send_buffered_changes() -> void:
 func set_all_cell_data(data: Dictionary, layer: int) -> void:
 	clear_layer(layer)
 	for key: Vector2i in data.keys():
-		set_cell(layer, key, 0, data[key])
+		set_cell_data(key, data[key], layer, 0, false)
 	Network.update_pre_game_overlay.emit("Map initialization done.")
 
 
@@ -670,9 +670,16 @@ func place_cell_at_position(at_position: Vector2) -> void:
 
 
 ## Set the current data of a cell to a given value
-func set_cell_data(at_position: Vector2i, id: Vector2i) -> void:
-	current_data[at_position] = id
-	set_cell(0, at_position, 0, id)
+func set_cell_data(
+	at_position: Vector2i,
+	id: Vector2i,
+	layer: int = 0,
+	source_id: int = 0,
+	update_current_data: bool = true
+) -> void:
+	if update_current_data:
+		current_data[at_position] = id
+	set_cell(layer, at_position, source_id, id)
 
 
 ## Push change data stored on the client to the server, if there is any
@@ -707,7 +714,7 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 func serve_update_tiles_from_given_data(tiles_to_update: Dictionary) -> void:
 	if len(tiles_to_update.keys()) > 0:
 		for key: Vector2i in tiles_to_update.keys():
-			set_cell(0, key, 0, tiles_to_update[key])
+			set_cell_data(key, tiles_to_update[key])
 
 
 ## Sends changes from the server to clients
@@ -734,7 +741,7 @@ func server_send_changed_data(data: Dictionary) -> void:
 
 ## Updates a cells tile from current data
 func update_cell_from_current(at_position: Vector2i) -> void:
-	set_cell(0, at_position, 0, current_data[at_position])
+	set_cell_data(at_position, current_data[at_position])
 
 
 @rpc("any_peer", "call_remote", "reliable")
