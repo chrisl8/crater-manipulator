@@ -714,7 +714,7 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 func serve_update_tiles_from_given_data(tiles_to_update: Dictionary) -> void:
 	if len(tiles_to_update.keys()) > 0:
 		for key: Vector2i in tiles_to_update.keys():
-			set_cell_data(key, tiles_to_update[key])
+			set_cell_data(key, tiles_to_update[key], 0, 0, false)
 
 
 ## Sends changes from the server to clients
@@ -741,7 +741,7 @@ func server_send_changed_data(data: Dictionary) -> void:
 
 ## Updates a cells tile from current data
 func update_cell_from_current(at_position: Vector2i) -> void:
-	set_cell_data(at_position, current_data[at_position])
+	set_cell_data(at_position, current_data[at_position], 0, 0, false)
 
 
 @rpc("any_peer", "call_remote", "reliable")
