@@ -2,7 +2,7 @@ extends TileMap
 
 const CHUNK_SIZE: int = 4000
 const SEND_FREQUENCY: float = 0.01
-const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
+const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 10.0
 
 # Map transfer compression mode and maximum uncompressed data size.
 # This size is a bit of a guess, hoping the compression
@@ -22,7 +22,7 @@ const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 2.0
 # COMPRESSION_FASTLZ - 110000
 # COMPRESSION_DEFLATE  - 170000
 # COMPRESSION_ZSTD - 160000
-const MAP_TRANSFER_MAX_UNCOMPRESSED_DATA_SIZE: int = 165000
+const MAP_TRANSFER_MAX_UNCOMPRESSED_DATA_SIZE: int = 150000
 const MAP_TRANSFER_COMPRESSION_MODE: int = FileAccess.COMPRESSION_ZSTD
 
 @export var tile_modification_particles_controller: Node2D
@@ -48,7 +48,7 @@ var server_data_changed: bool = false
 var current_cycle_time: float = 0.0
 var re_request_initial_map_data_timer: float = 0.0
 
-var local_player_initial_map_data_current_chunk_id: int = 0
+var local_player_initial_map_data_last_chunk_id_received: int = 0
 
 #Changes the server has received and accepted, and is waiting to send back to all clients later
 var server_buffered_changes: Dictionary = {}
@@ -315,7 +315,7 @@ func _process(delta: float) -> void:
 					# Acknowledge the last packet again. If they lost the ACK, this will fix that,
 					# If they sent us something newer, they will resend it.
 					acknowledge_received_chunk.rpc_id(
-						1, local_player_initial_map_data_current_chunk_id
+						1, local_player_initial_map_data_last_chunk_id_received
 					)
 
 	# Rate limited stuff
@@ -510,7 +510,6 @@ func chunk_and_send_initial_map_data_to_players() -> void:
 						. data_array
 						. compress(MAP_TRANSFER_COMPRESSION_MODE)
 					),
-					server_side_per_player_initial_map_data[player_id].resend,
 					percent_complete
 				)
 
@@ -544,22 +543,10 @@ func send_initial_map_data_chunk_to_client(
 	chunk_id: int,
 	data_size: int,
 	compressed_data: PackedByteArray,
-	resend: bool,
 	percent_complete: int
 ) -> void:
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
-	if not resend:
-		local_player_initial_map_data_current_chunk_id += 1
-
-	if local_player_initial_map_data_current_chunk_id != chunk_id:
-		printerr(
-			"New System Packet ID mismatch! Possibly missed packet! Client chunk_id ",
-			local_player_initial_map_data_current_chunk_id,
-			" != Server chunk_id ",
-			chunk_id
-		)
-		# TODO: Tell the server to re-send
-		return
+	local_player_initial_map_data_last_chunk_id_received = chunk_id
 
 	# Decompress data from stream buffer
 	var data: StreamPeerBuffer = StreamPeerBuffer.new()
@@ -570,7 +557,7 @@ func send_initial_map_data_chunk_to_client(
 		var id: Vector2i = Vector2i(data.get_16(), data.get_16())
 		synced_data[map_position] = id
 		current_data[map_position] = id
-	acknowledge_received_chunk.rpc_id(1, local_player_initial_map_data_current_chunk_id)
+	acknowledge_received_chunk.rpc_id(1, chunk_id)
 	Network.update_pre_game_overlay.emit("Loading map", percent_complete)
 
 
