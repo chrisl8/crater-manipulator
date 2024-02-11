@@ -667,6 +667,21 @@ func set_cell_data(
 	if update_current_data:
 		current_data[at_position] = id
 	set_cell(layer, at_position, source_id, id)
+	var cells_to_check: Array = get_surrounding_cells(at_position)
+	cells_to_check.append(at_position)
+	for cell_position: Vector2i in cells_to_check:
+		var cell_source_id: int = get_cell_source_id(layer, cell_position)
+		if cell_source_id > -1:
+			var cell_atlas_coords: Vector2i = get_cell_atlas_coords(layer, cell_position)
+			var should_have_collider: bool = false
+			for surrounding_cell: Vector2i in get_surrounding_cells(cell_position):
+				if get_cell_source_id(layer, surrounding_cell) == -1:
+					should_have_collider = true
+			# TODO: source_id is hard coded here, assuming 0 has colliders and 1 does not.
+			if should_have_collider and cell_source_id > 0:
+				set_cell(layer, cell_position, 0, cell_atlas_coords)
+			elif not should_have_collider and cell_source_id < 1:
+				set_cell(layer, cell_position, 1, cell_atlas_coords)
 
 
 ## Push change data stored on the client to the server, if there is any
