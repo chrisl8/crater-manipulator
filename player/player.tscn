@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://player/save_map_button.gd" id="6_a1bjq"]
 [ext_resource type="Script" path="res://player/player_leg_controller.gd" id="6_dfoja"]
 [ext_resource type="Script" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
-[ext_resource type="Texture2D" uid="uid://cxfvwdktyjru5" path="res://player/player_svg.svg" id="10_wmt63"]
+[ext_resource type="Texture2D" uid="uid://cxfvwdktyjru5" path="res://player/player.svg" id="10_wmt63"]
 
 [sub_resource type="GDScript" id="1"]
 

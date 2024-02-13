@@ -89,7 +89,7 @@ func get_depth_function(
 	# Desmos Formula:
 	#y=\frac{-\sin\left(\frac{xd}{c}\right)}{\frac{xd}{c}}h
 	#x>r
-	#x<r
+	#x<-r
 	# d = width_scale
 	# h = height_scale
 	# c = crater_scale
@@ -136,9 +136,23 @@ func regenerate_map() -> void:
 	current_data.clear()
 	generate_map()
 
+var ValidResourcegenerationTiles = []
 
+var GenerateSimpleWorld: bool = false
 ## Procedural world generation
 func generate_map() -> void:
+
+	#Breaks something, client gets stuck looking for spot then server freezes.
+	if(GenerateSimpleWorld):
+		for i: int in range(-2000, 2000):
+			for j: int in range(-1000, -1050):
+				current_data[Vector2i(i, j)] = get_random_stone_tile()
+		set_all_cell_data(current_data, 0)
+		synced_data = current_data
+		map_generated = true
+		return
+
+
 	var bottom_boundary_noise: FastNoiseLite = FastNoiseLite.new()
 
 	bottom_boundary_noise.seed = randi()
@@ -155,7 +169,10 @@ func generate_map() -> void:
 	var height_scale: int = 1000
 	var crater_scale: float = 2000.0
 	var additional_waste_distance: int = 1000
+	var FillHeight: float = height_scale/4.0
 
+	var FillIntercept: float = crater_scale / float(width_scale) * 3.14159265
+	print(FillIntercept)
 	var original_crater_generate_radius: int = crater_generate_radius
 	while crater_generate_radius >= -original_crater_generate_radius:
 		var radius: float = float(crater_generate_radius)
@@ -176,11 +193,29 @@ func generate_map() -> void:
 		for i: int in range(0, barrier_depth):
 			current_data[Vector2i(roundi(radius), roundi(-(depth - i)))] = get_random_barrier_rock_tile()
 
+		var InCoreRadius: bool = radius >= -FillIntercept and radius <= FillIntercept
 		#Add top layer
 		for i: int in range(-top_depth, minimum_top_depth):
-			current_data[Vector2i(roundi(radius), roundi(-(depth + i)))] = get_random_stone_tile()
+			var Tile: Vector2i = Vector2i(roundi(radius), roundi(-(depth + i)))
+			if(InCoreRadius):
+				ValidResourcegenerationTiles.append(Tile)
+			current_data[Tile] = get_random_stone_tile()
+
+		if(InCoreRadius):
+			var LocalFillHeight: int = roundi(get_depth_function(float(radius), float(width_scale), float(FillHeight), float(crater_scale)))
+			for i: int in range(depth+minimum_top_depth, LocalFillHeight):
+				#print("A")
+				
+				var Tile: Vector2i = Vector2i(roundi(radius), roundi(-(i)))
+				ValidResourcegenerationTiles.append(Tile)
+				current_data[Tile] = get_random_stone_tile()
+
+			
+
+
 
 		crater_generate_radius -= 1
+
 
 	var end_depth: float = get_depth_function(
 		float(original_crater_generate_radius),
