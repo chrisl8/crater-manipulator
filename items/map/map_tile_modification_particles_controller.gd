@@ -39,7 +39,10 @@ func destroy_cell_local(at_position: Vector2i, id: Vector2i) -> Array:
 
 	#Extract atlas image at tile, used for color sampling
 	var atlas: TileSetAtlasSource = map.tile_set.get_source(0)
+	#var timing: float = Time.get_ticks_msec()  #Time.get_ticks_usec()
+	# TODO: This next line takes 6 to 7 ms, so it should probably be replaced.
 	var atlas_image: Image = atlas.texture.get_image()
+	#print(Time.get_ticks_msec() - timing)
 	if id == Vector2i(-1, -1):
 		id = Vector2i(0, 0)
 	var tile_image: Image = atlas_image.get_region(atlas.get_tile_texture_region(id))
