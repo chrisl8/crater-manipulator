@@ -616,7 +616,7 @@ func modify_cell(at_position: Vector2i, id: Vector2i) -> void:
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
-	if at_position in changed_data.keys():
+	if changed_data.has(at_position):
 		changed_data[at_position] = [changed_data[at_position][0], id]
 	elif synced_data.has(at_position):
 		changed_data[at_position] = [synced_data[at_position], id]
