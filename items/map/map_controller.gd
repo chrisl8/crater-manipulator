@@ -62,6 +62,10 @@ var server_side_per_player_initial_map_data: Dictionary = {}
 var map_download_finished: bool = false
 var map_initialization_started: bool = false
 
+var valid_resource_generation_tiles: Array = []
+
+var generate_simple_world: bool = false
+
 
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
@@ -136,14 +140,11 @@ func regenerate_map() -> void:
 	current_data.clear()
 	generate_map()
 
-var ValidResourcegenerationTiles = []
 
-var GenerateSimpleWorld: bool = false
 ## Procedural world generation
 func generate_map() -> void:
-
 	#Breaks something, client gets stuck looking for spot then server freezes.
-	if(GenerateSimpleWorld):
+	if generate_simple_world:
 		for i: int in range(-2000, 2000):
 			for j: int in range(-1000, -1050):
 				current_data[Vector2i(i, j)] = get_random_stone_tile()
@@ -151,7 +152,6 @@ func generate_map() -> void:
 		synced_data = current_data
 		map_generated = true
 		return
-
 
 	var bottom_boundary_noise: FastNoiseLite = FastNoiseLite.new()
 
@@ -169,10 +169,10 @@ func generate_map() -> void:
 	var height_scale: int = 1000
 	var crater_scale: float = 2000.0
 	var additional_waste_distance: int = 1000
-	var FillHeight: float = height_scale/4.0
+	var fill_height: float = height_scale / 4.0
 
-	var FillIntercept: float = crater_scale / float(width_scale) * 3.14159265
-	print(FillIntercept)
+	var fill_intercept: float = crater_scale / float(width_scale) * 3.14159265
+	print(fill_intercept)
 	var original_crater_generate_radius: int = crater_generate_radius
 	while crater_generate_radius >= -original_crater_generate_radius:
 		var radius: float = float(crater_generate_radius)
@@ -193,29 +193,28 @@ func generate_map() -> void:
 		for i: int in range(0, barrier_depth):
 			current_data[Vector2i(roundi(radius), roundi(-(depth - i)))] = get_random_barrier_rock_tile()
 
-		var InCoreRadius: bool = radius >= -FillIntercept and radius <= FillIntercept
+		var in_core_radius: bool = radius >= -fill_intercept and radius <= fill_intercept
 		#Add top layer
 		for i: int in range(-top_depth, minimum_top_depth):
-			var Tile: Vector2i = Vector2i(roundi(radius), roundi(-(depth + i)))
-			if(InCoreRadius):
-				ValidResourcegenerationTiles.append(Tile)
-			current_data[Tile] = get_random_stone_tile()
+			var tile: Vector2i = Vector2i(roundi(radius), roundi(-(depth + i)))
+			if in_core_radius:
+				valid_resource_generation_tiles.append(tile)
+			current_data[tile] = get_random_stone_tile()
 
-		if(InCoreRadius):
-			var LocalFillHeight: int = roundi(get_depth_function(float(radius), float(width_scale), float(FillHeight), float(crater_scale)))
-			for i: int in range(depth+minimum_top_depth, LocalFillHeight):
+		if in_core_radius:
+			var local_fill_height: int = roundi(
+				get_depth_function(
+					float(radius), float(width_scale), float(fill_height), float(crater_scale)
+				)
+			)
+			for i: int in range(depth + minimum_top_depth, local_fill_height):
 				#print("A")
-				
-				var Tile: Vector2i = Vector2i(roundi(radius), roundi(-(i)))
-				ValidResourcegenerationTiles.append(Tile)
-				current_data[Tile] = get_random_stone_tile()
 
-			
-
-
+				var tile: Vector2i = Vector2i(roundi(radius), roundi(-(i)))
+				valid_resource_generation_tiles.append(tile)
+				current_data[tile] = get_random_stone_tile()
 
 		crater_generate_radius -= 1
-
 
 	var end_depth: float = get_depth_function(
 		float(original_crater_generate_radius),
@@ -575,10 +574,7 @@ func acknowledge_received_chunk(chunk_id: int) -> void:
 ## Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
 func send_initial_map_data_chunk_to_client(
-	chunk_id: int,
-	data_size: int,
-	compressed_data: PackedByteArray,
-	percent_complete: int
+	chunk_id: int, data_size: int, compressed_data: PackedByteArray, percent_complete: int
 ) -> void:
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
 	local_player_initial_map_data_last_chunk_id_received = chunk_id
