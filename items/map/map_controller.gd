@@ -175,7 +175,7 @@ func generate_map() -> void:
 
 	MaxRadius = crater_generate_radius + additional_waste_distance+2
 
-	var FillIntercept: float = crater_scale / float(width_scale) * 3.14159265
+	var fill_intercept: float = crater_scale / float(width_scale) * 3.14159265
 
 	var original_crater_generate_radius: int = crater_generate_radius
 	while crater_generate_radius >= -original_crater_generate_radius:
