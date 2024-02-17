@@ -54,7 +54,7 @@ func initialize(local: bool) -> void:
 	#get_node("/root").add_child(spawned_debug_object)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if is_local:
 		mouse_position = get_global_mouse_position()
 
@@ -69,7 +69,7 @@ func _process(_delta: float) -> void:
 				Vector2i(randi_range(-50, 50), randi_range(0, -50)), Vector2i(1, 1)
 			)
 
-		current_mining_time = clamp(current_mining_time + _delta, 0.0, 100.0)
+		current_mining_time += delta
 		if mouse_left_down:
 			mine_raycast()
 		is_mining = mouse_left_down

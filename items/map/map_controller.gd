@@ -62,6 +62,10 @@ var server_side_per_player_initial_map_data: Dictionary = {}
 var map_download_finished: bool = false
 var map_initialization_started: bool = false
 
+var valid_resource_generation_tiles: Array = []
+
+var generate_simple_world: bool = false
+
 
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
@@ -160,7 +164,7 @@ func generate_map() -> void:
 	var height_scale: int = 1000
 	var crater_scale: float = 2000.0
 	var additional_waste_distance: int = 1000
-	var FillHeight: float = height_scale/4.0
+	var fill_height: float = height_scale / 4.0
 
 	if(GenerateSimpleWorld):
 		crater_scale = 200
@@ -193,29 +197,28 @@ func generate_map() -> void:
 		for i: int in range(0, barrier_depth):
 			current_data[Vector2i(roundi(radius), roundi(-(depth - i)))] = get_random_barrier_rock_tile()
 
-		var InCoreRadius: bool = radius >= -FillIntercept and radius <= FillIntercept
+		var in_core_radius: bool = radius >= -fill_intercept and radius <= fill_intercept
 		#Add top layer
 		for i: int in range(-top_depth, minimum_top_depth):
-			var Tile: Vector2i = Vector2i(roundi(radius), roundi(-(depth + i)))
-			if(InCoreRadius):
-				ValidResourcegenerationTiles.append(Tile)
-			current_data[Tile] = get_random_stone_tile()
+			var tile: Vector2i = Vector2i(roundi(radius), roundi(-(depth + i)))
+			if in_core_radius:
+				valid_resource_generation_tiles.append(tile)
+			current_data[tile] = get_random_stone_tile()
 
-		if(InCoreRadius):
-			var LocalFillHeight: int = roundi(get_depth_function(float(radius), float(width_scale), float(FillHeight), float(crater_scale)))
-			for i: int in range(depth+minimum_top_depth, LocalFillHeight):
+		if in_core_radius:
+			var local_fill_height: int = roundi(
+				get_depth_function(
+					float(radius), float(width_scale), float(fill_height), float(crater_scale)
+				)
+			)
+			for i: int in range(depth + minimum_top_depth, local_fill_height):
 				#print("A")
-				
-				var Tile: Vector2i = Vector2i(roundi(radius), roundi(-(i)))
-				ValidResourcegenerationTiles.append(Tile)
-				current_data[Tile] = get_random_stone_tile()
 
-			
-
-
+				var tile: Vector2i = Vector2i(roundi(radius), roundi(-(i)))
+				valid_resource_generation_tiles.append(tile)
+				current_data[tile] = get_random_stone_tile()
 
 		crater_generate_radius -= 1
-
 
 	var end_depth: float = get_depth_function(
 		float(original_crater_generate_radius),
@@ -372,10 +375,10 @@ func _process(delta: float) -> void:
 
 ## Check for any buffered change data on the server (data received from clients and waiting to be sent), then chunk it and send it out to clients
 func server_send_buffered_changes() -> void:
-	if len(server_buffered_changes.keys()) > 0:
+	if server_buffered_changes.size() > 0:
 		var count: int = CHUNK_SIZE
 		var chunked_data: Dictionary = {}
-		while count > 0 and len(server_buffered_changes.keys()) > 0:
+		while count > 0 and server_buffered_changes.size() > 0:
 			chunked_data[server_buffered_changes.keys()[0]] = server_buffered_changes[
 				server_buffered_changes.keys()[0]
 			]
@@ -578,10 +581,7 @@ func acknowledge_received_chunk(chunk_id: int) -> void:
 ## Send chunks of the world dat block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
 func send_initial_map_data_chunk_to_client(
-	chunk_id: int,
-	data_size: int,
-	compressed_data: PackedByteArray,
-	percent_complete: int
+	chunk_id: int, data_size: int, compressed_data: PackedByteArray, percent_complete: int
 ) -> void:
 	re_request_initial_map_data_timer = 0.0  # Reset timer when we get data
 	local_player_initial_map_data_last_chunk_id_received = chunk_id
@@ -619,7 +619,7 @@ func modify_cell(at_position: Vector2i, id: Vector2i) -> void:
 		#Not allowed to modify map until first state received
 		#Because current map is not trustworthy, not cleared on start so player doesn't fall through world immediately.
 		return
-	if at_position in changed_data.keys():
+	if changed_data.has(at_position):
 		changed_data[at_position] = [changed_data[at_position][0], id]
 	elif synced_data.has(at_position):
 		changed_data[at_position] = [synced_data[at_position], id]
@@ -667,7 +667,7 @@ func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2
 func mine_cell_at_position(at_position: Vector2) -> void:
 	var compensated_position: Vector2i = local_to_map(to_local(at_position))
 	if (
-		(compensated_position in current_data.keys())
+		current_data.has(compensated_position)
 		and (current_data[compensated_position] != Vector2i(-1, -1))
 	):
 		if Globals.get_is_cell_mineable(current_data[compensated_position]):
@@ -726,7 +726,7 @@ func set_cell_data(
 ## Push change data stored on the client to the server, if there is any
 ## Still need to add chunking to this process right here
 func push_changed_data() -> void:
-	if len(changed_data.keys()) > 0:
+	if changed_data.size() > 0:
 		transfer_changed_map_data_to_server.rpc_id(1, changed_data)
 		changed_data.clear()
 
@@ -743,9 +743,9 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 			tiles_to_update[key] = map_data[key][1]
 
 			if map_data[key][0].y > -1:
-				if player_id not in stored_player_inventory_drops.keys():
+				if not stored_player_inventory_drops.has(player_id):
 					stored_player_inventory_drops[player_id] = {}
-				if map_data[key][0].y in stored_player_inventory_drops[player_id].keys():
+				if stored_player_inventory_drops[player_id].has(map_data[key][0].y):
 					stored_player_inventory_drops[player_id][map_data[key][0].y] += 1
 				else:
 					stored_player_inventory_drops[player_id][map_data[key][0].y] = 1
@@ -753,7 +753,7 @@ func transfer_changed_map_data_to_server(map_data: Dictionary) -> void:
 
 
 func serve_update_tiles_from_given_data(tiles_to_update: Dictionary) -> void:
-	if len(tiles_to_update.keys()) > 0:
+	if tiles_to_update.size() > 0:
 		for key: Vector2i in tiles_to_update.keys():
 			set_cell_data(key, tiles_to_update[key], 0, 0, false)
 
@@ -771,7 +771,7 @@ func server_send_changed_data(data: Dictionary) -> void:
 		if (
 			current_data.has(key)
 			and current_data[key] != data[key]
-			and (key in current_data.keys())
+			and current_data.has(key)
 			and (current_data[key] != Vector2i(-1, -1))
 		):
 			tile_modification_particles_controller.destroy_cell(key, data[key])
