@@ -145,6 +145,8 @@ func mine_raycast() -> void:
 			var hit_point: Vector2 = result["position"]
 			if result["collider"] is TileMap:
 				Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
+			elif result["collider"] is RigidBody2D:
+				print(result["collider"])
 			mining_particle_distance = mining_particles.global_position.distance_to(hit_point) / 2.0
 
 		mining_distance = mining_particle_distance

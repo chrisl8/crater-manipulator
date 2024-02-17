@@ -1,6 +1,6 @@
 extends Node
 
-var ball: Resource = preload("res://items/ball/ball.tscn")
+var ball: Resource = preload("res://items/disc/disc.tscn")
 
 var done_once: bool = false
 
