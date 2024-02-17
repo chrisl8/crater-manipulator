@@ -24,6 +24,7 @@ Spawner="*res://spawner.gd"
 
 [debug]
 
+settings/stdout/print_fps=true
 gdscript/warnings/untyped_declaration=1
 gdscript/warnings/inferred_declaration=1
 gdscript/warnings/unsafe_cast=1
@@ -151,6 +152,10 @@ ball={
 3d_physics/layer_2="Players"
 3d_physics/layer_4="Ball and other Things"
 3d_physics/layer_9="Buttons and Switches"
+
+[physics]
+
+common/physics_jitter_fix=0.0
 
 [rendering]
 
