@@ -22,6 +22,7 @@ func _process(delta: float) -> void:
 	var distance: float = global_position.x - last_position.x
 	#print(abs(distance)/delta)
 	var move: bool = abs(distance)/delta > 1
+	move = true
 	if move:
 		rot_point.rotate(distance * rot_speed * (-1.0 if flipped else 1.0))
 	left_leg.move = move
