@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=18 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/player_interaction_controller.gd" id="4_rfuvf"]
@@ -66,6 +66,9 @@ hue_variation_min = -0.13
 hue_variation_max = 0.1
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_6el7t"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6r2ad"]
+size = Vector2(75, 86)
 
 [node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "interaction_controller", "inventory_manager", "PlayerCanvas") groups=["players"]]
 collision_layer = 2
@@ -437,3 +440,14 @@ uv = PackedVector2Array(96, 640, 128, 608, 224, 608, 256, 640, 320, 640, 352, 70
 visible = false
 scale = Vector2(0.01, 0.01)
 texture = SubResource("NoiseTexture2D_6el7t")
+
+[node name="Personal Space" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 10
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Personal Space"]
+position = Vector2(7, -30)
+shape = SubResource("RectangleShape2D_6r2ad")
+
+[connection signal="body_entered" from="Personal Space" to="." method="_on_personal_space_body_entered"]
+[connection signal="body_exited" from="Personal Space" to="." method="_on_personal_space_body_exited"]

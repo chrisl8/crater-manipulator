@@ -1,4 +1,5 @@
 # https://forum.godotengine.org/t/jittery-rigidbody-movement-on-client-side/38377/3
+# TODO: This does NOT synchronize rotation at all. I'm not sure how you even get or set rotation on 2D objects.
 class_name PhysicsSynchronizer
 extends MultiplayerSynchronizer
 
@@ -22,7 +23,7 @@ var last_frame: int = 0
 )
 
 
-#copy state to array
+## Copy state to array
 func get_state(state: PhysicsDirectBodyState2D, array: Array) -> void:
 	array[ORIGIN] = state.transform.origin
 	#array[QUAT] = state.transform.basis.get_rotation_quaternion()
@@ -30,7 +31,7 @@ func get_state(state: PhysicsDirectBodyState2D, array: Array) -> void:
 	array[ANG_VEL] = state.angular_velocity
 
 
-#copy array to state
+## Copy array to state
 func set_state(array: Array, state: PhysicsDirectBodyState2D) -> void:
 	state.transform.origin = array[ORIGIN]
 	#state.transform.basis = Basis(array[QUAT])
@@ -64,7 +65,7 @@ func _on_synchronized() -> void:
 	set_physics_body_info()
 
 
-#  very basic network jitter reduction
+##  Very basic network jitter reduction
 func correct_error() -> void:
 	var diff: Vector2 = body_state.transform.origin - sync_bstate_array[ORIGIN]
 #	print(name,": diff origin ", diff.length())
