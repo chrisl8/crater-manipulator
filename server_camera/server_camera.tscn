@@ -49,6 +49,7 @@ size_flags_horizontal = 0
 size_flags_vertical = 4
 
 [node name="Regenerate Map" type="Button" parent="Debug Controls/Control"]
+visible = false
 layout_mode = 0
 offset_top = 99.0
 offset_right = 135.0
@@ -57,9 +58,11 @@ text = "Regenerate Map"
 script = ExtResource("2_on7ub")
 
 [node name="Focus To Map" type="Button" parent="Debug Controls/Control" node_paths=PackedStringArray("FocusParent")]
-offset_top = 132.0
-offset_right = 135.0
-offset_bottom = 163.0
+layout_mode = 0
+offset_left = 1.0
+offset_top = 124.0
+offset_right = 136.0
+offset_bottom = 155.0
 text = "Focus To Map"
 script = ExtResource("3_jhmab")
 FocusParent = NodePath("../../..")

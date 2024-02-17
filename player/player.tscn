@@ -166,7 +166,7 @@ z_as_relative = false
 position = Vector2(1, -1)
 script = ExtResource("5_h6bhr")
 rot_point = NodePath("Rot Point")
-rot_speed = 3.0
+rot_speed = 0.07
 left_leg = NodePath("Left Leg")
 right_leg = NodePath("Right Leg")
 
