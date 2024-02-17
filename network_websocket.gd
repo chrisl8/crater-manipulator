@@ -301,36 +301,29 @@ func data_received(data: String) -> void:
 	)
 
 
-## Check player's position and surrounding area to ensure it is clear for spawning
-func check_location_and_surroundings(at_position: Vector2) -> bool:
+## Check player's position and surrounding area to ensure it is clear for spawning, accepts integer tile map position
+func check_tile_location_and_surroundings(at_position: Vector2i) -> bool:
+	#Allowd to spawn in mid-air, assumes a physics distance check was already performed
+	#if(Globals.world_map.get_cell_ID_at_map_tile_position(at_position+Vector2i(0,1)) == Vector2i(-1, -1)):
+	#	#Position does not have block underneath it
+	#	return(false)
+	
+	# Find out what tiles exist at the player's intended position
+	for x_position: int in range(-2, 3):
+		for y_position: int in range(-5, 1):
+			if (Globals.world_map.get_cell_ID_at_map_tile_position(Vector2i(at_position.x + x_position, at_position.y + y_position)) != Vector2i(-1, -1)):
+				#Globals.world_map.modify_cell(Vector2i(at_position.x + x_position, at_position.y + y_position), Globals.world_map.get_random_ore_tile())
+				return(false)
+
+	return true
+
+## Check player's position and surrounding area to ensure it is clear for spawning, accepts floating point world position
+func check_global_location_and_surroundings(at_position: Vector2) -> bool:
+	#This is just a wrapper for the tile_location version for better code readability
 	var cell_position_at_player_potential_position: Vector2i = (
 		Globals.world_map.get_cell_position_at_global_position(at_position)
 	)
-
-	var all_cell_positions_to_clear_for_player: Array[Vector2i] = []
-
-	var starting_point: Vector2i = Vector2i(
-		cell_position_at_player_potential_position.x - 1,
-		cell_position_at_player_potential_position.y - 3
-	)
-
-	# Find out what tiles exist at the player's intended position
-	for x_position: int in range(0, 2):
-		for y_position: int in range(0, 3):
-			all_cell_positions_to_clear_for_player.append(
-				Vector2i(starting_point.x + x_position, starting_point.y + y_position)
-			)
-
-	var position_is_clear: bool = true
-
-	for cell_position_to_clear_for_player: Vector2i in all_cell_positions_to_clear_for_player:
-		if (
-			Globals.world_map.get_cell_data_at_map_local_position(cell_position_to_clear_for_player)
-			!= Vector2i(-1, -1)
-		):
-			position_is_clear = false
-
-	return position_is_clear
+	return(check_tile_location_and_surroundings(cell_position_at_player_potential_position))
 
 
 func player_joined(id: int, data: String) -> void:
@@ -397,12 +390,91 @@ func player_joined(id: int, data: String) -> void:
 			Globals.player_save_data[player_uuid]["position"]["y"],
 		)
 
-	var reached_bottom_of_map: bool = false
-	var last_x_shift_direction: String = "positive"
-	var last_x_shift_count: int = 0
 
 	update_remote_pre_game_overlay_message.rpc_id(id, "Finding our place\nin the world...")
+
+	var SearchTime = Time.get_unix_time_from_system()
+
+	var SearchOrigin: Vector2i = Vector2i(int(potential_player_position.x),int(potential_player_position.y))
+	var SearchRadius: int = -1
 	var clear_and_safe_position_found: bool = false
+	var CellData: Array = Globals.world_map.get_cell_positions()
+
+
+	#Brute map tile search, starts from top left index
+	'''
+	
+	var FoundSpot = false
+
+	for Tile in CellData:
+		if(check_tile_location_and_surroundings(Tile - Vector2i(0,1))):
+			FoundSpot = true
+			potential_player_position = (Vector2(Tile.x*16,Tile.y*16)- Vector2(0*16,1*16)) + Vector2(8,8)
+			break
+	'''
+
+	
+
+	#Radial search from initial origin
+	while(not clear_and_safe_position_found and SearchRadius < 10):
+		SearchRadius+=1
+		for i: int in range(0,4):
+			#Add terniary resricting x extents based on 'i' value to eliminate duplicate corner checking
+			for j: int in range(-SearchRadius,SearchRadius+1):
+				var SearchPosition: Vector2i = SearchOrigin
+				if i == 0:
+					SearchPosition+=Vector2i(SearchRadius,j)
+				elif i == 1:
+					SearchPosition+=Vector2i(-SearchRadius,j)
+				elif i == 2:
+					SearchPosition+=Vector2i(j,SearchRadius)
+				elif i == 3:
+					SearchPosition+=Vector2i(j,-SearchRadius)
+				potential_player_position = SearchPosition
+				if((SearchPosition - Vector2i(0,1)) in CellData):
+					clear_and_safe_position_found = check_tile_location_and_surroundings(SearchPosition)
+				
+				
+				#Globals.world_map.modify_cell(SearchPosition, Globals.world_map.get_random_ore_tile())
+		#await get_tree().create_timer(0.01).timeout 
+
+
+	var RaycastPosition:Vector2 = Vector2(SearchOrigin.x*16+8,SearchOrigin.y*16+8)
+	var space_state: PhysicsDirectSpaceState2D = Globals.world_map.get_world_2d().direct_space_state
+
+	var MaxRadius: int = Globals.world_map.MaxRadius*2
+	var CurrentRadius: int = 0
+
+	while(not clear_and_safe_position_found and abs(CurrentRadius) < MaxRadius):
+		RaycastPosition = Vector2(CurrentRadius*16.0+8.0,RaycastPosition.y)
+
+		var FrompPos: Vector2 = RaycastPosition-Vector2(0,100000)
+		var ToPos: Vector2 = RaycastPosition+Vector2(0,100000)
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
+			FrompPos,
+			ToPos
+		)
+		var result: Dictionary = space_state.intersect_ray(query)
+		if result.size() > 0:
+			var hit_point: Vector2 = result["position"]
+			var TileLocation: Vector2i = Globals.world_map.get_cell_position_at_global_position(hit_point-Vector2(0,0.01))
+			if(check_tile_location_and_surroundings(TileLocation)):
+				clear_and_safe_position_found = true
+				potential_player_position = Vector2(TileLocation.x*16+8,TileLocation.y*16+8)
+				break
+
+		if(CurrentRadius == 0):
+			CurrentRadius+=1
+		elif(CurrentRadius <= 0):
+			CurrentRadius*=-1
+			CurrentRadius+=1
+		else:
+			CurrentRadius*=-1
+
+
+
+	#Dad's system
+	'''
 	while not clear_and_safe_position_found:
 		var potential_player_position_in_map_coordinates: Vector2i = (
 			Globals.world_map.get_cell_position_at_global_position(potential_player_position)
@@ -432,7 +504,7 @@ func player_joined(id: int, data: String) -> void:
 			next_position_down_cell_contents = (
 				Globals
 				. world_map
-				. get_cell_data_at_map_local_position(
+				. get_cell_data_at_map_tile_position(
 					Vector2i(
 						potential_player_position_in_map_coordinates.x,
 						potential_player_position_in_map_coordinates.y + descender_counter
@@ -452,7 +524,7 @@ func player_joined(id: int, data: String) -> void:
 					potential_player_position_in_map_coordinates.y + descender_counter - 1
 				)
 			)
-			clear_and_safe_position_found = check_location_and_surroundings(
+			clear_and_safe_position_found = check_tile_location_and_surroundings(
 				potential_player_position
 			)
 			reached_bottom_of_map = true  # If we loop, always force a left/right shift at the next loop.
@@ -463,6 +535,11 @@ func player_joined(id: int, data: String) -> void:
 			)
 		# Otherwise, do not update the potential_player_position and start over
 		# TODO: There is nothing to stop this from looping forever in a worse case scenario
+	'''
+
+	if(!clear_and_safe_position_found):
+		print("WARNING : Failed to find player starting tile")
+	print("Player starting position search took : " + str(Time.get_unix_time_from_system() - SearchTime) + " s")
 
 	character.name = str(id)
 	get_node("../Main/Players").add_child(character, true)

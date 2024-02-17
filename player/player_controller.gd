@@ -16,7 +16,7 @@ extends RigidBody2D
 
 var update_synced_position: bool = false
 var update_synced_rotation: bool = false
-
+@export var PlayerCanvas: CanvasLayer
 
 func _ready() -> void:
 	# Attempt to fix character getting stuck on tiles as they move parallel to them
@@ -46,6 +46,9 @@ func _ready() -> void:
 		camera.queue_free()
 		gravity_scale = 0.0
 
+	PlayerCanvas.visible = !Globals.is_server
+	
+
 
 func _process(_delta: float) -> void:
 	if (
@@ -59,7 +62,7 @@ func _process(_delta: float) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func set_player_position(new_position: Vector2) -> void:
 	Helpers.log_print(str("Player was forced to ", new_position), "red")
-	position = new_position
+	global_position = new_position
 
 
 func _physics_process(delta: float) -> void:

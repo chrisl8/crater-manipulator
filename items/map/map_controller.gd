@@ -35,7 +35,7 @@ var map_generated: bool = false
 var synced_data: Dictionary = {}
 #Current map state, presumably faster than reading tilemap again
 var current_data: Dictionary = {}
-#Local modifications buffered until next sync cycle
+#Local modifications buffered until next sync cycle, current data includes these changes
 var changed_data: Dictionary = {}
 
 # current_data is the "best" reality for clients to work from and
@@ -136,22 +136,13 @@ func regenerate_map() -> void:
 	current_data.clear()
 	generate_map()
 
+var MaxRadius = -1
+
 var ValidResourcegenerationTiles = []
 
-var GenerateSimpleWorld: bool = false
+var GenerateSimpleWorld: bool = true
 ## Procedural world generation
 func generate_map() -> void:
-
-	#Breaks something, client gets stuck looking for spot then server freezes.
-	if(GenerateSimpleWorld):
-		for i: int in range(-2000, 2000):
-			for j: int in range(-1000, -1050):
-				current_data[Vector2i(i, j)] = get_random_stone_tile()
-		set_all_cell_data(current_data, 0)
-		synced_data = current_data
-		map_generated = true
-		return
-
 
 	var bottom_boundary_noise: FastNoiseLite = FastNoiseLite.new()
 
@@ -171,8 +162,17 @@ func generate_map() -> void:
 	var additional_waste_distance: int = 1000
 	var FillHeight: float = height_scale/4.0
 
+	if(GenerateSimpleWorld):
+		crater_scale = 200
+		additional_waste_distance = 10
+		height_scale = 10
+		crater_generate_radius = 400
+
+
+	MaxRadius = crater_generate_radius + additional_waste_distance+2
+
 	var FillIntercept: float = crater_scale / float(width_scale) * 3.14159265
-	print(FillIntercept)
+
 	var original_crater_generate_radius: int = crater_generate_radius
 	while crater_generate_radius >= -original_crater_generate_radius:
 		var radius: float = float(crater_generate_radius)
@@ -393,9 +393,12 @@ func set_all_cell_data(data: Dictionary, layer: int) -> void:
 
 
 ## Get the positions of every cell in the tile map
-func get_cell_positions(layer: int) -> Array[Vector2i]:
-	var positions: Array[Vector2i] = get_used_cells(layer)
-	return positions
+func get_cell_positions() -> Array:
+
+	if Globals.is_server:
+		return(synced_data.keys())
+	else:
+		return(synced_data.keys())
 
 
 ## Get the tile IDs of every cell in the tile map
@@ -632,7 +635,7 @@ func get_cell_position_at_global_position(at_position: Vector2) -> Vector2i:
 
 
 ## Return the tile data at a given map tile position
-func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
+func get_cell_ID_at_map_tile_position(at_position: Vector2i) -> Vector2i:
 	# Use the correct data set based on client vs. server
 	# current_data is the "best" reality for clients to work from and
 	# synced_data is the "best" data for the server to work from
@@ -642,6 +645,8 @@ func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
 	else:
 		map_data_to_use = current_data
 	if map_data_to_use.has(at_position):
+		#print(map_data_to_use.values())
+		#print(map_data_to_use[at_position])
 		return map_data_to_use[at_position]
 	# "Nothing", i.e. "air" is what "exists" at any position not listed in the map data
 	return Vector2i(-1, -1)
@@ -650,7 +655,7 @@ func get_cell_data_at_map_local_position(at_position: Vector2i) -> Vector2i:
 ## Return the tile data at a given world position
 func get_cell_data_at_global_position(at_position: Vector2) -> Vector2i:
 	var local_at_position: Vector2i = get_cell_position_at_global_position(at_position)
-	return get_cell_data_at_map_local_position(local_at_position)
+	return get_cell_ID_at_map_tile_position(local_at_position)
 
 
 ## Return the global position of a map cell given its map local position
@@ -671,17 +676,16 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 			)
 			modify_cell(compensated_position, Vector2i(-1, -1))
 
-
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
-	if !Globals.get_is_cell_mineable(get_cell_data_at_map_local_position(at_cell_position)):
+	if !Globals.get_is_cell_mineable(get_cell_ID_at_map_tile_position(at_cell_position)):
 		return
 	var adjacent_cell_contents: Array = [
-		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
-		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x, at_cell_position.y + 1)),
-		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x - 1, at_cell_position.y)),
-		get_cell_data_at_map_local_position(Vector2i(at_cell_position.x + 1, at_cell_position.y)),
+		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
+		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x, at_cell_position.y + 1)),
+		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x - 1, at_cell_position.y)),
+		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x + 1, at_cell_position.y)),
 	]
 	var can_place_cell: bool = false
 	for cell_content: Vector2i in adjacent_cell_contents:
