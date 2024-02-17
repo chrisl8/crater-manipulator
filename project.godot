@@ -13,7 +13,6 @@ config_version=5
 config/name="Crater Manipulator"
 run/main_scene="res://startup.tscn"
 config/features=PackedStringArray("4.2")
-run/max_fps=60
 boot_splash/image="res://splash-screen.png"
 
 [autoload]
