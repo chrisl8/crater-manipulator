@@ -64,8 +64,6 @@ var map_initialization_started: bool = false
 
 var valid_resource_generation_tiles: Array = []
 
-var generate_simple_world: bool = false
-
 
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
@@ -140,14 +138,16 @@ func regenerate_map() -> void:
 	current_data.clear()
 	generate_map()
 
+
 var MaxRadius = -1
 
 var ValidResourcegenerationTiles = []
 
 var GenerateSimpleWorld: bool = true
+
+
 ## Procedural world generation
 func generate_map() -> void:
-
 	var bottom_boundary_noise: FastNoiseLite = FastNoiseLite.new()
 
 	bottom_boundary_noise.seed = randi()
@@ -166,14 +166,14 @@ func generate_map() -> void:
 	var additional_waste_distance: int = 1000
 	var fill_height: float = height_scale / 4.0
 
-	if(GenerateSimpleWorld):
+	if GenerateSimpleWorld:
+		barrier_depth = 10
 		crater_scale = 200
 		additional_waste_distance = 10
 		height_scale = 10
 		crater_generate_radius = 400
 
-
-	MaxRadius = crater_generate_radius + additional_waste_distance+2
+	MaxRadius = crater_generate_radius + additional_waste_distance + 2
 
 	var fill_intercept: float = crater_scale / float(width_scale) * 3.14159265
 
@@ -397,11 +397,10 @@ func set_all_cell_data(data: Dictionary, layer: int) -> void:
 
 ## Get the positions of every cell in the tile map
 func get_cell_positions() -> Array:
-
 	if Globals.is_server:
-		return(synced_data.keys())
+		return synced_data.keys()
 	else:
-		return(synced_data.keys())
+		return synced_data.keys()
 
 
 ## Get the tile IDs of every cell in the tile map
@@ -675,6 +674,7 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 				compensated_position, current_data[compensated_position]
 			)
 			modify_cell(compensated_position, Vector2i(-1, -1))
+
 
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:

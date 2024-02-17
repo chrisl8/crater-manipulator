@@ -180,7 +180,7 @@ func _ready() -> void:
 
 	if OS.is_debug_build() and !Globals.is_server:
 		# Delay before connecting to give server a chance to start up
-		await get_tree().create_timer(2.0).timeout
+		await get_tree().create_timer(1.0).timeout
 
 	start_connection()
 
