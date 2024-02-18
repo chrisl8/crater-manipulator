@@ -66,11 +66,6 @@ func _process(delta: float) -> void:
 		else:
 			flip_point.scale.x = 1
 
-		if Input.is_action_just_pressed(&"interact"):
-			Globals.world_map.modify_cell(
-				Vector2i(randi_range(-50, 50), randi_range(0, -50)), Vector2i(1, 1)
-			)
-
 		current_mining_time += delta
 		if mouse_left_down:
 			mine_raycast()
