@@ -70,7 +70,7 @@ hue_variation_max = 0.1
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6r2ad"]
 size = Vector2(75, 86)
 
-[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "interaction_controller", "inventory_manager", "PlayerCanvas") groups=["players"]]
+[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "interaction_controller", "inventory_manager", "player_canvas") groups=["players"]]
 collision_layer = 2
 collision_mask = 11
 physics_material_override = SubResource("PhysicsMaterial_qk016")
@@ -87,7 +87,7 @@ player_spawn_point = Vector2(0, 0)
 camera = NodePath("Camera2D")
 interaction_controller = NodePath("Interaction Controller")
 inventory_manager = NodePath("Inventory Manager")
-PlayerCanvas = NodePath("CanvasLayer")
+player_canvas = NodePath("CanvasLayer")
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_ir062")
