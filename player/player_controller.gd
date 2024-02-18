@@ -13,7 +13,7 @@ extends RigidBody2D
 @export var camera: Node
 @export var interaction_controller: Node2D
 @export var inventory_manager: Node2D
-@export var PlayerCanvas: CanvasLayer
+@export var player_canvas: CanvasLayer
 
 var update_synced_position: bool = false
 var update_synced_rotation: bool = false
@@ -47,7 +47,7 @@ func _ready() -> void:
 		camera.queue_free()
 		gravity_scale = 0.0
 
-	PlayerCanvas.visible = !Globals.is_server
+	player_canvas.visible = !Globals.is_server
 
 
 func _process(_delta: float) -> void:
@@ -66,15 +66,6 @@ func set_player_position(new_position: Vector2) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	'''
-	if Input.is_action_pressed("sprint"):
-		print("SPRINTING")
-	elif Input.is_action_pressed("tiptoe"):
-		print("TIPTOEING")
-	else:
-		print("WALKING")
-	'''
-
 	### Movement
 	var move_input: Vector2 = relative_input()
 	var speed: float = 200.0
