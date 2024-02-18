@@ -13,10 +13,10 @@ extends RigidBody2D
 @export var camera: Node
 @export var interaction_controller: Node2D
 @export var inventory_manager: Node2D
+@export var PlayerCanvas: CanvasLayer
 
 var update_synced_position: bool = false
 var update_synced_rotation: bool = false
-@export var PlayerCanvas: CanvasLayer
 
 
 func _ready() -> void:
@@ -138,7 +138,6 @@ func add_inventory_data(data: Dictionary) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ball"):
-		Helpers.log_print("BALL!")
 		Spawner.thing.rpc_id(1, "Ball", Vector2(position.x, position.y - 100))
 
 

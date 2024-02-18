@@ -24,6 +24,8 @@ var mouse_left_down: bool
 var mine_cast: RayCast2D
 var mining_speed: float = 0.1
 var current_mining_time: float = 100
+var ball: Resource = preload("res://items/disc/disc.tscn")
+var held_item: Node
 
 
 func update_mining_particle_length() -> void:
@@ -89,6 +91,15 @@ func _process(delta: float) -> void:
 	head.look_at(mouse_position)
 	mining_particles.emitting = is_mining
 
+	if held_item:
+		if is_mining:
+			print(held_item.position, " ", mouse_position)
+			held_item.set_position(mouse_position)
+		else:
+			print("remove held item")
+			held_item.queue_free()
+			held_item = null
+
 
 #Re-add when arms sometimes need to target other locations
 #@export var ArmTargetPosition: Vector2
@@ -146,7 +157,9 @@ func mine_raycast() -> void:
 			if result["collider"] is TileMap:
 				Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
 			elif result["collider"] is RigidBody2D:
-				print(result["collider"])
+				var body: Node = result["collider"]
+				if body.has_method("grab"):
+					body.grab.rpc_id(1)
 			mining_particle_distance = mining_particles.global_position.distance_to(hit_point) / 2.0
 
 		mining_distance = mining_particle_distance
@@ -154,3 +167,27 @@ func mine_raycast() -> void:
 
 func right_mouse_clicked() -> void:
 	Globals.world_map.place_cell_at_position(get_global_mouse_position())
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func spawn_player_held_thing(grabbed_item_name: String) -> void:
+	var parsed_thing_name: Dictionary = Helpers.parse_thing_name(grabbed_item_name)
+	Helpers.log_print(
+		str(parsed_thing_name.name, " ", parsed_thing_name.id, " picked up by ", name),
+		"Cornflowerblue"
+	)
+	# Spawn a local version for myself
+	# This is similar to the thing spawning code in spawner()
+	match parsed_thing_name.name:
+		"Ball":
+			held_item = ball.instantiate()
+		_:
+			printerr(
+				"Invalid thing to spawn name into player held position: ", parsed_thing_name.name
+			)
+			return
+	held_item.name = grabbed_item_name
+	add_child(held_item)
+	# holding_things_joint.add_child(held_item)
+	# holding_things_joint.node_a = NodePath("..")
+	# holding_things_joint.node_b = held_item.get_path()

@@ -15,3 +15,25 @@ func nearby(is_nearby: bool, _body: Node2D) -> void:
 		$HighlightMesh.visible = true
 	else:
 		$HighlightMesh.visible = false
+
+
+@rpc("any_peer", "call_local")
+func grab() -> void:
+	Helpers.log_print(
+		str(
+			"I (",
+			name,
+			") was grabbed by ",
+			multiplayer.get_remote_sender_id(),
+			" Deleting myself now"
+		),
+		"saddlebrown"
+	)
+	# Delete myself if someone grabbed me
+	queue_free()
+	# Once that is done, tell the player node that grabbed me to spawn a "held" version
+	var player: Node = get_node_or_null(
+		str("/root/Main/Players/", multiplayer.get_remote_sender_id(), "/Interaction Controller")
+	)
+	if player and player.has_method("spawn_player_held_thing"):
+		player.spawn_player_held_thing.rpc(name)
