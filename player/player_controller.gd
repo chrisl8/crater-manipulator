@@ -50,14 +50,6 @@ func _ready() -> void:
 	player_canvas.visible = !Globals.is_server
 
 
-func _process(_delta: float) -> void:
-	if (
-		get_multiplayer_authority() == multiplayer.get_unique_id()
-		and Input.is_action_just_pressed(&"interact")
-	):
-		return
-
-
 ## Remotely force the player to a given position
 @rpc("any_peer", "call_remote", "reliable")
 func set_player_position(new_position: Vector2) -> void:
