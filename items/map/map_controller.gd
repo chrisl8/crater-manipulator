@@ -9,19 +9,19 @@ const RE_REQUEST_INITIAL_MAP_DATA_TIMEOUT: float = 10.0
 # works to keep it under the buffer size limit, which is a gamble
 # Worst case from testing for each type is:
 # COMPRESSION_FASTLZ  - 110696 compresses to 65006
-# COMPRESSION_DEFLATE  - 170000 compresses to 61283
-# COMPRESSION_ZSTD - 160000 compresses to 62934
+# COMPRESSION_DEFLATE - 170000 compresses to 61283
+# COMPRESSION_ZSTD    - 160000 compresses to 62934
 
-# COMPRESSION_FASTLZ uses less CPU/is faster but compresses less It is meant for when speed and low CPU load is more important than bandwidth
-# COMPRESSION_ZSTD is supposed to be a lot faster than 1 at the expense of just a little compression
-# COMPRESSION_DEFLATE doesn't really offer any benefit unless maximum compression is paramount
-# COMPRESSION_GZIP is not better than any other option. It is just available for compatibility.
-# COMPRESSION_BROTLI  only supports decompression.
+# COMPRESSION_FASTLZ  - uses less CPU/is faster but compresses less It is meant for when speed and low CPU load is more important than bandwidth
+# COMPRESSION_ZSTD is - supposed to be a lot faster than 1 at the expense of just a little compression
+# COMPRESSION_DEFLATE - doesn't really offer any benefit unless maximum compression is paramount
+# COMPRESSION_GZIP is - not better than any other option. It is just available for compatibility.
+# COMPRESSION_BROTLI  - only supports decompression.
 
 # So for a given compression type, I set these to:
-# COMPRESSION_FASTLZ - 110000
-# COMPRESSION_DEFLATE  - 170000
-# COMPRESSION_ZSTD - 160000
+# COMPRESSION_FASTLZ  - 110000
+# COMPRESSION_DEFLATE - 170000
+# COMPRESSION_ZSTD    - 150000
 const MAP_TRANSFER_MAX_UNCOMPRESSED_DATA_SIZE: int = 150000
 const MAP_TRANSFER_COMPRESSION_MODE: int = FileAccess.COMPRESSION_ZSTD
 
@@ -63,6 +63,10 @@ var map_download_finished: bool = false
 var map_initialization_started: bool = false
 
 var valid_resource_generation_tiles: Array = []
+
+var max_radius: int = -1
+
+var generate_simple_world: bool = true
 
 
 func _ready() -> void:
@@ -139,13 +143,6 @@ func regenerate_map() -> void:
 	generate_map()
 
 
-var MaxRadius = -1
-
-var ValidResourcegenerationTiles = []
-
-var GenerateSimpleWorld: bool = true
-
-
 ## Procedural world generation
 func generate_map() -> void:
 	var bottom_boundary_noise: FastNoiseLite = FastNoiseLite.new()
@@ -166,14 +163,14 @@ func generate_map() -> void:
 	var additional_waste_distance: int = 1000
 	var fill_height: float = height_scale / 4.0
 
-	if GenerateSimpleWorld:
+	if generate_simple_world:
 		barrier_depth = 10
 		crater_scale = 200
 		additional_waste_distance = 10
 		height_scale = 10
 		crater_generate_radius = 400
 
-	MaxRadius = crater_generate_radius + additional_waste_distance + 2
+	max_radius = crater_generate_radius + additional_waste_distance + 2
 
 	var fill_intercept: float = crater_scale / float(width_scale) * 3.14159265
 
@@ -397,10 +394,7 @@ func set_all_cell_data(data: Dictionary, layer: int) -> void:
 
 ## Get the positions of every cell in the tile map
 func get_cell_positions() -> Array:
-	if Globals.is_server:
-		return synced_data.keys()
-	else:
-		return synced_data.keys()
+	return synced_data.keys()
 
 
 ## Get the tile IDs of every cell in the tile map
@@ -634,7 +628,7 @@ func get_cell_position_at_global_position(at_position: Vector2) -> Vector2i:
 
 
 ## Return the tile data at a given map tile position
-func get_cell_ID_at_map_tile_position(at_position: Vector2i) -> Vector2i:
+func get_cell_id_at_map_tile_position(at_position: Vector2i) -> Vector2i:
 	# Use the correct data set based on client vs. server
 	# current_data is the "best" reality for clients to work from and
 	# synced_data is the "best" data for the server to work from
@@ -654,7 +648,7 @@ func get_cell_ID_at_map_tile_position(at_position: Vector2i) -> Vector2i:
 ## Return the tile data at a given world position
 func get_cell_data_at_global_position(at_position: Vector2) -> Vector2i:
 	var local_at_position: Vector2i = get_cell_position_at_global_position(at_position)
-	return get_cell_ID_at_map_tile_position(local_at_position)
+	return get_cell_id_at_map_tile_position(local_at_position)
 
 
 ## Return the global position of a map cell given its map local position
@@ -679,13 +673,13 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
-	if !Globals.get_is_cell_mineable(get_cell_ID_at_map_tile_position(at_cell_position)):
+	if !Globals.get_is_cell_mineable(get_cell_id_at_map_tile_position(at_cell_position)):
 		return
 	var adjacent_cell_contents: Array = [
-		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
-		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x, at_cell_position.y + 1)),
-		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x - 1, at_cell_position.y)),
-		get_cell_ID_at_map_tile_position(Vector2i(at_cell_position.x + 1, at_cell_position.y)),
+		get_cell_id_at_map_tile_position(Vector2i(at_cell_position.x, at_cell_position.y - 1)),
+		get_cell_id_at_map_tile_position(Vector2i(at_cell_position.x, at_cell_position.y + 1)),
+		get_cell_id_at_map_tile_position(Vector2i(at_cell_position.x - 1, at_cell_position.y)),
+		get_cell_id_at_map_tile_position(Vector2i(at_cell_position.x + 1, at_cell_position.y)),
 	]
 	var can_place_cell: bool = false
 	for cell_content: Vector2i in adjacent_cell_contents:

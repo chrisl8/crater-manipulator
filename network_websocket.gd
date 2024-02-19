@@ -309,7 +309,7 @@ func check_tile_location_and_surroundings(at_position: Vector2i) -> bool:
 	for x_position: int in range(-2, 3):
 		for y_position: int in range(-5, 1):
 			if (
-				Globals.world_map.get_cell_ID_at_map_tile_position(
+				Globals.world_map.get_cell_id_at_map_tile_position(
 					Vector2i(at_position.x + x_position, at_position.y + y_position)
 				)
 				!= Vector2i(-1, -1)
@@ -425,7 +425,7 @@ func player_joined(id: int, data: String) -> void:
 	var raycast_position: Vector2 = Vector2(search_origin.x * 16 + 8, search_origin.y * 16 + 8)
 	var space_state: PhysicsDirectSpaceState2D = Globals.world_map.get_world_2d().direct_space_state
 
-	var max_radius: int = Globals.world_map.MaxRadius * 2
+	var max_radius: int = Globals.world_map.max_radius * 2
 	var current_radius: int = 0
 
 	while not clear_and_safe_position_found and abs(current_radius) < max_radius:

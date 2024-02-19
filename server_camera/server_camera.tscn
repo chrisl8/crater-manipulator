@@ -57,7 +57,7 @@ offset_bottom = 130.0
 text = "Regenerate Map"
 script = ExtResource("2_on7ub")
 
-[node name="Focus To Map" type="Button" parent="Debug Controls/Control" node_paths=PackedStringArray("FocusParent")]
+[node name="Focus To Map" type="Button" parent="Debug Controls/Control" node_paths=PackedStringArray("focus_parent")]
 layout_mode = 0
 offset_left = 1.0
 offset_top = 124.0
@@ -65,4 +65,4 @@ offset_right = 136.0
 offset_bottom = 155.0
 text = "Focus To Map"
 script = ExtResource("3_jhmab")
-FocusParent = NodePath("../../..")
+focus_parent = NodePath("../../..")
