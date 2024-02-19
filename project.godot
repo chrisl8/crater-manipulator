@@ -86,10 +86,8 @@ ball={
 
 [layer_names]
 
-3d_physics/layer_1="Walls and Floors"
-3d_physics/layer_2="Players"
-3d_physics/layer_4="Ball and other Things"
-3d_physics/layer_9="Buttons and Switches"
+2d_physics/layer_2="Players"
+2d_physics/layer_4="Ball and other Things"
 
 [physics]
 
