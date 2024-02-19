@@ -36,4 +36,5 @@ func thing(thing_name: String, spawn_position: Vector2 = Vector2.ZERO, id: int =
 		new_thing.name = str(thing_name_to_spawn)
 		if spawn_position:
 			new_thing.spawn_position = spawn_position
+		Helpers.log_print(str("Spawning ", thing_name_to_spawn, " at ", spawn_position), "yellow")
 		things_spawning_node.add_child(new_thing)

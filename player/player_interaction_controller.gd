@@ -88,16 +88,26 @@ func _process(delta: float) -> void:
 
 	if held_item:
 		if is_mining:
-			print(held_item.position, " ", mouse_position)
-			held_item.set_position(mouse_position)
-		else:
-			print("remove held item")
-			held_item.queue_free()
-			held_item = null
+			# TODO: Do not allow moving objects into terrain or through other characters,
+			# much like the mining beam does not.
+			held_item.set_position(to_local(mouse_position))
+		elif is_multiplayer_authority():
+			var held_item_name: String = held_item.name
+			var held_item_global_position: Vector2 = held_item.global_position
+			_drop_held_thing.rpc()
+			Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 
 
 #Re-add when arms sometimes need to target other locations
 #@export var ArmTargetPosition: Vector2
+
+@rpc("call_local")
+func _drop_held_thing() -> void:
+	Helpers.log_print(
+		str(held_item.name, " dropped by ", multiplayer.get_remote_sender_id()), "Cornflowerblue"
+	)
+	held_item.queue_free()
+	held_item = null
 
 
 func _input(event: InputEvent) -> void:
@@ -149,9 +159,9 @@ func mine_raycast() -> void:
 		var result: Dictionary = space_state.intersect_ray(query)
 		if result.size() > 0:
 			var hit_point: Vector2 = result["position"]
-			if result["collider"] is TileMap:
+			if result["collider"] is TileMap and not held_item:  # Do not mine while holding items
 				Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
-			elif result["collider"] is RigidBody2D:
+			elif not held_item and result["collider"] is RigidBody2D and is_multiplayer_authority():
 				var body: Node = result["collider"]
 				if body.has_method("grab"):
 					body.grab.rpc_id(1)
@@ -164,7 +174,10 @@ func right_mouse_clicked() -> void:
 	Globals.world_map.place_cell_at_position(get_global_mouse_position())
 
 
-@rpc("any_peer", "call_remote", "reliable")
+# Spawning and dropping the "thing" must be an RPC because all "copies" of the player
+# must do this to sync the view of them holding/not holding the thing across players views
+# of this player.
+@rpc("any_peer", "call_local")
 func spawn_player_held_thing(grabbed_item_name: String) -> void:
 	var parsed_thing_name: Dictionary = Helpers.parse_thing_name(grabbed_item_name)
 	Helpers.log_print(
@@ -182,7 +195,6 @@ func spawn_player_held_thing(grabbed_item_name: String) -> void:
 			)
 			return
 	held_item.name = grabbed_item_name
+	# Disable collision on held items, otherwise you can push others or yourself into the sky or the ground
+	held_item.set_collision_layer_value(4, false)
 	add_child(held_item)
-	# holding_things_joint.add_child(held_item)
-	# holding_things_joint.node_a = NodePath("..")
-	# holding_things_joint.node_b = held_item.get_path()
