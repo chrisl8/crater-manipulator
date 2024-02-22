@@ -126,9 +126,10 @@ func load_saved_map() -> bool:
 			get_tree().quit()  # Quits the game due to bad server config data
 
 		var loaded_map_data: Dictionary = json.data
-		for key: String in loaded_map_data:
+		max_radius = loaded_map_data.max_radius
+		for key: String in loaded_map_data.synced_data:
 			current_data[str_to_var("Vector2i" + key)] = str_to_var(
-				"Vector2i" + loaded_map_data[key]
+				"Vector2i" + loaded_map_data.synced_data[key]
 			)
 		set_all_cell_data(current_data, 0)
 		synced_data = current_data
@@ -782,4 +783,7 @@ func update_cell_from_current(at_position: Vector2i) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func save_map() -> void:
 	Helpers.log_print("Save Map!")
-	Helpers.save_data_to_file("user://saved_map.dat", JSON.stringify(synced_data))
+	Helpers.save_data_to_file(
+		"user://saved_map.dat",
+		JSON.stringify({"max_radius": max_radius, "synced_data": synced_data})
+	)
