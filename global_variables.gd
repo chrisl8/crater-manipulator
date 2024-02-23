@@ -29,19 +29,8 @@ var resource_names: Dictionary = {}
 var has_built_resources_dictionary: bool = false
 var players: Dictionary = {}
 
-
-## Map Edges - A static variable defining the maximum map size
-## Used by functions to find a safe place to place a player and to de-spawn objects that fall or fly out of the map.
-class MapEdges:
-	## Lowest x and y position of any possible occupied tile space
-	class Min:
-		static var x: int = -100000
-		static var y: int = -100000
-
-	## Highest x and y position of any possible occupied tile space
-	class Max:
-		static var x: int = 100000
-		static var y: int = 100000
+# Used by new player position finding algorithm to avoid looking past the edge of the map.
+var maximum_map_size: int = 100000
 
 
 func get_resource_name(id: int) -> String:

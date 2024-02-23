@@ -13,10 +13,11 @@ extends RigidBody2D
 @export var camera: Node
 @export var interaction_controller: Node2D
 @export var inventory_manager: Node2D
+@export var player_canvas: CanvasLayer
 
 var update_synced_position: bool = false
 var update_synced_rotation: bool = false
-@export var PlayerCanvas: CanvasLayer
+
 
 func _ready() -> void:
 	# Attempt to fix character getting stuck on tiles as they move parallel to them
@@ -46,16 +47,7 @@ func _ready() -> void:
 		camera.queue_free()
 		gravity_scale = 0.0
 
-	PlayerCanvas.visible = !Globals.is_server
-	
-
-
-func _process(_delta: float) -> void:
-	if (
-		get_multiplayer_authority() == multiplayer.get_unique_id()
-		and Input.is_action_just_pressed(&"interact")
-	):
-		return
+	player_canvas.visible = !Globals.is_server
 
 
 ## Remotely force the player to a given position
@@ -66,15 +58,6 @@ func set_player_position(new_position: Vector2) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	'''
-	if Input.is_action_pressed("sprint"):
-		print("SPRINTING")
-	elif Input.is_action_pressed("tiptoe"):
-		print("TIPTOEING")
-	else:
-		print("WALKING")
-	'''
-
 	### Movement
 	var move_input: Vector2 = relative_input()
 	var speed: float = 200.0
@@ -138,5 +121,15 @@ func add_inventory_data(data: Dictionary) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ball"):
-		Helpers.log_print("BALL!")
 		Spawner.thing.rpc_id(1, "Ball", Vector2(position.x, position.y - 100))
+
+
+func _on_personal_space_body_entered(body: Node2D) -> void:
+	if is_multiplayer_authority() and body.has_method("nearby"):
+		if is_multiplayer_authority():
+			body.nearby(true, body)
+
+
+func _on_personal_space_body_exited(body: Node2D) -> void:
+	if is_multiplayer_authority() and body.has_method("nearby"):
+		body.nearby(false, body)

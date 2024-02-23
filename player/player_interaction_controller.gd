@@ -24,6 +24,8 @@ var mouse_left_down: bool
 var mine_cast: RayCast2D
 var mining_speed: float = 0.1
 var current_mining_time: float = 100
+var ball: Resource = preload("res://items/disc/disc.tscn")
+var held_item: Node
 
 
 func update_mining_particle_length() -> void:
@@ -64,11 +66,6 @@ func _process(delta: float) -> void:
 		else:
 			flip_point.scale.x = 1
 
-		if Input.is_action_just_pressed(&"interact"):
-			Globals.world_map.modify_cell(
-				Vector2i(randi_range(-50, 50), randi_range(0, -50)), Vector2i(1, 1)
-			)
-
 		current_mining_time += delta
 		if mouse_left_down:
 			mine_raycast()
@@ -89,9 +86,28 @@ func _process(delta: float) -> void:
 	head.look_at(mouse_position)
 	mining_particles.emitting = is_mining
 
+	if held_item:
+		if is_mining:
+			# TODO: Do not allow moving objects into terrain or through other characters,
+			# much like the mining beam does not.
+			held_item.set_position(to_local(mouse_position))
+		elif is_multiplayer_authority():
+			var held_item_name: String = held_item.name
+			var held_item_global_position: Vector2 = held_item.global_position
+			_drop_held_thing.rpc()
+			Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
+
 
 #Re-add when arms sometimes need to target other locations
 #@export var ArmTargetPosition: Vector2
+
+@rpc("call_local")
+func _drop_held_thing() -> void:
+	Helpers.log_print(
+		str(held_item.name, " dropped by ", multiplayer.get_remote_sender_id()), "Cornflowerblue"
+	)
+	held_item.queue_free()
+	held_item = null
 
 
 func _input(event: InputEvent) -> void:
@@ -143,8 +159,12 @@ func mine_raycast() -> void:
 		var result: Dictionary = space_state.intersect_ray(query)
 		if result.size() > 0:
 			var hit_point: Vector2 = result["position"]
-			if result["collider"] is TileMap:
+			if result["collider"] is TileMap and not held_item:  # Do not mine while holding items
 				Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
+			elif not held_item and result["collider"] is RigidBody2D and is_multiplayer_authority():
+				var body: Node = result["collider"]
+				if body.has_method("grab"):
+					body.grab.rpc_id(1)
 			mining_particle_distance = mining_particles.global_position.distance_to(hit_point) / 2.0
 
 		mining_distance = mining_particle_distance
@@ -152,3 +172,29 @@ func mine_raycast() -> void:
 
 func right_mouse_clicked() -> void:
 	Globals.world_map.place_cell_at_position(get_global_mouse_position())
+
+
+# Spawning and dropping the "thing" must be an RPC because all "copies" of the player
+# must do this to sync the view of them holding/not holding the thing across players views
+# of this player.
+@rpc("any_peer", "call_local")
+func spawn_player_held_thing(grabbed_item_name: String) -> void:
+	var parsed_thing_name: Dictionary = Helpers.parse_thing_name(grabbed_item_name)
+	Helpers.log_print(
+		str(parsed_thing_name.name, " ", parsed_thing_name.id, " picked up by ", name),
+		"Cornflowerblue"
+	)
+	# Spawn a local version for myself
+	# This is similar to the thing spawning code in spawner()
+	match parsed_thing_name.name:
+		"Ball":
+			held_item = ball.instantiate()
+		_:
+			printerr(
+				"Invalid thing to spawn name into player held position: ", parsed_thing_name.name
+			)
+			return
+	held_item.name = grabbed_item_name
+	# Disable collision on held items, otherwise you can push others or yourself into the sky or the ground
+	held_item.set_collision_layer_value(4, false)
+	add_child(held_item)

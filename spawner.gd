@@ -1,6 +1,6 @@
 extends Node
 
-var ball: Resource = preload("res://items/ball/ball.tscn")
+var ball: Resource = preload("res://items/disc/disc.tscn")
 
 var done_once: bool = false
 
@@ -36,5 +36,5 @@ func thing(thing_name: String, spawn_position: Vector2 = Vector2.ZERO, id: int =
 		new_thing.name = str(thing_name_to_spawn)
 		if spawn_position:
 			new_thing.spawn_position = spawn_position
-		Helpers.log_print(str("spawning ", thing_name_to_spawn), "yellow")
+		Helpers.log_print(str("Spawning ", thing_name_to_spawn, " at ", spawn_position), "yellow")
 		things_spawning_node.add_child(new_thing)
