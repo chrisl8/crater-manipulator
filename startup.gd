@@ -181,19 +181,22 @@ func start_connection() -> void:
 	if OS.is_debug_build() and Globals.local_debug_instance_number > 0 and not Globals.is_server:
 		var debug_delay: int = Globals.local_debug_instance_number
 		while debug_delay > 0:
-			pre_game_overlay.set_msg("Debug delay " + str(debug_delay))
+			if pre_game_overlay:
+				pre_game_overlay.set_msg("Debug delay " + str(debug_delay))
 			debug_delay = debug_delay - 1
 			await get_tree().create_timer(0.2).timeout
-	pre_game_overlay.set_msg("Connecting...")
+	if pre_game_overlay:
+		pre_game_overlay.set_msg("Connecting...")
 	Network.ready_to_connect = true
 
 
 func connection_reset(delay: int) -> void:
 	display_pre_game_overlay()
-	pre_game_overlay.set_msg(
-		Globals.connection_failed_message,
-		Color(0.79215687513351, 0.26274511218071, 0.56470590829849)
-	)
+	if pre_game_overlay:
+		pre_game_overlay.set_msg(
+			Globals.connection_failed_message,
+			Color(0.79215687513351, 0.26274511218071, 0.56470590829849)
+		)
 	if OS.is_debug_build() and Globals.has_connected_once and OS.get_name() != "Web":
 		# Exit when the server closes in debug mode
 		# except in web mode, where "exit" has no meaning.
@@ -253,5 +256,6 @@ func _on_players_spawner_spawned(node: Node) -> void:
 
 
 func update_pre_game_overlay(message: String, percentage: int = -1) -> void:
-	pre_game_overlay.set_msg(message)
-	pre_game_overlay.update_progress_bar(percentage)
+	if pre_game_overlay:
+		pre_game_overlay.set_msg(message)
+		pre_game_overlay.update_progress_bar(percentage)
