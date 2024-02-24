@@ -169,17 +169,8 @@ func _ready() -> void:
 	if capture_mouse_on_startup and not Globals.is_server:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
-	if OS.is_debug_build() and OS.get_name() != "Web":
-		Globals.release_mouse_text = "F1 to Release Mouse"
-		if not Globals.is_server:
-			Globals.how_to_end_game_text = "ESC to Close this Client"
-	elif OS.get_name() != "Web":
-		# No need to ever display this in web, as people just close the tab to end the game,
-		# and nothing we do can change that.
-		Globals.how_to_end_game_text = ""
-
 	if OS.is_debug_build() and !Globals.is_server:
-		# Delay before connecting to give server a chance to start up
+		# Delay before connecting to give server a chance to start
 		await get_tree().create_timer(1.0).timeout
 
 	start_connection()
@@ -259,25 +250,6 @@ func hide_pre_game_overlay() -> void:
 # It cannot be done sooner or anywhere else
 func _on_players_spawner_spawned(node: Node) -> void:
 	node.set_multiplayer_authority(str(node.name).to_int())
-
-
-# Called when an InputEvent has not been consumed by _input() or any GUI item
-func _unhandled_input(event: InputEvent) -> void:
-	if (
-		event is InputEventMouseButton
-		and event.button_index == MOUSE_BUTTON_LEFT
-		and event.pressed
-		and Globals.my_camera
-		and not Globals.is_server
-	):
-		var text_to_toast: String = Globals.how_to_end_game_text
-		var text_duration: float = 2.0
-		if text_to_toast != "" and text_to_toast != Globals.last_toast:
-			# Set it to an empty string to signal that we don't want to display anything this time.
-			Globals.last_toast = text_to_toast
-			var toast: Toast = Toast.new(text_to_toast, text_duration)
-			Globals.my_camera.add_child(toast)
-			toast.display()
 
 
 func update_pre_game_overlay(message: String, percentage: int = -1) -> void:

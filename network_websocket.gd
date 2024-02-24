@@ -174,7 +174,6 @@ func _connected_to_server() -> void:
 		Helpers.quit_gracefully()
 		return
 
-	#TODO: Testing data read/write
 	var saved_player_data: String = Helpers.load_data_from_file(player_save_data_filename())
 
 	# Wait for map data to load from server before initiating player spawn

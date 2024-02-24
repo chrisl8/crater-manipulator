@@ -42,7 +42,6 @@ func _ready() -> void:
 
 	if player == multiplayer.get_unique_id():
 		camera.make_current()
-		Globals.my_camera = camera
 	else:
 		camera.queue_free()
 		gravity_scale = 0.0
