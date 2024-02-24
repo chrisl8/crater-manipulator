@@ -10,7 +10,6 @@ func _ready() -> void:
 	server_camera = get_node("Camera2D")
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	var move: Vector2 = Vector2()
 
@@ -28,7 +27,9 @@ func _process(_delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == 1 and event.is_pressed():
+		if event.double_click:
+			global_position = get_global_mouse_position()
+		elif event.button_index == 1 and event.is_pressed():
 			mouse_left_down = true
 		elif event.button_index == 1 and not event.is_pressed():
 			mouse_left_down = false
