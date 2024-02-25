@@ -302,29 +302,50 @@ func data_received(data: String) -> void:
 
 ## Check player's position and surrounding area to ensure it is clear for spawning, accepts integer tile map position
 func check_tile_location_and_surroundings(at_position: Vector2i) -> bool:
-	# Allowed to spawn in mid-air, assumes a physics distance check was already performed
+	var position_is_clear: bool = false
 
-	# Find out what tiles exist at the player's intended position
-	for x_position: int in range(-2, 3):
-		for y_position: int in range(-5, 1):
+	for x_offset: int in range(-1, 1):
+		var cell_position_at_player_potential_position: Vector2i = (
+			Globals.world_map.get_cell_position_at_global_position(at_position)
+		)
+
+		var all_cell_positions_to_clear_for_player: Array[Vector2i] = []
+
+		var starting_point: Vector2i = Vector2i(
+			cell_position_at_player_potential_position.x + x_offset,
+			cell_position_at_player_potential_position.y - 4
+		)
+
+		# Find out what tiles exist at the player's intended position
+		for x_position: int in range(0, 2):
+			for y_position: int in range(0, 4):
+				all_cell_positions_to_clear_for_player.append(
+					Vector2i(starting_point.x + x_position, starting_point.y + y_position)
+				)
+
+		var this_position_is_clear: bool = true
+
+		for cell_position_to_clear_for_player: Vector2i in all_cell_positions_to_clear_for_player:
 			if (
 				Globals.world_map.get_cell_id_at_map_tile_position(
-					Vector2i(at_position.x + x_position, at_position.y + y_position)
+					cell_position_to_clear_for_player
 				)
 				!= Vector2i(-1, -1)
 			):
-				return false
+				this_position_is_clear = false
+				# Globals.world_map.highlight_cell_at_map_position(
+				# 	cell_position_to_clear_for_player, Color.PINK
+				# ) # For visualizing to debug
+			# else:
+			# 	Globals.world_map.highlight_cell_at_map_position(
+			# 		cell_position_to_clear_for_player, Color.PINK
+			# 	) # For visualizing to debug
 
-	return true
+		if this_position_is_clear:
+			# EITHER position being clear results in an OK.
+			position_is_clear = true
 
-
-## Check player's position and surrounding area to ensure it is clear for spawning, accepts floating point world position
-func check_global_location_and_surroundings(at_position: Vector2) -> bool:
-	#This is just a wrapper for the tile_location version for better code readability
-	var cell_position_at_player_potential_position: Vector2i = (
-		Globals.world_map.get_cell_position_at_global_position(at_position)
-	)
-	return check_tile_location_and_surroundings(cell_position_at_player_potential_position)
+	return position_is_clear
 
 
 func player_joined(id: int, data: String) -> void:
@@ -393,71 +414,114 @@ func player_joined(id: int, data: String) -> void:
 
 	update_remote_pre_game_overlay_message.rpc_id(id, "Finding our place\nin the world...")
 
-	var search_origin: Vector2i = Vector2i(
-		int(potential_player_position.x), int(potential_player_position.y)
-	)
-	var search_radius: int = -1
 	var clear_and_safe_position_found: bool = false
-	var cell_data: Array = Globals.world_map.get_cell_positions()
 
-	# Radial search from initial origin
-	while not clear_and_safe_position_found and search_radius < 10:
-		search_radius += 1
-		for i: int in range(0, 4):
-			#Add ternary restricting x extents based on 'i' value to eliminate duplicate corner checking
-			for j: int in range(-search_radius, search_radius + 1):
-				var search_position: Vector2i = search_origin
-				if i == 0:
-					search_position += Vector2i(search_radius, j)
-				elif i == 1:
-					search_position += Vector2i(-search_radius, j)
-				elif i == 2:
-					search_position += Vector2i(j, search_radius)
-				elif i == 3:
-					search_position += Vector2i(j, -search_radius)
-				potential_player_position = search_position
-				if (search_position - Vector2i(0, 1)) in cell_data:
-					clear_and_safe_position_found = check_tile_location_and_surroundings(
-						search_position
-					)
+	var single_tile_width: int = 16
 
-	var raycast_position: Vector2 = Vector2(search_origin.x * 16 + 8, search_origin.y * 16 + 8)
 	var space_state: PhysicsDirectSpaceState2D = Globals.world_map.get_world_2d().direct_space_state
+	var max_radius: int = Globals.world_map.max_radius * single_tile_width * 2
+	var last_x_shift_direction: String = "positive"
+	var last_x_shift_count: int = 1
 
-	var max_radius: int = Globals.world_map.max_radius * 2
-	var current_radius: int = 0
+	# Some variables used inside the loop.
+	# They don't have to be pre-declared, but it simplifies the code in the loop.
+	var from_position: Vector2
+	var to_position: Vector2
+	var ray_trace_query: PhysicsRayQueryParameters2D
+	var ray_trace_result: Dictionary
 
-	while not clear_and_safe_position_found and abs(current_radius) < max_radius:
-		raycast_position = Vector2(current_radius * 16.0 + 8.0, raycast_position.y)
+	while not clear_and_safe_position_found:
+		# For visualizing to debug
+		#Globals.world_map.highlight_cell_at_global_position(potential_player_position, Color.BLUE)
 
-		var from_position: Vector2 = raycast_position - Vector2(0, Globals.maximum_map_size)
-		var to_position: Vector2 = raycast_position + Vector2(0, Globals.maximum_map_size)
-		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			from_position, to_position
-		)
-		var result: Dictionary = space_state.intersect_ray(query)
-		if result.size() > 0:
-			var hit_point: Vector2 = result["position"]
-			var tile_location: Vector2i = Globals.world_map.get_cell_position_at_global_position(
-				hit_point - Vector2(0, 0.01)
+		# 0. Is there a floor beneath me? While the solid layer at the bottom of the map should prevent "world holes" I want
+		#    this system to allow for them without ever putting players into an infinite loop of falling out of the world on spawn.
+		#    Plus the easiest solution for having fallen "out of the world" will be to initiate a respawn.
+
+		# The saved position will be the floor tile you are standing on, which means if this is the last tile at the bottom of
+		# the world, you could never stay on it, so we must move "up" one tile and trace down.
+		# Also: No standing on the edge of cliffs. This always turns out badly.
+		var floor_exists: bool = true
+		for x_offset: int in range(-1, 2):
+			from_position = (
+				potential_player_position
+				+ Vector2(x_offset * single_tile_width, -single_tile_width)
 			)
-			if check_tile_location_and_surroundings(tile_location):
-				clear_and_safe_position_found = true
-				potential_player_position = Vector2(
-					tile_location.x * 16 + 8, tile_location.y * 16 + 8
+			to_position = (
+				potential_player_position + Vector2(x_offset * single_tile_width, max_radius)
+			)
+			#Globals.world_map.draw_line_on_map(from_position, to_position, Color.BROWN) # For visualizing to debug
+			ray_trace_query = PhysicsRayQueryParameters2D.create(from_position, to_position)
+			ray_trace_result = space_state.intersect_ray(ray_trace_query)
+			if ray_trace_result.size() == 0:
+				floor_exists = false
+
+		# 1. Check the tilemap to see if it is clear. Remember that tiles "below the surface" have no colliders (to avoid overwhelming the physics engine), meaning ray-trace won't work in there
+		if floor_exists:
+			clear_and_safe_position_found = check_tile_location_and_surroundings(
+				potential_player_position
+			)
+
+		# 1a. Normalize the player position to the center of the tile.
+		# This avoids spawning in at the edge of a tile and immediately falling off of it.
+		if not clear_and_safe_position_found:
+			# Attempt to shift "left or right" based on what side of the tile player was on.
+			potential_player_position = (
+				Globals
+				. world_map
+				. get_global_position_at_map_local_position(
+					Globals.world_map.get_cell_position_at_global_position(
+						potential_player_position
+					)
 				)
-				break
+			)
 
-		if current_radius == 0:
-			current_radius += 1
-		elif current_radius <= 0:
-			current_radius *= -1
-			current_radius += 1
-		else:
-			current_radius *= -1
+		# 2. If the area is not clear enough, ray trace UP to find the next clear "surface" and do #1 again
+		# TODO: This could put you "on top of the dome" if we eventually have a dome ceiling, which is not desireable.
+		#       	We can fix that later.
+		if not clear_and_safe_position_found:
+			#await get_tree().create_timer(0.5).timeout # For visualizing to debug
+			from_position = potential_player_position
+			to_position = potential_player_position - Vector2(0, max_radius)
+			#Globals.world_map.draw_line_on_map(from_position, to_position) # For visualizing to debug
+			ray_trace_query = PhysicsRayQueryParameters2D.create(from_position, to_position)
+			ray_trace_result = space_state.intersect_ray(ray_trace_query)
+			if ray_trace_result.size() > 0:
+				# Because we hit a collider, we will set that as the new player position,
+				# then run the loop again from the top to check to see if the position is clear
+				var hit_point: Vector2 = ray_trace_result["position"]
+				# To ensure position is inside the target tile, not short of it, which will select the wrong tile
+				hit_point = hit_point - Vector2(0, 1.01)
+				#Globals.world_map.highlight_cell_at_global_position(hit_point, Color.RED) # For visualizing to debug
+				potential_player_position = hit_point
+				continue
 
-	if !clear_and_safe_position_found:
+		# 3. If we reach the world limit UP (didn't hit anything) then move "over". Move left then right, alternating one tile and ray trace DOWN from the TOP to find the first spot (left, right, left, right) that exists,
+		#    and then the first clear spot on any "surface".
+		if not clear_and_safe_position_found:
+			# We must shift left/right and try again
+			# This should provide a "back and forth" shifting left and right at greater and greater amounts
+			# But not on the first round. The first time just try to use the same X position, hence start with 0,
+			# and increment it after.
+			if last_x_shift_direction == "positive":
+				potential_player_position = (
+					potential_player_position - Vector2(single_tile_width * last_x_shift_count, 0)
+				)
+				last_x_shift_direction = "negative"
+			else:
+				potential_player_position = (
+					potential_player_position + Vector2(single_tile_width * last_x_shift_count, 0)
+				)
+				last_x_shift_direction = "positive"
+			last_x_shift_count += 1
+
+	if not clear_and_safe_position_found:
 		printerr("WARNING : Failed to find player starting tile.")
+
+	# For visualizing to debug
+	# Globals.world_map.highlight_cell_at_global_position(
+	# 	potential_player_position, Color.CORNFLOWER_BLUE
+	# )
 
 	character.name = str(id)
 	get_node("../Main/Players").add_child(character, true)
