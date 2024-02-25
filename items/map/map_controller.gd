@@ -780,7 +780,7 @@ func update_cell_from_current(at_position: Vector2i) -> void:
 	set_cell_data(at_position, current_data[at_position], 0, 0, false)
 
 
-@rpc("any_peer", "call_remote", "reliable")
+@rpc("any_peer", "call_local", "reliable")
 func save_map() -> void:
 	Helpers.log_print("Save Map!")
 	Helpers.save_data_to_file(
