@@ -41,10 +41,12 @@ func _process(_delta: float) -> void:
 
 func add_data(data: Dictionary) -> void:
 	for key: int in data.keys():
-		var extra: int = powder_resources[Globals.get_resource_name(key)] + data[key] - MAX_STONE
-		if extra <= 0:
-			powder_resources[Globals.get_resource_name(key)] += data[key]
-		else:
-			#Too much stone, delete extra for now
-			powder_resources[Globals.get_resource_name(key)] = MAX_STONE
+		var resource_name: String = Globals.get_resource_name(key)
+		if powder_resources.has(resource_name):
+			var extra: int = powder_resources[resource_name] + data[key] - MAX_STONE
+			if extra <= 0:
+				powder_resources[resource_name] += data[key]
+			else:
+				#Too much stone, delete extra for now
+				powder_resources[resource_name] = MAX_STONE
 	inventory_updated = true

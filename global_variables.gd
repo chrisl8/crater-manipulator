@@ -26,7 +26,10 @@ var maximum_map_size: int = 100000
 
 func get_resource_name(id: int) -> String:
 	build_resources_dictionaries()
-	return resource_names[id]
+	var resource_name: String
+	if resource_names.has(id):
+		resource_name = resource_names[id]
+	return resource_name
 
 
 func get_resource_id(resource_name: String) -> Array:
