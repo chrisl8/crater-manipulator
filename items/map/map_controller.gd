@@ -671,6 +671,34 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 			modify_cell(compensated_position, Vector2i(-1, -1))
 
 
+func highlight_cell_at_global_position(at_position: Vector2, color: Color = Color.GREEN) -> void:
+	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
+	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
+	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
+	}
+	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
+	$Drawing.update_draw = true
+
+
+func highlight_cell_at_map_position(at_cell_position: Vector2, color: Color = Color.GREEN) -> void:
+	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
+	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
+	}
+	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
+	$Drawing.update_draw = true
+
+
+func draw_line_on_map(
+	from_position: Vector2, to_position: Vector2, color: Color = Color.GREEN
+) -> void:
+	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)] = {
+	}
+	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].from = from_position
+	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].to = to_position
+	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].color = color
+	$Drawing.update_draw = true
+
+
 ## Place a standard piece of stone at a position : TEST TEMP
 func place_cell_at_position(at_position: Vector2) -> void:
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
