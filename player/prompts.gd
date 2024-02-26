@@ -24,3 +24,14 @@ func _process(delta: float) -> void:
 			text = "Right click to place a block."
 		elif text == "Right click to place a block.":
 			text = ""
+		elif not Globals.player_has_done.has("press_craft_button"):
+			text = "Press and hold 'c' to place an item."
+		elif text == "Press and hold 'c' to place an item.":
+			text = ""
+		elif not Globals.player_has_done.has("scroll_crafting_items"):
+			text = "Use mouse wheel to select item to craft.\nLeft click to place item.\nRelease 'c' to cancel item placing."
+		elif (
+			text
+			== "Use mouse wheel to select item to craft.\nLeft click to place item.\nRelease 'c' to cancel item placing."
+		):
+			text = ""
