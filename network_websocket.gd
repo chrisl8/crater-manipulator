@@ -435,6 +435,12 @@ func player_joined(id: int, data: String) -> void:
 		# For visualizing to debug
 		#Globals.world_map.highlight_cell_at_global_position(potential_player_position, Color.BLUE)
 
+		# -1. Check that potential player position isn't outside of the max radius already
+		if abs(potential_player_position.x) > max_radius:
+			potential_player_position = Vector2(0, potential_player_position.y)
+		if abs(potential_player_position.y) > max_radius:
+			potential_player_position = Vector2(potential_player_position.x, 0)
+
 		# 0. Is there a floor beneath me? While the solid layer at the bottom of the map should prevent "world holes" I want
 		#    this system to allow for them without ever putting players into an infinite loop of falling out of the world on spawn.
 		#    Plus the easiest solution for having fallen "out of the world" will be to initiate a respawn.
@@ -451,7 +457,7 @@ func player_joined(id: int, data: String) -> void:
 			to_position = (
 				potential_player_position + Vector2(x_offset * single_tile_width, max_radius)
 			)
-			#Globals.world_map.draw_line_on_map(from_position, to_position, Color.BROWN) # For visualizing to debug
+			#Globals.world_map.draw_line_on_map(from_position, to_position, Color.BROWN)  # For visualizing to debug
 			ray_trace_query = PhysicsRayQueryParameters2D.create(from_position, to_position)
 			ray_trace_result = space_state.intersect_ray(ray_trace_query)
 			if ray_trace_result.size() == 0:
@@ -481,10 +487,10 @@ func player_joined(id: int, data: String) -> void:
 		# TODO: This could put you "on top of the dome" if we eventually have a dome ceiling, which is not desireable.
 		#       	We can fix that later.
 		if not clear_and_safe_position_found:
-			#await get_tree().create_timer(0.5).timeout # For visualizing to debug
+			#await get_tree().create_timer(0.5).timeout  # For visualizing to debug
 			from_position = potential_player_position
 			to_position = potential_player_position - Vector2(0, max_radius)
-			#Globals.world_map.draw_line_on_map(from_position, to_position) # For visualizing to debug
+			#Globals.world_map.draw_line_on_map(from_position, to_position)  # For visualizing to debug
 			ray_trace_query = PhysicsRayQueryParameters2D.create(from_position, to_position)
 			ray_trace_result = space_state.intersect_ray(ray_trace_query)
 			if ray_trace_result.size() > 0:
@@ -493,7 +499,7 @@ func player_joined(id: int, data: String) -> void:
 				var hit_point: Vector2 = ray_trace_result["position"]
 				# To ensure position is inside the target tile, not short of it, which will select the wrong tile
 				hit_point = hit_point - Vector2(0, 1.01)
-				#Globals.world_map.highlight_cell_at_global_position(hit_point, Color.RED) # For visualizing to debug
+				#Globals.world_map.highlight_cell_at_global_position(hit_point, Color.RED)  # For visualizing to debug
 				potential_player_position = hit_point
 				continue
 
