@@ -669,6 +669,7 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 				compensated_position, current_data[compensated_position]
 			)
 			modify_cell(compensated_position, Vector2i(-1, -1))
+			Globals.player_has_done.mine_a_block = true
 
 
 func highlight_cell_at_global_position(at_position: Vector2, color: Color = Color.GREEN) -> void:
@@ -716,6 +717,7 @@ func place_cell_at_position(at_position: Vector2) -> void:
 			can_place_cell = true
 	if can_place_cell:
 		modify_cell(local_to_map(to_local(at_position)), get_random_stone_tile())
+		Globals.player_has_done.place_a_block = true
 
 
 ## Set the current data of a cell to a given value

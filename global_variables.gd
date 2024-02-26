@@ -19,9 +19,7 @@ var resource_ids: Dictionary = {"Stone": 0, "Red Ore": 1}
 var resource_names: Dictionary = {}
 var has_built_resources_dictionary: bool = false
 var players: Dictionary = {}
-
-# Used by new player position finding algorithm to avoid looking past the edge of the map.
-var maximum_map_size: int = 100000
+var player_has_done: Dictionary = {}
 
 
 func get_resource_name(id: int) -> String:

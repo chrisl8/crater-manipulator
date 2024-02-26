@@ -1,6 +1,7 @@
-[gd_scene load_steps=18 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=19 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
+[ext_resource type="Script" path="res://player/prompts.gd" id="4_dgte5"]
 [ext_resource type="Script" path="res://player/player_interaction_controller.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/player_atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/player_legs_manager.gd" id="5_h6bhr"]
@@ -121,7 +122,7 @@ grow_vertical = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 
-[node name="Label" type="Label" parent="CanvasLayer/Control"]
+[node name="Inventory" type="Label" parent="CanvasLayer/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -132,6 +133,18 @@ offset_right = 490.0
 offset_bottom = 74.0
 grow_horizontal = 0
 text = "Inventory"
+
+[node name="Prompts" type="Label" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -38.0
+offset_right = 38.0
+offset_bottom = 23.0
+grow_horizontal = 2
+horizontal_alignment = 1
+script = ExtResource("4_dgte5")
 
 [node name="Control" type="Control" parent="CanvasLayer/Control"]
 anchors_preset = 0
