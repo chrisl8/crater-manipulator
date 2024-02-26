@@ -165,7 +165,7 @@ func generate_map() -> void:
 	var fill_height: float = height_scale / 4.0
 
 	if generate_simple_world:
-		barrier_depth = 10
+		barrier_depth = 50
 		crater_scale = 200
 		additional_waste_distance = 10
 		height_scale = 10

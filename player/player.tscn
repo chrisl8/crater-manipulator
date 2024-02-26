@@ -1,7 +1,6 @@
 [gd_scene load_steps=19 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
-[ext_resource type="Script" path="res://player/prompts.gd" id="4_dgte5"]
 [ext_resource type="Script" path="res://player/player_interaction_controller.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/player_atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/player_legs_manager.gd" id="5_h6bhr"]
@@ -9,6 +8,7 @@
 [ext_resource type="Script" path="res://player/save_map_button.gd" id="6_a1bjq"]
 [ext_resource type="Script" path="res://player/player_leg_controller.gd" id="6_dfoja"]
 [ext_resource type="Script" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
+[ext_resource type="Script" path="res://player/antenna_physics_controller.gd" id="10_c7nhb"]
 [ext_resource type="Texture2D" uid="uid://cxfvwdktyjru5" path="res://player/player.svg" id="10_wmt63"]
 
 [sub_resource type="GDScript" id="1"]
@@ -98,23 +98,20 @@ position = Vector2(0, -47)
 zoom = Vector2(3, 3)
 position_smoothing_enabled = true
 
-[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("mining_particles", "flip_point", "arm_id_controller", "arm_lower_id_controller", "head", "legs_manager")]
+[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("mining_particles", "flip_point", "arm_id_controller", "arm_lower_id_controller", "head", "legs_manager", "antenna")]
 script = ExtResource("4_rfuvf")
-debug_object = null
 mining_particles = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper/Lower/GPUParticles2D")
-is_mining = null
-mining_distance = null
 flip_point = NodePath("../Flip Point")
-flipped = null
 arm_id_controller = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper")
 arm_lower_id_controller = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper/Lower")
 head = NodePath("../Flip Point/Player Rig/Head")
 legs_manager = NodePath("../Flip Point/Player Rig/IK Rig/Legs")
-mouse_position = null
+antenna = NodePath("../Flip Point/Antenna")
 
-[node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("stone_bar")]
+[node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("stone_bar", "red_ore_bar")]
 script = ExtResource("5_xpvfg")
-stone_bar = NodePath("../CanvasLayer/Control/Control")
+stone_bar = NodePath("../CanvasLayer/Control/Stone")
+red_ore_bar = NodePath("../CanvasLayer/Control/Red ore")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -128,42 +125,93 @@ grow_vertical = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 
-[node name="Inventory" type="Label" parent="CanvasLayer/Control"]
+[node name="Label" type="Label" parent="CanvasLayer/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -83.0
-offset_top = -1.0
-offset_right = 490.0
-offset_bottom = 74.0
-grow_horizontal = 0
-text = "Inventory"
-
-[node name="Prompts" type="Label" parent="CanvasLayer/Control"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -38.0
-offset_right = 38.0
+offset_left = -171.0
+offset_right = -91.0
 offset_bottom = 23.0
-grow_horizontal = 2
-horizontal_alignment = 1
-script = ExtResource("4_dgte5")
+grow_horizontal = 0
+scale = Vector2(2, 2)
+text = "Resources"
 
-[node name="Control" type="Control" parent="CanvasLayer/Control"]
-anchors_preset = 0
-offset_left = 496.0
-offset_top = 65.0
-offset_right = 536.0
-offset_bottom = 105.0
+[node name="Red Ore Background" type="Control" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -69.0
+offset_top = 174.0
+offset_right = -29.0
+offset_bottom = 214.0
+grow_horizontal = 0
+scale = Vector2(2, 10)
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Control"]
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Red Ore Background"]
 layout_mode = 0
 offset_left = -5.0
 offset_top = -10.0
 offset_right = 5.0
+color = Color(0.752941, 0.752941, 0.752941, 1)
+
+[node name="Red ore" type="Control" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -69.0
+offset_top = 174.0
+offset_right = -29.0
+offset_bottom = 214.0
+grow_horizontal = 0
+scale = Vector2(2, 10)
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Red ore"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = -10.0
+offset_right = 5.0
+color = Color(0.478431, 0.196078, 0.196078, 1)
+
+[node name="Stone background" type="Control" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -39.0
+offset_top = 174.0
+offset_right = 1.0
+offset_bottom = 214.0
+grow_horizontal = 0
+scale = Vector2(2, 10)
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Stone background"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = -10.0
+offset_right = 5.0
+color = Color(0.752941, 0.752941, 0.752941, 1)
+
+[node name="Stone" type="Control" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -39.0
+offset_top = 174.0
+offset_right = 1.0
+offset_bottom = 214.0
+grow_horizontal = 0
+scale = Vector2(2, 10)
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Stone"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = -10.0
+offset_right = 5.0
+color = Color(0.431373, 0.431373, 0.431373, 1)
 
 [node name="Save Map" type="Button" parent="CanvasLayer/Control"]
 layout_mode = 0
@@ -173,6 +221,7 @@ text = "Save Map"
 script = ExtResource("6_a1bjq")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+z_index = -1
 position = Vector2(3, -30)
 polygon = PackedVector2Array(10, -33, -16, -33, -16, 3, -3, 24, 10, 3)
 
@@ -404,7 +453,7 @@ polygon = PackedVector2Array(1152, 864, 1792, 864, 1792, 1088, 1152, 1088)
 uv = PackedVector2Array(1152, 864, 1792, 864, 1792, 1088, 1152, 1088)
 
 [node name="Lower" type="Node2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper"]
-position = Vector2(16, 0)
+position = Vector2(14.4, 0)
 
 [node name="Lower Left Arm" type="Polygon2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper/Lower"]
 z_index = 4
@@ -413,7 +462,7 @@ position = Vector2(-48, -24.5)
 scale = Vector2(0.025, 0.025)
 texture = ExtResource("10_wmt63")
 polygon = PackedVector2Array(1920, 864, 2528, 864, 2528, 1088, 1920, 1088)
-uv = PackedVector2Array(1920, 864, 2528, 864, 2528, 1088, 1920, 1088)
+uv = PackedVector2Array(1856, 864, 2464, 864, 2464, 1088, 1856, 1088)
 
 [node name="GPUParticles2D" type="GPUParticles2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper/Lower"]
 position = Vector2(15, 0)
@@ -455,12 +504,21 @@ texture = ExtResource("10_wmt63")
 polygon = PackedVector2Array(96, 640, 128, 608, 224, 608, 256, 640, 320, 640, 352, 704, 448, 704, 480, 640, 800, 640, 832, 704, 864, 704, 896, 736, 896, 800, 960, 800, 1024, 864, 1024, 1280, 960, 1344, 896, 1344, 896, 1408, 832, 1536, 832, 1568, 800, 1600, 416, 1600, 384, 1568, 384, 1408, 352, 1440, 128, 1440, 96, 1408)
 uv = PackedVector2Array(96, 640, 128, 608, 224, 608, 256, 640, 320, 640, 352, 704, 448, 704, 480, 640, 800, 640, 832, 704, 864, 704, 896, 736, 896, 800, 960, 800, 1024, 864, 1024, 1280, 960, 1344, 896, 1344, 896, 1408, 832, 1536, 832, 1568, 800, 1600, 416, 1600, 384, 1568, 384, 1408, 352, 1440, 128, 1440, 96, 1408)
 
+[node name="Antenna" type="Line2D" parent="Flip Point"]
+z_index = -1
+position = Vector2(-9, -54)
+points = PackedVector2Array(0, 0, 0, -2, 0, -4, 0, -6, 0, -8)
+width = 0.5
+default_color = Color(0.545098, 0.545098, 0.545098, 1)
+script = ExtResource("10_c7nhb")
+
 [node name="Center Point Debug Object" type="Sprite2D" parent="."]
 visible = false
 scale = Vector2(0.01, 0.01)
 texture = SubResource("NoiseTexture2D_6el7t")
 
 [node name="Personal Space" type="Area2D" parent="."]
+z_index = -1
 collision_layer = 2
 collision_mask = 10
 

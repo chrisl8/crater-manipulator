@@ -1,9 +1,10 @@
 extends Node2D
 
-const MAX_STONE: int = 100
-const MAX_BAR_SCALE: float = 4
+const MAX_RESOURCE: int = 100
+const MAX_BAR_SCALE: float = 10
 
 @export var stone_bar: Control
+@export var red_ore_bar: Control
 
 var powder_resources: Dictionary = {}
 var is_local: bool = false
@@ -25,7 +26,10 @@ func initialize(new_is_local: bool) -> void:
 func _process(_delta: float) -> void:
 	if inventory_updated:
 		stone_bar.scale.y = (
-			float(MAX_BAR_SCALE) / float(MAX_STONE) * float(powder_resources["Stone"])
+			float(MAX_BAR_SCALE) / float(MAX_RESOURCE) * float(powder_resources["Stone"])
+		)
+		red_ore_bar.scale.y = (
+			float(MAX_BAR_SCALE) / float(MAX_RESOURCE) * float(powder_resources["Red Ore"])
 		)
 		#print(float(MAX_BAR_SCALE) / float(MAX_STONE) * float(powder_resources["Stone"]))
 		#print(stone_bar.scale.y)
@@ -41,10 +45,10 @@ func add_data(data: Dictionary) -> void:
 	for key: int in data.keys():
 		var resource_name: String = Globals.get_resource_name(key)
 		if powder_resources.has(resource_name):
-			var extra: int = powder_resources[resource_name] + data[key] - MAX_STONE
+			var extra: int = powder_resources[resource_name] + data[key] - MAX_RESOURCE
 			if extra <= 0:
 				powder_resources[resource_name] += data[key]
 			else:
 				#Too much stone, delete extra for now
-				powder_resources[resource_name] = MAX_STONE
+				powder_resources[resource_name] = MAX_RESOURCE
 	inventory_updated = true

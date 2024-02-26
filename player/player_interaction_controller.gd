@@ -15,7 +15,9 @@ const INTERACT_RANGE: float = 200.0
 @export var arm_lower_id_controller: Node2D
 @export var head: Node2D
 @export var legs_manager: Node2D
+@export var antenna: Node2D
 @export var mouse_position: Vector2
+
 
 var is_local: bool = false
 var current_tool: int = 1
@@ -79,6 +81,7 @@ func _process(delta: float) -> void:
 			flip_point.scale.x = 1
 
 	legs_manager.flipped = flipped
+	antenna.flipped = flipped
 
 	if is_mining:
 		mining_particles.look_at(mouse_position)
