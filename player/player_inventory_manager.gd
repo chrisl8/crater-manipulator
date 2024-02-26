@@ -10,7 +10,6 @@ var is_local: bool = false
 var inventory_updated: bool = false
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	#Round about because names dictionary isn't defined till request
 	for key: String in Globals.resource_ids.keys():
@@ -23,7 +22,6 @@ func initialize(new_is_local: bool) -> void:
 	inventory_updated = true
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	if inventory_updated:
 		stone_bar.scale.y = (

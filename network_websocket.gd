@@ -348,6 +348,7 @@ func check_tile_location_and_surroundings(at_position: Vector2i) -> bool:
 	return position_is_clear
 
 
+## Run when a player joins the server.
 func player_joined(id: int, data: String) -> void:
 	var player_uuid: String = ""
 	if data != "":

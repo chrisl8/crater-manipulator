@@ -118,9 +118,11 @@ func add_inventory_data(data: Dictionary) -> void:
 		inventory_manager.add_data(data)
 
 
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"ball"):
-		Spawner.thing.rpc_id(1, "Ball", Vector2(position.x, position.y - 100))
+# func _input(event: InputEvent) -> void:
+# 	if event.is_action_pressed(&"ball"):
+# 		Spawner.thing.rpc_id(1, "Ball", Vector2(position.x, position.y - 100))
+# 	elif event.is_action_pressed(&"soup_machine"):
+# 		Spawner.thing.rpc_id(1, "SoupMachine", Vector2(position.x, position.y - 100))
 
 
 func _on_personal_space_body_entered(body: Node2D) -> void:
