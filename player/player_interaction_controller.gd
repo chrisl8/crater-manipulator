@@ -12,6 +12,7 @@ const INTERACT_RANGE: float = 200.0
 @export var flip_point: Node2D
 @export var flipped: bool = false
 @export var arm_id_controller: Node2D
+@export var arm_lower_id_controller: Node2D
 @export var head: Node2D
 @export var legs_manager: Node2D
 @export var mouse_position: Vector2
@@ -132,11 +133,12 @@ func mine_raycast() -> void:
 		current_mining_time = 0.0
 		var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 
-		#var spawned_debug_object = debug_object.instantiate()
-		#get_node("/root").add_child(spawned_debug_object)
-		#spawned_debug_object.global_position = Arm.global_position
+		# spawned_debug_object = debug_object.instantiate()
+		# get_node("/root").add_child(spawned_debug_object)
+		# spawned_debug_object.global_position = arm_id_controller.global_position
 
 		var arm_position: Vector2 = arm_id_controller.global_position
+		var lower_arm_position: Vector2 = arm_lower_id_controller.global_position
 		var mining_particle_distance: float = (
 			clamp(
 				clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE),
@@ -146,15 +148,26 @@ func mine_raycast() -> void:
 			/ 2.0
 		)
 		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			arm_position,
+			lower_arm_position,
 			(
-				arm_position
+				lower_arm_position
 				+ (
-					arm_id_controller.global_transform.x
-					* clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
+					arm_lower_id_controller.global_transform.x
+					* clamp(lower_arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
 				)
 			)
 		)
+		# Globals.world_map.draw_line_on_map(
+		# 	lower_arm_position,
+		# 	(
+		# 		lower_arm_position
+		# 		+ (
+		# 			arm_lower_id_controller.global_transform.x
+		# 			* clamp(lower_arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
+		# 		)
+		# 	),
+		# 	Color.RED
+		# )  # For visualizing to debug
 		query.exclude = [self]
 		var result: Dictionary = space_state.intersect_ray(query)
 		if result.size() > 0:

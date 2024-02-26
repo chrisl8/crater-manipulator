@@ -98,13 +98,19 @@ position = Vector2(0, -47)
 zoom = Vector2(3, 3)
 position_smoothing_enabled = true
 
-[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("mining_particles", "flip_point", "arm_id_controller", "head", "legs_manager")]
+[node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("mining_particles", "flip_point", "arm_id_controller", "arm_lower_id_controller", "head", "legs_manager")]
 script = ExtResource("4_rfuvf")
+debug_object = null
 mining_particles = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper/Lower/GPUParticles2D")
+is_mining = null
+mining_distance = null
 flip_point = NodePath("../Flip Point")
+flipped = null
 arm_id_controller = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper")
+arm_lower_id_controller = NodePath("../Flip Point/Player Rig/IK Rig/Arm/Upper/Lower")
 head = NodePath("../Flip Point/Player Rig/Head")
 legs_manager = NodePath("../Flip Point/Player Rig/IK Rig/Legs")
+mouse_position = null
 
 [node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("stone_bar")]
 script = ExtResource("5_xpvfg")

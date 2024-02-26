@@ -657,7 +657,7 @@ func get_global_position_at_map_local_position(at_position: Vector2i) -> Vector2
 	return to_global(map_to_local(at_position))
 
 
-## Place air at a position : TEST TEMP
+## Place air at a position
 func mine_cell_at_position(at_position: Vector2) -> void:
 	var compensated_position: Vector2i = local_to_map(to_local(at_position))
 	if (
