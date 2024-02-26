@@ -118,11 +118,24 @@ func add_inventory_data(data: Dictionary) -> void:
 		inventory_manager.add_data(data)
 
 
-# func _input(event: InputEvent) -> void:
-# 	if event.is_action_pressed(&"ball"):
-# 		Spawner.thing.rpc_id(1, "Ball", Vector2(position.x, position.y - 100))
-# 	elif event.is_action_pressed(&"soup_machine"):
-# 		Spawner.thing.rpc_id(1, "SoupMachine", Vector2(position.x, position.y - 100))
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"craft"):
+		Globals.player_has_done.press_craft_button = true
+		# Always Start with a ball
+		var player_node: Node = get_node_or_null(
+			str("/root/Main/Players/", player, "/Interaction Controller")
+		)
+		if player_node and player_node.has_method("spawn_player_controlled_thing"):
+			var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+			var id: int = rng.randi()
+			var thing_name_to_spawn: String = str("Ball", "-", id)
+			player_node.spawn_player_controlled_thing.rpc(thing_name_to_spawn, "Placing")
+	elif event.is_action_released(&"craft"):
+		var player_node: Node = get_node_or_null(
+			str("/root/Main/Players/", player, "/Interaction Controller")
+		)
+		if player_node and player_node.has_method("spawn_player_controlled_thing"):
+			player_node.de_spawn_placing_item.rpc()
 
 
 func _on_personal_space_body_entered(body: Node2D) -> void:

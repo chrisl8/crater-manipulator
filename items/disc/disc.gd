@@ -35,5 +35,5 @@ func grab() -> void:
 	var player: Node = get_node_or_null(
 		str("/root/Main/Players/", multiplayer.get_remote_sender_id(), "/Interaction Controller")
 	)
-	if player and player.has_method("spawn_player_held_thing"):
-		player.spawn_player_held_thing.rpc(name)
+	if player and player.has_method("spawn_player_controlled_thing"):
+		player.spawn_player_controlled_thing.rpc(name)
