@@ -14,6 +14,7 @@ config/name="Crater Manipulator"
 run/main_scene="res://startup.tscn"
 config/features=PackedStringArray("4.2")
 boot_splash/image="res://splash-screen.png"
+config/icon="res://icon.svg"
 
 [autoload]
 
