@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cifgkne11xhh6" path="res://items/soup_machine/soup_machine.png" id="1_c1lxn"]
 [ext_resource type="Script" path="res://items/soup_machine/soup_machine.gd" id="1_o1ao3"]
-[ext_resource type="Script" path="res://items/disc/multiplayer_synchronizer.gd" id="3_duwhi"]
+[ext_resource type="Script" path="res://items/multiplayer_synchronizer.gd" id="3_duwhi"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_674wf"]
 size = Vector2(32, 32)

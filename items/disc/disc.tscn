@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://items/disc/disc.gd" id="1_61eev"]
 [ext_resource type="Texture2D" uid="uid://b0ibv214xgbak" path="res://items/disc/disc.png" id="2_a20fp"]
-[ext_resource type="Script" path="res://items/disc/multiplayer_synchronizer.gd" id="3_ehtux"]
+[ext_resource type="Script" path="res://items/multiplayer_synchronizer.gd" id="3_ehtux"]
 [ext_resource type="Texture2D" uid="uid://d3715arcp7w7s" path="res://items/disc/disc_highlight.png" id="3_w6kn4"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_y6k7m"]
