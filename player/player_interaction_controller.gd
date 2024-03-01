@@ -18,7 +18,6 @@ const INTERACT_RANGE: float = 200.0
 @export var antenna: Node2D
 @export var mouse_position: Vector2
 
-
 var is_local: bool = false
 var current_tool: int = 1
 var max_hand_distance: float = 25.0
@@ -27,6 +26,7 @@ var mine_cast: RayCast2D
 var mining_speed: float = 0.1
 var current_mining_time: float = 100
 var ball: Resource = preload("res://items/disc/disc.tscn")
+var box: Resource = preload("res://items/square/square.tscn")
 var controlled_item: Node
 var controlled_item_type: String = "Held"
 
@@ -124,7 +124,8 @@ func _drop_held_thing() -> void:
 
 @rpc("call_local")
 func de_spawn_placing_item() -> void:
-	if controlled_item:
+	if controlled_item and controlled_item_type == "Placing":
+		# Don't allow us to de-spawn held items this way.
 		controlled_item.queue_free()
 		controlled_item = null
 
@@ -211,6 +212,10 @@ func right_mouse_clicked() -> void:
 func spawn_player_controlled_thing(
 	controlled_item_name: String, spawned_item_type: String = "Held"
 ) -> void:
+	if controlled_item:
+		# We can never control a new thing if we are already controlling something
+		# Whoever called this should have called de_spawn_placing_item() first if they were serious
+		return
 	var parsed_thing_name: Dictionary = Helpers.parse_thing_name(controlled_item_name)
 	var action: String = "picked up"
 	if spawned_item_type == "Placing":
@@ -224,6 +229,8 @@ func spawn_player_controlled_thing(
 	match parsed_thing_name.name:
 		"Ball":
 			controlled_item = ball.instantiate()
+		"Box":
+			controlled_item = box.instantiate()
 		_:
 			printerr(
 				"Invalid thing to spawn name into player held position: ", parsed_thing_name.name

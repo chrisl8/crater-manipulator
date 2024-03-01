@@ -17,6 +17,9 @@ extends RigidBody2D
 
 var update_synced_position: bool = false
 var update_synced_rotation: bool = false
+var player_spawnable_items: Array = ["Ball", "Box"]
+var player_spawn_item_next: int = 0
+var player_is_placing: bool = false
 
 
 func _ready() -> void:
@@ -118,24 +121,36 @@ func add_inventory_data(data: Dictionary) -> void:
 		inventory_manager.add_data(data)
 
 
+func _spawn_item() -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	var id: int = rng.randi()
+	var thing_name_to_spawn: String = str(player_spawnable_items[player_spawn_item_next], "-", id)
+	$"Interaction Controller".spawn_player_controlled_thing.rpc(thing_name_to_spawn, "Placing")
+
+
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"craft"):
 		Globals.player_has_done.press_craft_button = true
-		# Always Start with a ball
-		var player_node: Node = get_node_or_null(
-			str("/root/Main/Players/", player, "/Interaction Controller")
-		)
-		if player_node and player_node.has_method("spawn_player_controlled_thing"):
-			var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-			var id: int = rng.randi()
-			var thing_name_to_spawn: String = str("Ball", "-", id)
-			player_node.spawn_player_controlled_thing.rpc(thing_name_to_spawn, "Placing")
+		player_is_placing = true
+		_spawn_item()
 	elif event.is_action_released(&"craft"):
-		var player_node: Node = get_node_or_null(
-			str("/root/Main/Players/", player, "/Interaction Controller")
-		)
-		if player_node and player_node.has_method("spawn_player_controlled_thing"):
-			player_node.de_spawn_placing_item.rpc()
+		player_is_placing = false
+		$"Interaction Controller".de_spawn_placing_item.rpc()
+	if event is InputEventMouseButton:
+		if event.button_index == 4 and event.pressed and player_is_placing:
+			# Scroll Up
+			player_spawn_item_next += 1
+			if player_spawn_item_next > player_spawnable_items.size() - 1:
+				player_spawn_item_next = 0
+			$"Interaction Controller".de_spawn_placing_item.rpc()
+			_spawn_item()
+		elif event.button_index == 5 and event.pressed and player_is_placing:
+			# Scroll Down
+			player_spawn_item_next -= 1
+			if player_spawn_item_next < 0:
+				player_spawn_item_next = player_spawnable_items.size() - 1
+			$"Interaction Controller".de_spawn_placing_item.rpc()
+			_spawn_item()
 
 
 func _on_personal_space_body_entered(body: Node2D) -> void:
