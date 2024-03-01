@@ -106,7 +106,7 @@ fi
 # instead of
 # https://github.com/godotengine/godot/releases/download/
 DOWNLOAD_FOLDER_SUFFIX=""
-if [[ ${GODOT_VERSION} == *"beta"* || ${GODOT_VERSION} == *"rc"* ]];then
+if [[ ${GODOT_VERSION} == *"beta"* || ${GODOT_VERSION} == *"rc"* || ${GODOT_VERSION} == *"dev"* ]];then
   DOWNLOAD_FOLDER_SUFFIX="-builds"
 fi
 
