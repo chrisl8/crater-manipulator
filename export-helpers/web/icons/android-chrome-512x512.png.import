@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cf7cnowvvggfl"
-path="res://.godot/imported/favicon-128x128.png-c81386ca4463f93b1775bd30981b88a8.ctex"
+uid="uid://e0wbl48jl64x"
+path="res://.godot/imported/android-chrome-512x512.png-bab7f7325307e361b6ec9ff82e3a6a5b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://export-helpers/web/icons/favicon-128x128.png"
-dest_files=["res://.godot/imported/favicon-128x128.png-c81386ca4463f93b1775bd30981b88a8.ctex"]
+source_file="res://export-helpers/web/icons/android-chrome-512x512.png"
+dest_files=["res://.godot/imported/android-chrome-512x512.png-bab7f7325307e361b6ec9ff82e3a6a5b.ctex"]
 
 [params]
 

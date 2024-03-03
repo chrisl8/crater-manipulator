@@ -216,3 +216,6 @@ class MapEdges:
 ```
 
 Both will work, but the class example is more "Godot" proper and also you can type every variable and your IDE will like you better.
+
+# Website Icons
+I used https://realfavicongenerator.net/ to generate the icons for the website.
