@@ -94,14 +94,14 @@ func _process(delta: float) -> void:
 			elif is_multiplayer_authority():
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
-				_drop_held_thing.rpc()
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
+				_drop_held_thing.rpc()
 		elif controlled_item_type == "Placing":
 			if is_mining and is_multiplayer_authority():
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
-				_drop_held_thing.rpc()
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
+				_drop_held_thing.rpc()
 			else:
 				# TODO: Do not allow moving objects into terrain or through other characters,
 				# much like the mining beam does not.
