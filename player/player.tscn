@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=23 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/prompts.gd" id="4_8hopg"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
 [ext_resource type="Script" path="res://player/antenna_physics_controller.gd" id="10_c7nhb"]
 [ext_resource type="Texture2D" uid="uid://cxfvwdktyjru5" path="res://player/player.svg" id="10_wmt63"]
+[ext_resource type="Texture2D" uid="uid://btvwh51r4767" path="res://player/Party Hat.svg" id="11_2y8ad"]
 
 [sub_resource type="GDScript" id="1"]
 
@@ -51,10 +52,10 @@ properties/8/replication_mode = 2
 _data = [Vector2(0.455729, 0.856713), 0.0, 0.0, 0, 0, Vector2(0.669271, 0.0490983), 0.0, 0.0, 0, 0]
 point_count = 2
 
-[sub_resource type="CurveTexture" id="CurveTexture_qpmck"]
+[sub_resource type="CurveTexture" id="CurveTexture_wesqt"]
 curve = SubResource("Curve_tmffk")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_vd1d2"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_jfoyl"]
 particle_flag_align_y = true
 particle_flag_rotate_y = true
 particle_flag_disable_z = true
@@ -63,9 +64,27 @@ emission_shape = 3
 emission_box_extents = Vector3(50, 10, 1)
 gravity = Vector3(0, 0, 0)
 color = Color(0.129412, 0.686275, 0.698039, 1)
-emission_curve = SubResource("CurveTexture_qpmck")
+emission_curve = SubResource("CurveTexture_wesqt")
 hue_variation_min = -0.13
 hue_variation_max = 0.1
+
+[sub_resource type="CurveTexture" id="CurveTexture_dkrs5"]
+curve = SubResource("Curve_tmffk")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_at8od"]
+particle_flag_align_y = true
+particle_flag_rotate_y = true
+particle_flag_disable_z = true
+emission_shape_offset = Vector3(50, 0, 0)
+emission_shape = 3
+emission_box_extents = Vector3(50, 10, 1)
+initial_velocity_max = 69.62
+gravity = Vector3(0, 0, 0)
+color = Color(0.129412, 0.686275, 0.698039, 1)
+emission_curve = SubResource("CurveTexture_dkrs5")
+hue_variation_min = -1.0
+hue_variation_max = -0.84
+turbulence_enabled = true
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_6el7t"]
 
@@ -90,6 +109,7 @@ camera = NodePath("Camera2D")
 interaction_controller = NodePath("Interaction Controller")
 inventory_manager = NodePath("Inventory Manager")
 player_canvas = NodePath("CanvasLayer")
+metadata/_edit_horizontal_guides_ = [-66.0, -74.0]
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_ir062")
@@ -477,12 +497,21 @@ texture = ExtResource("10_wmt63")
 polygon = PackedVector2Array(1920, 864, 2528, 864, 2528, 1088, 1920, 1088)
 uv = PackedVector2Array(1856, 864, 2464, 864, 2464, 1088, 1856, 1088)
 
-[node name="GPUParticles2D" type="GPUParticles2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper/Lower"]
+[node name="Saved Mining Particles" type="GPUParticles2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper/Lower"]
+visible = false
 position = Vector2(15, 0)
 rotation = 1.20897
 amount = 100
-process_material = SubResource("ParticleProcessMaterial_vd1d2")
+process_material = SubResource("ParticleProcessMaterial_jfoyl")
 lifetime = 0.5
+collision_base_size = 0.0
+visibility_rect = Rect2(0, -15, 1000, 30)
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper/Lower"]
+position = Vector2(15, 0)
+rotation = 1.20897
+amount = 200
+process_material = SubResource("ParticleProcessMaterial_at8od")
 collision_base_size = 0.0
 visibility_rect = Rect2(0, -15, 1000, 30)
 
@@ -506,6 +535,13 @@ position = Vector2(-600, -650)
 texture = ExtResource("10_wmt63")
 polygon = PackedVector2Array(384, 128, 768, 128, 896, 256, 896, 576, 832, 640, 416, 640, 384, 608)
 uv = PackedVector2Array(384, 128, 768, 128, 896, 256, 896, 576, 832, 640, 416, 640, 384, 608)
+
+[node name="PartyHat" type="Sprite2D" parent="Flip Point/Player Rig/Head"]
+z_index = 1
+position = Vector2(-130, -645)
+rotation = -0.315084
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("11_2y8ad")
 
 [node name="Body" type="Node2D" parent="Flip Point/Player Rig"]
 position = Vector2(0, -9.5)
