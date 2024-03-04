@@ -10,6 +10,22 @@ func _ready() -> void:
 		Helpers.log_print(str("Setting ball position to ", spawn_position))
 
 
+func _physics_process(_delta: float) -> void:
+	# Only the server should act on this object, as the server owns it,
+	# especially the delete part.
+	# Delete if it gets out of bounds
+	if (
+		abs(position.x)
+		> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+	):
+		queue_free()
+	if (
+		abs(position.y)
+		> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+	):
+		queue_free()
+
+
 func nearby(is_nearby: bool, _body: Node2D) -> void:
 	if is_nearby:
 		$HighlightMesh.visible = true
