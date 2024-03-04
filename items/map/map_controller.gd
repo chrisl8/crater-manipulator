@@ -839,3 +839,15 @@ func check_tile_location_and_surroundings(at_position: Vector2i) -> Globals.MapT
 					cell_position_at_position.y + y_position
 				)
 			)
+
+	for cell_position: Vector2i in return_data.tile_list:
+		return_data.tile_content[cell_position] = (
+			Globals.world_map.get_cell_id_at_map_tile_position(cell_position)
+		)
+		if return_data.tile_content[cell_position] != Vector2i(-1, -1):
+			return_data.all_tiles_are_empty = false
+		# 	Globals.world_map.highlight_cell_at_map_position(cell_position, Color.PINK)  # For visualizing to debug
+		# else:
+		# 	Globals.world_map.highlight_cell_at_map_position(cell_position, Color.LIME_GREEN)  # For visualizing to debug
+
+	return return_data

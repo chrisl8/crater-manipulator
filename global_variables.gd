@@ -22,6 +22,13 @@ var players: Dictionary = {}
 var player_has_done: Dictionary = {}
 
 
+## Map Tile Set - A static class used to pass around a set of map tiles with general data about them.
+class MapTileSet:
+	var all_tiles_are_empty: bool = false
+	var tile_list: Array[Vector2i] = []
+	var tile_content: Dictionary = {}
+
+
 func get_resource_name(id: int) -> String:
 	build_resources_dictionaries()
 	var resource_name: String

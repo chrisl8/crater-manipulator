@@ -88,8 +88,6 @@ func _process(delta: float) -> void:
 		# Placed items are placed when you click the left mouse button.
 		if controlled_item_type == "Held":
 			if is_mining:
-				# TODO: Do not allow moving objects into terrain or through other characters,
-				# much like the mining beam does not.
 				controlled_item.set_position(to_local(mouse_position))
 			elif is_multiplayer_authority():
 				var held_item_name: String = controlled_item.name
@@ -103,9 +101,13 @@ func _process(delta: float) -> void:
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 				_drop_held_thing.rpc()
 			else:
-				# TODO: Do not allow moving objects into terrain or through other characters,
-				# much like the mining beam does not.
 				controlled_item.set_position(to_local(mouse_position))
+				Globals.world_map.check_tile_location_and_surroundings(mouse_position)
+				##print(colliding_tiles.all_tiles_are_empty)
+				#print(colliding_tiles.tile_list)
+				# if not Globals.world_map.check_tile_location_and_surroundings(mouse_position):
+				# 	#Globals.world_map.highlight_cell_at_global_position(mouse_position, Color.RED)
+				# 	Helpers.log_print("Nope")
 
 
 #Re-add when arms sometimes need to target other locations

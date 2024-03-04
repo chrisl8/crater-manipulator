@@ -206,13 +206,13 @@ DO do this:
 class MapEdges:
 	## Lowest x and y position of any possible occupied tile space
 	class Min:
-		static var x: int = -1
-		static var y: int = -1
+		var x: int = -1
+		var y: int = -1
 
 	## Highest x and y position of any possible occupied tile space
 	class Max:
-		static var x: int = 100000
-		static var y: int = 100000
+		var x: int = 100000
+		var y: int = 100000
 ```
 
 Both will work, but the class example is more "Godot" proper and also you can type every variable and your IDE will like you better.
