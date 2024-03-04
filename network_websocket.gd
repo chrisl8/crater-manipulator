@@ -417,10 +417,10 @@ func player_joined(id: int, data: String) -> void:
 
 	var clear_and_safe_position_found: bool = false
 
-	var single_tile_width: int = 16
-
 	var space_state: PhysicsDirectSpaceState2D = Globals.world_map.get_world_2d().direct_space_state
-	var max_radius: int = Globals.world_map.max_radius * single_tile_width * 2
+	var max_radius: int = (
+		Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width * 2
+	)
 	var last_x_shift_direction: String = "positive"
 	var last_x_shift_count: int = 1
 
@@ -452,10 +452,14 @@ func player_joined(id: int, data: String) -> void:
 		for x_offset: int in range(-1, 2):
 			from_position = (
 				potential_player_position
-				+ Vector2(x_offset * single_tile_width, -single_tile_width)
+				+ Vector2(
+					x_offset * Globals.world_map.single_tile_width,
+					-Globals.world_map.single_tile_width
+				)
 			)
 			to_position = (
-				potential_player_position + Vector2(x_offset * single_tile_width, max_radius)
+				potential_player_position
+				+ Vector2(x_offset * Globals.world_map.single_tile_width, max_radius)
 			)
 			#Globals.world_map.draw_line_on_map(from_position, to_position, Color.BROWN)  # For visualizing to debug
 			ray_trace_query = PhysicsRayQueryParameters2D.create(from_position, to_position)
@@ -512,12 +516,14 @@ func player_joined(id: int, data: String) -> void:
 			# and increment it after.
 			if last_x_shift_direction == "positive":
 				potential_player_position = (
-					potential_player_position - Vector2(single_tile_width * last_x_shift_count, 0)
+					potential_player_position
+					- Vector2(Globals.world_map.single_tile_width * last_x_shift_count, 0)
 				)
 				last_x_shift_direction = "negative"
 			else:
 				potential_player_position = (
-					potential_player_position + Vector2(single_tile_width * last_x_shift_count, 0)
+					potential_player_position
+					+ Vector2(Globals.world_map.single_tile_width * last_x_shift_count, 0)
 				)
 				last_x_shift_direction = "positive"
 			last_x_shift_count += 1

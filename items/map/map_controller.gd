@@ -64,7 +64,9 @@ var map_initialization_started: bool = false
 
 var valid_resource_generation_tiles: Array = []
 
-var max_radius: int = -1
+var max_radius_in_tiles: int = -1
+
+var single_tile_width: int = 16
 
 var generate_simple_world: bool = true
 
@@ -126,7 +128,7 @@ func load_saved_map() -> bool:
 			get_tree().quit()  # Quits the game due to bad server config data
 
 		var loaded_map_data: Dictionary = json.data
-		max_radius = loaded_map_data.max_radius
+		max_radius_in_tiles = loaded_map_data.max_radius_in_tiles
 		for key: String in loaded_map_data.synced_data:
 			current_data[str_to_var("Vector2i" + key)] = str_to_var(
 				"Vector2i" + loaded_map_data.synced_data[key]
@@ -171,7 +173,7 @@ func generate_map() -> void:
 		height_scale = 10
 		crater_generate_radius = 400
 
-	max_radius = crater_generate_radius + additional_waste_distance + 2
+	max_radius_in_tiles = crater_generate_radius + additional_waste_distance + 2
 
 	var fill_intercept: float = crater_scale / float(width_scale) * 3.14159265
 
@@ -815,5 +817,25 @@ func save_map() -> void:
 	Helpers.log_print("Save Map!")
 	Helpers.save_data_to_file(
 		"user://saved_map.dat",
-		JSON.stringify({"max_radius": max_radius, "synced_data": synced_data})
+		JSON.stringify({"max_radius_in_tiles": max_radius_in_tiles, "synced_data": synced_data})
 	)
+
+
+func check_tile_location_and_surroundings(at_position: Vector2i) -> Globals.MapTileSet:
+	var cell_position_at_position: Vector2i = (
+		Globals.world_map.get_cell_position_at_global_position(at_position)
+	)
+
+	var return_data: Globals.MapTileSet = Globals.MapTileSet.new()
+	print(return_data.tile_list.size())
+	return_data.all_tiles_are_empty = true
+
+	# Find out what tiles exist at the requested position
+	for x_position: int in range(0, 1):
+		for y_position: int in range(0, 1):
+			return_data.tile_list.append(
+				Vector2i(
+					cell_position_at_position.x + x_position,
+					cell_position_at_position.y + y_position
+				)
+			)
