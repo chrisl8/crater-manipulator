@@ -70,6 +70,8 @@ var single_tile_width: int = 16
 
 var generate_simple_world: bool = true
 
+var drawings_scene: Resource = preload("res://items/map/map_drawing_canvas.tscn")
+
 
 func _ready() -> void:
 	# Without this, sending a StreamPeerBuffer over an RPC generates the error
@@ -674,32 +676,67 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 			Globals.player_has_done.mine_a_block = true
 
 
-func highlight_cell_at_global_position(at_position: Vector2, color: Color = Color.GREEN) -> void:
+var drawing_canvases: Dictionary = {}
+
+
+func _get_drawing_canvas(canvas_entry_name: String = "default") -> Node2D:
+	if not drawing_canvases.has(canvas_entry_name):
+		drawing_canvases[canvas_entry_name] = drawings_scene.instantiate()
+		add_child(drawing_canvases[canvas_entry_name])
+	return drawing_canvases[canvas_entry_name]
+
+
+func highlight_cell_at_global_position(
+	at_position: Vector2, color: Color = Color.GREEN, canvas_entry_name: String = "default"
+) -> void:
+	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
 	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
-	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
 	}
-	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
-	$Drawing.update_draw = true
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
+	drawing_canvas.update_draw = true
 
 
-func highlight_cell_at_map_position(at_cell_position: Vector2, color: Color = Color.GREEN) -> void:
+func highlight_cell_at_map_position(
+	at_cell_position: Vector2i, color: Color = Color.GREEN, canvas_entry_name: String = "default"
+) -> void:
+	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
 	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
-	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
 	}
-	$Drawing.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
-	$Drawing.update_draw = true
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
+	drawing_canvas.update_draw = true
 
 
 func draw_line_on_map(
-	from_position: Vector2, to_position: Vector2, color: Color = Color.GREEN
+	from_position: Vector2,
+	to_position: Vector2,
+	color: Color = Color.GREEN,
+	canvas_entry_name: String = "default"
 ) -> void:
-	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)] = {
+	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)] = {
 	}
-	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].from = from_position
-	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].to = to_position
-	$Drawing.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].color = color
-	$Drawing.update_draw = true
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].from = from_position
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].to = to_position
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].color = color
+	drawing_canvas.update_draw = true
+
+
+## Wipe all drawing from map.
+## This is more of a test than a function I expect to be used a lot, but it may remain useful.
+func erase_drawing_canvas(canvas_entry_name: String = "default") -> void:
+	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
+	drawing_canvas.rectangles_to_draw.clear()
+	drawing_canvas.lines_to_draw.clear()
+	drawing_canvas.update_draw = true
+
+
+func delete_drawing_canvas(canvas_entry_name: String = "default") -> void:
+	if drawing_canvases.has(canvas_entry_name):
+		drawing_canvases[canvas_entry_name].queue_free()
+		drawing_canvases.erase(canvas_entry_name)
 
 
 ## Place a standard piece of stone at a position : TEST TEMP

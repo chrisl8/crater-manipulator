@@ -1,9 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://b3oas60x2h2ll"]
+[gd_scene load_steps=9 format=3 uid="uid://b3oas60x2h2ll"]
 
 [ext_resource type="Texture2D" uid="uid://cmmcxhs3grx8n" path="res://items/map/atlas.png" id="1_6lmq1"]
 [ext_resource type="Script" path="res://items/map/map_controller.gd" id="2_xpmlm"]
 [ext_resource type="Script" path="res://items/map/map_tile_modification_particles_controller.gd" id="3_s0ufw"]
-[ext_resource type="Script" path="res://items/map/map_drawing.gd" id="4_odim8"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_w4kpn"]
 texture = ExtResource("1_6lmq1")
@@ -448,9 +447,6 @@ tile_modification_particles_controller = NodePath("Particles")
 script = ExtResource("3_s0ufw")
 map = NodePath("..")
 scale_curve = SubResource("Curve_7u1fo")
-
-[node name="Drawing" type="Node2D" parent="."]
-script = ExtResource("4_odim8")
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="."]
 visible = false

@@ -16,7 +16,6 @@ func _process(_delta: float) -> void:
 	):
 		update_draw = false
 		rectangles_to_draw_size = rectangles_to_draw.size()
-		# TODO: Only run this when the array changes.
 		queue_redraw()
 
 
@@ -28,7 +27,7 @@ func _draw() -> void:
 				color = rectangles_to_draw[key].color
 			draw_rect(key, color)
 	if lines_to_draw.size() > 0:
-		# Narrower lines tend to disappear at discreet zoom levels, although they are easier to spot which pixel the came from/went to.
+		# Narrower lines tend to disappear at discreet zoom levels, although they are easier to spot which pixel they came from/went to.
 		# This could be configurable in the data.
 		var line_width: float = 1.0
 		for key: String in lines_to_draw.keys():
