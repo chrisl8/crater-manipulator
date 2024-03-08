@@ -29,6 +29,7 @@ var ball: Resource = preload("res://items/disc/disc.tscn")
 var box: Resource = preload("res://items/square/square.tscn")
 var controlled_item: Node
 var controlled_item_type: String = "Held"
+var controlled_item_clear_of_collisions: bool = false
 
 
 func update_mining_particle_length() -> void:
@@ -95,7 +96,7 @@ func _process(delta: float) -> void:
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 				_drop_held_thing.rpc()
 		elif controlled_item_type == "Placing":
-			if is_mining and is_multiplayer_authority():
+			if is_mining and is_multiplayer_authority() and controlled_item_clear_of_collisions:
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
@@ -106,7 +107,9 @@ func _process(delta: float) -> void:
 				var intersecting_tiles: Globals.MapTileSet = (
 					Globals.world_map.check_tile_location_and_surroundings(mouse_position)
 				)
-				if not intersecting_tiles.all_tiles_are_empty:
+				controlled_item_clear_of_collisions = intersecting_tiles.all_tiles_are_empty
+				Globals.world_map.erase_drawing_canvas()
+				if not controlled_item_clear_of_collisions:
 					for cell: Vector2i in intersecting_tiles.tile_list:
 						Globals.world_map.highlight_cell_at_map_position(cell, Color.RED)
 				##print(colliding_tiles.all_tiles_are_empty)
