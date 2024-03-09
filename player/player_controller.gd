@@ -60,6 +60,22 @@ func set_player_position(new_position: Vector2) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Only the server should act on this object, as the server owns it,
+	# especially the delete part.
+	# Delete if it gets out of bounds
+	if (
+		(
+			abs(position.x)
+			> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+		)
+		or (
+			abs(position.y)
+			> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+		)
+	):
+		Network.reset_connection()
+		return
+
 	### Movement
 	var move_input: Vector2 = relative_input()
 	var speed: float = 200.0
