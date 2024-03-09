@@ -736,6 +736,21 @@ func draw_line_on_map(
 	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].color = color
 	drawing_canvas.update_draw = true
 
+func draw_temp_line_on_map(
+	from_position: Vector2,
+	to_position: Vector2,
+	color: Color = Color.GREEN,
+	canvas_entry_name: String = "temp"
+) -> void:
+	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)] = {
+	}
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].from = from_position
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].to = to_position
+	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].color = color
+	drawing_canvas.update_draw = true
+	drawing_canvas.temp = true
+
 
 ## Wipe all drawing from map.
 ## This is more of a test than a function I expect to be used a lot, but it may remain useful.

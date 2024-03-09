@@ -78,7 +78,7 @@ func _physics_process(delta: float) -> void:
 
 	### Movement
 	var move_input: Vector2 = relative_input()
-	var speed: float = 200.0
+	var speed: float = 140.0
 
 	var velocity: Vector2 = linear_velocity
 	if abs(move_input.x) > 0.1:
@@ -141,7 +141,7 @@ func _spawn_item() -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	var id: int = rng.randi()
 	var thing_name_to_spawn: String = str(player_spawnable_items[player_spawn_item_next], "-", id)
-	$"Interaction Controller".spawn_player_controlled_thing.rpc(thing_name_to_spawn, "Placing")
+	$"Interaction Controller".spawn_player_controlled_thing.rpc(Vector2.ZERO,0,thing_name_to_spawn, "Placing")
 
 
 func _input(event: InputEvent) -> void:

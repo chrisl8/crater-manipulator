@@ -88,6 +88,7 @@ craft={
 [physics]
 
 common/physics_jitter_fix=0.0
+2d/default_gravity=490.0
 
 [rendering]
 

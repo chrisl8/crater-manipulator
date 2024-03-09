@@ -18,7 +18,7 @@ properties/0/replication_mode = 1
 z_index = 1
 collision_layer = 8
 collision_mask = 11
-mass = 10.0
+mass = 30.0
 script = ExtResource("1_mi7bp")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

@@ -27,7 +27,7 @@ var mining_speed: float = 0.1
 var current_mining_time: float = 100
 var ball: Resource = preload("res://items/disc/disc.tscn")
 var box: Resource = preload("res://items/square/square.tscn")
-var controlled_item: Node
+var controlled_item: RigidBody2D
 var controlled_item_type: String = "Held"
 var controlled_item_clear_of_collisions: bool = false
 
@@ -89,7 +89,29 @@ func _process(delta: float) -> void:
 		# Placed items are placed when you click the left mouse button.
 		if controlled_item_type == "Held":
 			if is_mining:
-				controlled_item.set_position(to_local(mouse_position))
+				#controlled_item.set_position(to_local(mouse_position))
+				#controlled_item.set_position(controlled_item.global_position)
+				#if(randf() > 0.99):
+				#	controlled_item.set_position(to_local(mouse_position))
+
+				#if(is_local):
+
+				#controlled_item.add_constant_central_force(controlled_item.global_position-to_local(mouse_position))
+				#print(to_local(mouse_position) - controlled_item.global_position)
+				#print(controlled_item.global_position.distance_to(mouse_position))
+				#print(controlled_item.global_position,mouse_position,(mouse_position - controlled_item.global_position))
+
+				var LocationA = mouse_position
+				var LocationB = controlled_item.to_global(controlled_item.center_of_mass)
+
+				Globals.world_map.draw_temp_line_on_map(LocationA, LocationB, Color.CYAN)
+				var Force = (LocationA - LocationB).normalized() * 100000.0
+
+				controlled_item.constant_force = (Force)
+				#controlled_item.x
+				#controlled_item.apply_central_force ((controlled_item.global_position-to_local(mouse_position)).normalized()*100)
+				pass
+
 			elif is_multiplayer_authority():
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
@@ -223,7 +245,10 @@ func right_mouse_clicked() -> void:
 # of this player.
 @rpc("any_peer", "call_local")
 func spawn_player_controlled_thing(
-	controlled_item_name: String, spawned_item_type: String = "Held"
+	thing_position: Vector2,
+	thing_rotation: float,
+	controlled_item_name: String,
+	spawned_item_type: String = "Held"
 ) -> void:
 	if controlled_item:
 		# We can never control a new thing if we are already controlling something
@@ -251,6 +276,12 @@ func spawn_player_controlled_thing(
 			return
 	controlled_item_type = spawned_item_type
 	controlled_item.name = controlled_item_name
+	if spawned_item_type == "Held":
+		controlled_item.SetSpawnLocation(thing_position, thing_rotation)
+
+	controlled_item.global_position = thing_position
+	controlled_item.global_rotation = thing_rotation
+
 	# Disable collision on held items, otherwise you can push others or yourself into the sky or the ground
 	controlled_item.set_collision_layer_value(4, false)
 	add_child(controlled_item)
