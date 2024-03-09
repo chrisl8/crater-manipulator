@@ -16,7 +16,7 @@ var game_scene_initialized: bool = false
 var network_connection_initiated: bool = false
 
 var player_character_template: PackedScene = preload("res://player/player.tscn")
-var map: PackedScene = preload("res://items/map/map.tscn")
+var map: PackedScene = preload("res://map/map.tscn")
 
 var websocket_multiplayer_peer: WebSocketMultiplayerPeer
 var uuid_util: Resource = preload("res://addons/uuid/uuid.gd")

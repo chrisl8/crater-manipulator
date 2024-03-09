@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://d2xfjuc84u0r5"]
 
 [ext_resource type="Script" path="res://server_camera/server_camera_controller.gd" id="1_knfvd"]
-[ext_resource type="Script" path="res://items/map/regenerate_map_button.gd" id="2_on7ub"]
-[ext_resource type="Script" path="res://items/map/zoom_to_map_button.gd" id="3_jhmab"]
+[ext_resource type="Script" path="res://map/regenerate_map_button.gd" id="2_on7ub"]
+[ext_resource type="Script" path="res://map/zoom_to_map_button.gd" id="3_jhmab"]
 [ext_resource type="Script" path="res://server_camera/save_map_button.gd" id="4_as8yn"]
 
 [node name="ServerCamera" type="Node2D"]

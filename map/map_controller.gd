@@ -70,7 +70,7 @@ var single_tile_width: int = 16
 
 var generate_simple_world: bool = true
 
-var drawings_scene: Resource = preload("res://items/map/map_drawing_canvas.tscn")
+var drawings_scene: Resource = preload("res://map/map_drawing_canvas.tscn")
 
 
 func _ready() -> void:
