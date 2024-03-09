@@ -101,17 +101,19 @@ func _process(delta: float) -> void:
 				var held_item_global_position: Vector2 = controlled_item.global_position
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 				_drop_held_thing.rpc()
-				Globals.world_map.delete_drawing_canvas()
+				Globals.world_map.delete_drawing_canvas(controlled_item.name)
 			else:
 				controlled_item.set_position(to_local(mouse_position))
 				var intersecting_tiles: Globals.MapTileSet = (
 					Globals.world_map.check_tile_location_and_surroundings(mouse_position)
 				)
 				controlled_item_clear_of_collisions = intersecting_tiles.all_tiles_are_empty
-				Globals.world_map.erase_drawing_canvas()
+				Globals.world_map.erase_drawing_canvas(controlled_item.name)
 				if not controlled_item_clear_of_collisions:
 					for cell: Vector2i in intersecting_tiles.tile_list:
-						Globals.world_map.highlight_cell_at_map_position(cell, Color.RED)
+						Globals.world_map.highlight_cell_at_map_position(
+							cell, Color.RED, controlled_item.name
+						)
 				##print(colliding_tiles.all_tiles_are_empty)
 				#print(colliding_tiles.tile_list)
 				# if not Globals.world_map.check_tile_location_and_surroundings(mouse_position):
