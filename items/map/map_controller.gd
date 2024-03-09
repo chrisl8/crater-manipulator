@@ -130,7 +130,7 @@ func load_saved_map() -> bool:
 			get_tree().quit()  # Quits the game due to bad server config data
 
 		var loaded_map_data: Dictionary = json.data
-		max_radius_in_tiles = loaded_map_data.max_radius_in_tiles
+		set_max_radius_in_tiles(loaded_map_data.max_radius_in_tiles)
 		for key: String in loaded_map_data.synced_data:
 			current_data[str_to_var("Vector2i" + key)] = str_to_var(
 				"Vector2i" + loaded_map_data.synced_data[key]
@@ -175,7 +175,7 @@ func generate_map() -> void:
 		height_scale = 10
 		crater_generate_radius = 400
 
-	max_radius_in_tiles = crater_generate_radius + additional_waste_distance + 2
+	set_max_radius_in_tiles(crater_generate_radius + additional_waste_distance + 2)
 
 	var fill_intercept: float = crater_scale / float(width_scale) * 3.14159265
 
@@ -573,10 +573,25 @@ func acknowledge_received_chunk(chunk_id: int) -> void:
 	else:
 		server_side_per_player_initial_map_data[player_id].last_acknowledged_chunk_id = chunk_id
 		if server_side_per_player_initial_map_data[player_id].finished_sending:
+			send_max_radius_in_tiles.rpc_id(player_id, max_radius_in_tiles)
 			tell_client_initial_map_data_send_is_finished.rpc_id(player_id)
 
 
-## Send chunks of the world dat block to clients, used for initial world sync
+## Update the max radius in tiles.
+## Used to check for world bounds
+func set_max_radius_in_tiles(new_max_radius_in_tiles: int) -> void:
+	max_radius_in_tiles = new_max_radius_in_tiles
+	send_max_radius_in_tiles.rpc(new_max_radius_in_tiles)
+
+
+## Send the maximum map size to players.
+## This is used for things like checking if you fell out of the world.
+@rpc("authority", "call_remote", "reliable")
+func send_max_radius_in_tiles(sent_max_radius_in_tiles: int) -> void:
+	max_radius_in_tiles = sent_max_radius_in_tiles
+
+
+## Send chunks of the world data block to clients, used for initial world sync
 @rpc("authority", "call_remote", "unreliable")
 func send_initial_map_data_chunk_to_client(
 	chunk_id: int, data_size: int, compressed_data: PackedByteArray, percent_complete: int
