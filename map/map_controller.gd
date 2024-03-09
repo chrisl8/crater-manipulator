@@ -879,7 +879,6 @@ func check_tile_location_and_surroundings(at_position: Vector2i) -> Globals.MapT
 	)
 
 	var return_data: Globals.MapTileSet = Globals.MapTileSet.new()
-	print(return_data.tile_list.size())
 	return_data.all_tiles_are_empty = true
 
 	# Find out what tiles exist at the requested position
