@@ -71,6 +71,7 @@ var single_tile_width: int = 16
 var generate_simple_world: bool = true
 
 var drawings_scene: Resource = preload("res://map/map_drawing_canvas.tscn")
+var drawing_canvases: Dictionary = {}
 
 
 func _ready() -> void:
@@ -689,9 +690,6 @@ func mine_cell_at_position(at_position: Vector2) -> void:
 			)
 			modify_cell(compensated_position, Vector2i(-1, -1))
 			Globals.player_has_done.mine_a_block = true
-
-
-var drawing_canvases: Dictionary = {}
 
 
 func _get_drawing_canvas(canvas_entry_name: String = "default") -> Node2D:
