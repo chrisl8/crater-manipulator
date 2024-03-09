@@ -101,7 +101,7 @@ func _process(delta: float) -> void:
 				var held_item_global_position: Vector2 = controlled_item.global_position
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 				_drop_held_thing.rpc()
-				Globals.world_map.delete_drawing_canvas(controlled_item.name)
+				Globals.world_map.delete_drawing_canvas(held_item_name)
 			else:
 				controlled_item.set_position(to_local(mouse_position))
 				var intersecting_tiles: Globals.MapTileSet = (
