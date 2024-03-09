@@ -15,13 +15,14 @@ func _physics_process(_delta: float) -> void:
 	# especially the delete part.
 	# Delete if it gets out of bounds
 	if (
-		abs(position.x)
-		> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
-	):
-		queue_free()
-	if (
-		abs(position.y)
-		> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+		(
+			abs(position.x)
+			> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+		)
+		or (
+			abs(position.y)
+			> Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width
+		)
 	):
 		queue_free()
 
