@@ -153,6 +153,7 @@ func _drop_held_thing() -> void:
 		"Cornflowerblue"
 	)
 	if controlled_item:
+		Globals.world_map.delete_drawing_canvas(controlled_item.name)
 		controlled_item.queue_free()
 		controlled_item = null
 
@@ -161,6 +162,7 @@ func _drop_held_thing() -> void:
 func de_spawn_placing_item() -> void:
 	if controlled_item and controlled_item_type == "Placing":
 		# Don't allow us to de-spawn held items this way.
+		Globals.world_map.delete_drawing_canvas(controlled_item.name)
 		controlled_item.queue_free()
 		controlled_item = null
 
