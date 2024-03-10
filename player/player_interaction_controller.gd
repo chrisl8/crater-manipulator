@@ -189,7 +189,6 @@ func mine_raycast() -> void:
 		current_mining_time = 0.0
 		var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 		var arm_position: Vector2 = arm_id_controller.global_position
-		var lower_arm_position: Vector2 = arm_lower_id_controller.global_position
 		var mining_particle_distance: float = (
 			clamp(
 				clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE),
@@ -198,27 +197,17 @@ func mine_raycast() -> void:
 			)
 			/ 2.0
 		)
-		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			lower_arm_position,
-			(
-				lower_arm_position
-				+ (
-					arm_lower_id_controller.global_transform.x
-					* clamp(lower_arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
-				)
+		var target_position: Vector2 = (
+			arm_position
+			+ (
+				(mouse_position - arm_position).normalized()
+				* clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
 			)
 		)
-		# Globals.world_map.draw_line_on_map(
-		# 	lower_arm_position,
-		# 	(
-		# 		lower_arm_position
-		# 		+ (
-		# 			arm_lower_id_controller.global_transform.x
-		# 			* clamp(lower_arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
-		# 		)
-		# 	),
-		# 	Color.RED
-		# )  # For visualizing to debug
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
+			arm_position, target_position
+		)
+		Globals.world_map.draw_temp_line_on_map(arm_position, target_position, Color.RED)  # For visualizing to debug
 		query.exclude = [self]
 		var result: Dictionary = space_state.intersect_ray(query)
 		if result.size() > 0:
