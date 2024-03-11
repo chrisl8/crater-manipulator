@@ -1,5 +1,7 @@
 extends RigidBody2D
 
+var item_type: String = "Entity"
+
 @export var spawn_position: Vector2
 
 
@@ -29,9 +31,9 @@ func _physics_process(_delta: float) -> void:
 
 func nearby(is_nearby: bool, _body: Node2D) -> void:
 	if is_nearby:
-		$HighlightMesh.visible = true
+		$NormalMesh.modulate = Color(1.0, 216 / 255.0, 0.0, 1.0)
 	else:
-		$HighlightMesh.visible = false
+		$NormalMesh.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 
 #func _process(delta: float) -> void:
@@ -50,16 +52,15 @@ func grab() -> void:
 		"saddlebrown"
 	)
 	# Delete myself if someone grabbed me
-	print(global_position)
 	queue_free()
-	print(global_position)
 	# Once that is done, tell the player node that grabbed me to spawn a "held" version
 	var player: Node = get_node_or_null(
 		str("/root/Main/Players/", multiplayer.get_remote_sender_id(), "/Interaction Controller")
 	)
 	if player and player.has_method("spawn_player_controlled_thing"):
 		print(global_position)
-		player.spawn_player_controlled_thing.rpc(global_position,global_rotation,name)
+		player.spawn_player_controlled_thing.rpc(global_position, global_rotation, name)
+
 
 var WaitingToSetLocation = false
 var ForceSetPosition
@@ -72,12 +73,14 @@ var ForceSetRotation
 #This is hard baked enough into Godot's methodology that I assume it is intended behavior, and consequently this will need to be broken out into it's own script
 #to allow this behaviour to be easilly addded to objects, as it is critical for physics control.
 
-func SetSpawnLocation(Position:Vector2,Rotation:float) -> void:
+
+func SetSpawnLocation(Position: Vector2, Rotation: float) -> void:
 	ForceSetPosition = Position
 	ForceSetRotation = Rotation
 	WaitingToSetLocation = true
 
+
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if WaitingToSetLocation:
-		state.transform = Transform2D(ForceSetRotation,ForceSetPosition)
+		state.transform = Transform2D(ForceSetRotation, ForceSetPosition)
 		WaitingToSetLocation = false

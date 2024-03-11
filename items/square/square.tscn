@@ -1,8 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://bbgco05vj36s"]
+[gd_scene load_steps=7 format=3 uid="uid://bbgco05vj36s"]
 
 [ext_resource type="Script" path="res://items/square/square.gd" id="1_mi7bp"]
 [ext_resource type="Texture2D" uid="uid://dysoemuojkdlh" path="res://items/square/square.png" id="2_d5e2h"]
-[ext_resource type="Texture2D" uid="uid://dtemsdwv1hhhx" path="res://items/square/square_highlight.png" id="3_swh2x"]
 [ext_resource type="Script" path="res://items/multiplayer_synchronizer.gd" id="4_rkra7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0i0wv"]
@@ -28,12 +27,6 @@ shape = SubResource("RectangleShape2D_0i0wv")
 scale = Vector2(20, 20)
 mesh = SubResource("QuadMesh_v6qtj")
 texture = ExtResource("2_d5e2h")
-
-[node name="HighlightMesh" type="MeshInstance2D" parent="."]
-visible = false
-scale = Vector2(20, 20)
-mesh = SubResource("QuadMesh_v6qtj")
-texture = ExtResource("3_swh2x")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_wd4wg")
