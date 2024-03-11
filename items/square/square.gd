@@ -66,12 +66,12 @@ var WaitingToSetLocation = false
 var ForceSetPosition
 var ForceSetRotation
 
-#Unforunately Godot does not provide a system for physics/trasnform reconciliation, direct acess to the physics state, or a state update request system.
+#Unfortunately Godot does not provide a system for physics/transform reconciliation, direct acess to the physics state, or a state update request system.
 #So the only option is this cyclic state update check. Hopefully it isn't too expensive.
 #The initial position can not be set either because of how the spawning system work for netwrok syncronizers.
 
 #This is hard baked enough into Godot's methodology that I assume it is intended behavior, and consequently this will need to be broken out into it's own script
-#to allow this behaviour to be easilly addded to objects, as it is critical for physics control.
+#to allow this behavior to be easily added to objects, as it is critical for physics control.
 
 
 func SetSpawnLocation(Position: Vector2, Rotation: float) -> void:
