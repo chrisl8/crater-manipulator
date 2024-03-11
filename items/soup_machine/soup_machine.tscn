@@ -13,9 +13,9 @@ properties/0/spawn = true
 properties/0/replication_mode = 1
 
 [node name="SoupMachine" type="RigidBody2D"]
-z_index = 2
-collision_layer = 8
-collision_mask = 11
+z_index = -3
+collision_layer = 256
+collision_mask = 9
 script = ExtResource("1_o1ao3")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
