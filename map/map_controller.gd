@@ -736,6 +736,7 @@ func draw_line_on_map(
 	drawing_canvas.lines_to_draw[str(from_position.x, "-", from_position.y, "-", to_position.x, "-", to_position.y)].color = color
 	drawing_canvas.update_draw = true
 
+
 func draw_temp_line_on_map(
 	from_position: Vector2,
 	to_position: Vector2,

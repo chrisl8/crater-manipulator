@@ -17,7 +17,7 @@ extends RigidBody2D
 
 var update_synced_position: bool = false
 var update_synced_rotation: bool = false
-var player_spawnable_items: Array = ["Ball", "Box"]
+var player_spawnable_items: Array = ["Ball", "Box", "SoupMachine"]
 var player_spawn_item_next: int = 0
 var player_is_placing: bool = false
 
@@ -141,7 +141,9 @@ func _spawn_item() -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	var id: int = rng.randi()
 	var thing_name_to_spawn: String = str(player_spawnable_items[player_spawn_item_next], "-", id)
-	$"Interaction Controller".spawn_player_controlled_thing.rpc(Vector2.ZERO,0,thing_name_to_spawn, "Placing")
+	$"Interaction Controller".spawn_player_controlled_thing.rpc(
+		Vector2.ZERO, 0, thing_name_to_spawn, "Placing"
+	)
 
 
 func _input(event: InputEvent) -> void:

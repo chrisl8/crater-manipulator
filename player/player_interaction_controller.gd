@@ -27,6 +27,7 @@ var mining_speed: float = 0.1
 var current_mining_time: float = 100
 var ball: Resource = preload("res://items/disc/disc.tscn")
 var box: Resource = preload("res://items/square/square.tscn")
+var soup_machine: Resource = preload("res://items/soup_machine/soup_machine.tscn")
 var controlled_item: RigidBody2D
 var controlled_item_type: String = "Held"
 var controlled_item_clear_of_collisions: bool = false
@@ -134,8 +135,15 @@ func _process(delta: float) -> void:
 				if not controlled_item_clear_of_collisions:
 					for cell: Vector2i in intersecting_tiles.tile_list:
 						Globals.world_map.highlight_cell_at_map_position(
-							cell, Color.RED, controlled_item.name
+							cell, Color(255.0, 0.0, 0.0, 0.50), controlled_item.name
 						)
+				else:
+					# TODO: Only do this if it is the "kind of item" that needs to do this (soup machines, not balls)
+					for cell: Vector2i in intersecting_tiles.tile_list:
+						Globals.world_map.highlight_cell_at_map_position(
+							cell, Color(0.0, 255.0, 0.0, 0.50), controlled_item.name
+						)
+
 				##print(colliding_tiles.all_tiles_are_empty)
 				#print(colliding_tiles.tile_list)
 				# if not Globals.world_map.check_tile_location_and_surroundings(mouse_position):
@@ -260,6 +268,8 @@ func spawn_player_controlled_thing(
 			controlled_item = ball.instantiate()
 		"Box":
 			controlled_item = box.instantiate()
+		"SoupMachine":
+			controlled_item = soup_machine.instantiate()
 		_:
 			printerr(
 				"Invalid thing to spawn name into player held position: ", parsed_thing_name.name
