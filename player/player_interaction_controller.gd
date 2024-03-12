@@ -107,12 +107,12 @@ func _process(delta: float) -> void:
 
 				Globals.world_map.draw_temp_line_on_map(LocationA, LocationB, Color.CYAN)
 				var max_force = 50000.0
-				var force: Vector2 = (LocationA - LocationB) * 25000.0
+				var force = (LocationA - LocationB) * 25000.0
 				var mass = controlled_item.mass
-				var acceleration = force.normalized() * force.length() / mass
+				var acceleration = force.length() / mass
 				if acceleration > 100.0:
 					force = mass * acceleration
-				if force and force.length() > max_force:
+				if force.length() > max_force:
 					force = (LocationA - LocationB).normalized() * 50000.0
 
 				controlled_item.constant_force = (force)
