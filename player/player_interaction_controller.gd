@@ -106,9 +106,16 @@ func _process(delta: float) -> void:
 				var LocationB = controlled_item.to_global(controlled_item.center_of_mass)
 
 				Globals.world_map.draw_temp_line_on_map(LocationA, LocationB, Color.CYAN)
-				var Force = (LocationA - LocationB).normalized() * 100000.0
+				var max_force = 50000.0
+				var force = (LocationA - LocationB) * 25000.0
+				var mass = controlled_item.mass
+				var acceleration = force.length()/mass
+				if(acceleration > 100.0):
+					force = mass *acceleration
+				if force.length() > max_force:
+					force = (LocationA - LocationB).normalized() * 50000.0
 
-				controlled_item.constant_force = (Force)
+				controlled_item.constant_force = (force)
 				#controlled_item.x
 				#controlled_item.apply_central_force ((controlled_item.global_position-to_local(mouse_position)).normalized()*100)
 				pass
@@ -295,6 +302,7 @@ func spawn_player_controlled_thing(
 			return
 	controlled_item_type = spawned_item_type
 	controlled_item.name = controlled_item_name
+
 	if spawned_item_type == "Held":
 		controlled_item.SetSpawnLocation(thing_position, thing_rotation)
 

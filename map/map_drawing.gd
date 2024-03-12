@@ -41,4 +41,4 @@ func _draw() -> void:
 		rectangles_to_draw.clear()
 		lines_to_draw.clear()
 		#queue_redraw()
-	temp = false
+		temp = false
