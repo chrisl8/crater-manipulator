@@ -23,6 +23,8 @@ var uuid_util: Resource = preload("res://addons/uuid/uuid.gd")
 
 var ServerCamera: PackedScene = preload("res://server_camera/server_camera.tscn")
 
+var player_focus_button: PackedScene = preload("res://server_camera/player_focus_button.tscn")
+
 
 func _process(_delta: float) -> void:
 	if not ready_to_connect:
@@ -553,3 +555,9 @@ func player_joined(id: int, data: String) -> void:
 	# Clean up initial map data sending data in MapController to avoid memory leak
 	# and possible corruption if another player joins later and gets the same multiplayer_id
 	Globals.world_map.server_side_per_player_initial_map_data.erase(id)
+
+	# Add another "Focus to Player" button to Server
+	var new_player_focus_button: Button = player_focus_button.instantiate()
+	var server_camera: Node = get_node_or_null("/root/Main/Map/ServerCamera/")
+	if server_camera:
+		server_camera.add_child(new_player_focus_button)

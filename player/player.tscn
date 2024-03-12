@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=22 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/prompts.gd" id="4_8hopg"]
@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/player_atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/player_legs_manager.gd" id="5_h6bhr"]
 [ext_resource type="Script" path="res://player/player_inventory_manager.gd" id="5_xpvfg"]
-[ext_resource type="Script" path="res://player/save_map_button.gd" id="6_a1bjq"]
 [ext_resource type="Script" path="res://player/player_leg_controller.gd" id="6_dfoja"]
 [ext_resource type="Script" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
 [ext_resource type="Script" path="res://player/antenna_physics_controller.gd" id="10_c7nhb"]
@@ -247,12 +246,39 @@ offset_top = -10.0
 offset_right = 5.0
 color = Color(0.431373, 0.431373, 0.431373, 1)
 
-[node name="Save Map" type="Button" parent="CanvasLayer/Control"]
+[node name="Tools" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Title" type="Label" parent="CanvasLayer/Tools"]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
-text = "Save Map"
-script = ExtResource("6_a1bjq")
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Tools
+"
+
+[node name="Current" type="Label" parent="CanvasLayer/Tools"]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 27.0
+offset_right = 135.0
+offset_bottom = 76.0
+text = "Left: Mine
+Right: Place Block
+"
+
+[node name="Options" type="Label" parent="CanvasLayer/Tools"]
+layout_mode = 0
+offset_top = 88.0
+offset_right = 77.0
+offset_bottom = 189.0
+text = "v - Mine
+b - Build
+f - Pick Up
+g - Drag
+"
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 z_index = -1

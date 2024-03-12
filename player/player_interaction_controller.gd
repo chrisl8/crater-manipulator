@@ -30,6 +30,7 @@ var soup_machine: Resource = preload("res://items/soup_machine/soup_machine.tscn
 var controlled_item: RigidBody2D
 var controlled_item_type: String = "Held"
 var controlled_item_clear_of_collisions: bool = false
+var left_hand_tool: String = "Mine"
 
 
 func update_mining_particle_length() -> void:
@@ -175,6 +176,11 @@ func de_spawn_placing_item() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	var previous_left_hand_tool: String = left_hand_tool
+	if event.is_action_released(&"build"):
+		left_hand_tool = "Build"
+		Globals.player_has_done.press_craft_button = true
+		owner.spawn_item()
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
 			mouse_left_down = true
@@ -182,6 +188,26 @@ func _input(event: InputEvent) -> void:
 			mouse_left_down = false
 		elif event.button_index == 2 and event.is_pressed():
 			right_mouse_clicked()
+
+		if left_hand_tool == "Build":
+			if event.button_index == 4 and event.pressed:
+				# Scroll Up
+				owner.player_spawn_item_next += 1
+				if owner.player_spawn_item_next > owner.player_spawnable_items.size() - 1:
+					owner.player_spawn_item_next = 0
+				de_spawn_placing_item.rpc()
+				owner.spawn_item()
+			elif event.button_index == 5 and event.pressed:
+				# Scroll Down
+				owner.player_spawn_item_next -= 1
+				if owner.player_spawn_item_next < 0:
+					owner.player_spawn_item_next = owner.player_spawnable_items.size() - 1
+				de_spawn_placing_item.rpc()
+				owner.spawn_item()
+	if previous_left_hand_tool != left_hand_tool:
+		# Tool changed
+		if previous_left_hand_tool == "Build":
+			de_spawn_placing_item.rpc()
 
 
 func mine_raycast() -> void:

@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://dt0wy64nq1yqr"]
+
+[node name="PlayerFocusButton" type="Button"]
+text = "Focus On ???"
