@@ -19,7 +19,6 @@ const INTERACT_RANGE: float = 200.0
 @export var mouse_position: Vector2
 
 var is_local: bool = false
-var current_tool: int = 1
 var max_hand_distance: float = 25.0
 var mouse_left_down: bool
 var mine_cast: RayCast2D
@@ -178,18 +177,11 @@ func de_spawn_placing_item() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
-			if !mouse_left_down:
-				left_mouse_clicked()
 			mouse_left_down = true
 		elif event.button_index == 1 and not event.is_pressed():
 			mouse_left_down = false
 		elif event.button_index == 2 and event.is_pressed():
 			right_mouse_clicked()
-
-
-func left_mouse_clicked() -> void:
-	if current_tool == 1:
-		pass
 
 
 func mine_raycast() -> void:
