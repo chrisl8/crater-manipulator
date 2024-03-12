@@ -107,12 +107,12 @@ func _process(delta: float) -> void:
 
 				Globals.world_map.draw_temp_line_on_map(LocationA, LocationB, Color.CYAN)
 				var max_force = 50000.0
-				var force = (LocationA - LocationB) * 25000.0
+				var force: Vector2 = (LocationA - LocationB) * 25000.0
 				var mass = controlled_item.mass
-				var acceleration = force.length()/mass
-				if(acceleration > 100.0):
-					force = mass *acceleration
-				if force.length() > max_force:
+				var acceleration = force.normalized() * force.length() / mass
+				if acceleration > 100.0:
+					force = mass * acceleration
+				if force and force.length() > max_force:
 					force = (LocationA - LocationB).normalized() * 50000.0
 
 				controlled_item.constant_force = (force)
@@ -188,6 +188,12 @@ func _input(event: InputEvent) -> void:
 		left_hand_tool = "Build"
 		Globals.player_has_done.press_craft_button = true
 		owner.spawn_item()
+	elif event.is_action_released(&"mine"):
+		left_hand_tool = "Mine"
+	elif event.is_action_released(&"pickup"):
+		left_hand_tool = "Pickup"
+	elif event.is_action_released(&"drag"):
+		left_hand_tool = "Drag"
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
 			mouse_left_down = true
