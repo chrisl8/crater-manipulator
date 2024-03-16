@@ -1,6 +1,8 @@
 extends RigidBody2D
 
 @export var spawn_position: Vector2
+@export var width_in_tiles: int = 2
+@export var height_in_tiles: int = 2
 
 
 func _ready() -> void:

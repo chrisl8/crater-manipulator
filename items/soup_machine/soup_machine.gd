@@ -1,8 +1,10 @@
 extends RigidBody2D
 
-var item_type: String = "Entity"
-
 @export var spawn_position: Vector2
+@export var width_in_tiles: int = 4
+@export var height_in_tiles: int = 4
+
+var item_type: String = "Entity"
 
 
 func _ready() -> void:

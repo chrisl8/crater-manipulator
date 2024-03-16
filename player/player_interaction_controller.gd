@@ -90,34 +90,7 @@ func _process(delta: float) -> void:
 		# Placed items are placed when you click the left mouse button.
 		if controlled_item_type == "Held":
 			if is_mining:
-				#controlled_item.set_position(to_local(mouse_position))
-				#controlled_item.set_position(controlled_item.global_position)
-				#if(randf() > 0.99):
-				#	controlled_item.set_position(to_local(mouse_position))
-
-				#if(is_local):
-
-				#controlled_item.add_constant_central_force(controlled_item.global_position-to_local(mouse_position))
-				#print(to_local(mouse_position) - controlled_item.global_position)
-				#print(controlled_item.global_position.distance_to(mouse_position))
-				#print(controlled_item.global_position,mouse_position,(mouse_position - controlled_item.global_position))
-
-				var LocationA = mouse_position
-				var LocationB = controlled_item.to_global(controlled_item.center_of_mass)
-
-				Globals.world_map.draw_temp_line_on_map(LocationA, LocationB, Color.CYAN)
-				var max_force = 50000.0
-				var force = (LocationA - LocationB) * 25000.0
-				var mass = controlled_item.mass
-				var acceleration = force.length() / mass
-				if acceleration > 100.0:
-					force = mass * acceleration
-				if force.length() > max_force:
-					force = (LocationA - LocationB).normalized() * 50000.0
-
-				controlled_item.constant_force = (force)
-				#controlled_item.x
-				#controlled_item.apply_central_force ((controlled_item.global_position-to_local(mouse_position)).normalized()*100)
+				controlled_item.set_position(to_local(mouse_position))
 				pass
 
 			elif is_multiplayer_authority():
@@ -135,7 +108,13 @@ func _process(delta: float) -> void:
 			else:
 				controlled_item.set_position(to_local(mouse_position))
 				var intersecting_tiles: Globals.MapTileSet = (
-					Globals.world_map.check_tile_location_and_surroundings(mouse_position)
+					Globals
+					. world_map
+					. check_tile_location_and_surroundings(
+						mouse_position,
+						controlled_item.height_in_tiles,
+						controlled_item.width_in_tiles
+					)
 				)
 				controlled_item_clear_of_collisions = intersecting_tiles.all_tiles_are_empty
 				Globals.world_map.erase_drawing_canvas(controlled_item.name)

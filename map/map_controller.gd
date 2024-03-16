@@ -700,25 +700,37 @@ func _get_drawing_canvas(canvas_entry_name: String = "default") -> Node2D:
 
 
 func highlight_cell_at_global_position(
-	at_position: Vector2, color: Color = Color.GREEN, canvas_entry_name: String = "default"
+	at_position: Vector2,
+	color: Color = Color.GREEN,
+	canvas_entry_name: String = "default",
+	offsetX: int = 8,
+	offsetY: int = 8,
+	sizeX: int = 16,
+	sizeY: int = 16
 ) -> void:
 	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
 	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)] = {
 	}
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)].color = color
 	drawing_canvas.update_draw = true
 
 
 func highlight_cell_at_map_position(
-	at_cell_position: Vector2i, color: Color = Color.GREEN, canvas_entry_name: String = "default"
+	at_cell_position: Vector2i,
+	color: Color = Color.GREEN,
+	canvas_entry_name: String = "default",
+	offsetX: int = 8,
+	offsetY: int = 8,
+	sizeX: int = 16,
+	sizeY: int = 16
 ) -> void:
 	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
 	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)] = {
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)] = {
 	}
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - 8, cell_global_position.y - 8, 16, 16)].color = color
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)].color = color
 	drawing_canvas.update_draw = true
 
 
@@ -887,32 +899,40 @@ func save_map() -> void:
 	)
 
 
-func check_tile_location_and_surroundings(at_position: Vector2i) -> Globals.MapTileSet:
+func check_tile_location_and_surroundings(
+	at_position: Vector2i, height_in_tiles: int = 1, width_in_tiles: int = 1
+) -> Globals.MapTileSet:
+	var half_tile_offset_position: Vector2i = Vector2i(at_position.x + 8, at_position.y + 8)
 	var cell_position_at_position: Vector2i = (
-		Globals.world_map.get_cell_position_at_global_position(at_position)
+		Globals.world_map.get_cell_position_at_global_position(half_tile_offset_position)
 	)
 
 	var return_data: Globals.MapTileSet = Globals.MapTileSet.new()
 	return_data.all_tiles_are_empty = true
 
 	# Find out what tiles exist at the requested position
-	for x_position: int in range(0, 1):
-		for y_position: int in range(0, 1):
+	for x_position: int in range(0, width_in_tiles):
+		for y_position: int in range(0, height_in_tiles):
 			return_data.tile_list.append(
 				Vector2i(
-					cell_position_at_position.x + x_position,
-					cell_position_at_position.y + y_position
+					cell_position_at_position.x - (width_in_tiles / 2) + x_position,
+					cell_position_at_position.y - (height_in_tiles / 2) + y_position
 				)
 			)
 
+	Globals.world_map.erase_drawing_canvas("checking_tile_position")
 	for cell_position: Vector2i in return_data.tile_list:
 		return_data.tile_content[cell_position] = (
 			Globals.world_map.get_cell_id_at_map_tile_position(cell_position)
 		)
 		if return_data.tile_content[cell_position] != Vector2i(-1, -1):
 			return_data.all_tiles_are_empty = false
-		# 	Globals.world_map.highlight_cell_at_map_position(cell_position, Color.PINK)  # For visualizing to debug
-		# else:
-		# 	Globals.world_map.highlight_cell_at_map_position(cell_position, Color.LIME_GREEN)  # For visualizing to debug
+			Globals.world_map.highlight_cell_at_map_position(
+				cell_position, Color(1.0, 0.0, 0.0, 0.1), "checking_tile_position"
+			)  # For visualizing to debug
+		else:
+			Globals.world_map.highlight_cell_at_map_position(
+				cell_position, Color(0.0, 1.0, 0.0, 0.1), "checking_tile_position"
+			)  # For visualizing to debug
 
 	return return_data

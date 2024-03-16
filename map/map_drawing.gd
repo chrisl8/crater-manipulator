@@ -9,6 +9,7 @@ var update_draw: bool = false
 
 var temp: bool = false
 
+
 func _process(_delta: float) -> void:
 	if (
 		update_draw
@@ -37,7 +38,7 @@ func _draw() -> void:
 			if lines_to_draw[key].has("color"):
 				color = lines_to_draw[key].color
 			draw_line(lines_to_draw[key].from, lines_to_draw[key].to, color, line_width)
-	if(temp):
+	if temp:
 		rectangles_to_draw.clear()
 		lines_to_draw.clear()
 		#queue_redraw()
