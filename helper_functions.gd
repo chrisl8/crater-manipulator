@@ -10,12 +10,14 @@ func log_print(text: String, color: String = "white") -> void:
 		var unique_id: int = -1
 		if multiplayer.has_multiplayer_peer():
 			unique_id = multiplayer.get_unique_id()
+		var local_debug_instance_number_text: String = ""
+		if Globals.local_debug_instance_number > -1:
+			local_debug_instance_number_text = str(Globals.local_debug_instance_number, " ")
 		print_rich(
 			"[color=",
 			color,
 			"]",
-			Globals.local_debug_instance_number,
-			" ",
+			local_debug_instance_number_text,
 			unique_id,
 			" ",
 			text,
