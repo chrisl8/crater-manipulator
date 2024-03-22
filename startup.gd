@@ -18,20 +18,6 @@ var _instance_socket: TCPServer
 
 
 func _init() -> void:
-	if OS.is_debug_build():
-		# Check if this is the first instance of a debug run, so only one attempts to be the server
-		# It also provides us with a unique "instance number" for each debug instance of the game run by the editor
-		# https://gist.github.com/CrankyBunny/71316e7af809d7d4cf5ec6e2369a30b9
-		_instance_socket = TCPServer.new()
-		for n: int in range(0, 4):  # Godot Editor only creates up to 4 instances maximum.
-			if _instance_socket.listen(5000 + n) == OK:
-				Globals.local_debug_instance_number = n
-				break
-		# if Globals.local_debug_instance_number < 0:
-		# 	print("Unable to determine instance number. Seems like all TCP ports are in use")
-		# else:
-		# 	print("We are instance number ", Globals.local_debug_instance_number)
-
 	if OS.get_cmdline_user_args().size() > 0:
 		for arg: String in OS.get_cmdline_user_args():
 			var arg_array: Array = arg.split("=")
@@ -53,6 +39,20 @@ func _init() -> void:
 					server_config_file_name
 				)
 				Globals.server_config = parse_server_config_file_data(server_config_file_data)
+
+	if !Globals.is_server and !Globals.force_client and OS.is_debug_build():
+		# Check if this is the first instance of a debug run, so only one attempts to be the server
+		# It also provides us with a unique "instance number" for each debug instance of the game run by the editor
+		# https://gist.github.com/CrankyBunny/71316e7af809d7d4cf5ec6e2369a30b9
+		_instance_socket = TCPServer.new()
+		for n: int in range(0, 4):  # Godot Editor only creates up to 4 instances maximum.
+			if _instance_socket.listen(5000 + n) == OK:
+				Globals.local_debug_instance_number = n
+				break
+		# if Globals.local_debug_instance_number < 0:
+		# 	print("Unable to determine instance number. Seems like all TCP ports are in use")
+		# else:
+		# 	print("We are instance number ", Globals.local_debug_instance_number)
 
 
 func _notification(what: int) -> void:
@@ -114,7 +114,8 @@ func _ready() -> void:
 	Network.close_pre_game_overlay.connect(hide_pre_game_overlay)
 	Network.update_pre_game_overlay.connect(update_pre_game_overlay)
 	if (
-		!Globals.force_client
+		!Globals.is_server
+		and !Globals.force_client
 		and OS.is_debug_build()
 		and run_server_in_debug
 		and Globals.local_debug_instance_number < 1
