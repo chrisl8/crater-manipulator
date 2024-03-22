@@ -900,7 +900,10 @@ func save_map() -> void:
 
 
 func check_tile_location_and_surroundings(
-	at_position: Vector2i, height_in_tiles: int = 1, width_in_tiles: int = 1
+	at_position: Vector2i,
+	height_in_tiles: int = 1,
+	width_in_tiles: int = 1,
+	highlight_name: String = ""
 ) -> Globals.MapTileSet:
 	var half_tile_offset_position: Vector2i = Vector2i(at_position.x + 8, at_position.y + 8)
 	var cell_position_at_position: Vector2i = (
@@ -920,19 +923,19 @@ func check_tile_location_and_surroundings(
 				)
 			)
 
-	Globals.world_map.erase_drawing_canvas("checking_tile_position")
+	if highlight_name != "":
+		Globals.world_map.erase_drawing_canvas(highlight_name)
 	for cell_position: Vector2i in return_data.tile_list:
 		return_data.tile_content[cell_position] = (
 			Globals.world_map.get_cell_id_at_map_tile_position(cell_position)
 		)
+		var highlight_color: Color = Color(0.0, 1.0, 0.0, 0.1)
 		if return_data.tile_content[cell_position] != Vector2i(-1, -1):
 			return_data.all_tiles_are_empty = false
+			highlight_color = Color(1.0, 0.0, 0.0, 0.1)
+		if highlight_name != "":
 			Globals.world_map.highlight_cell_at_map_position(
-				cell_position, Color(1.0, 0.0, 0.0, 0.1), "checking_tile_position"
-			)  # For visualizing to debug
-		else:
-			Globals.world_map.highlight_cell_at_map_position(
-				cell_position, Color(0.0, 1.0, 0.0, 0.1), "checking_tile_position"
-			)  # For visualizing to debug
+				cell_position, highlight_color, highlight_name
+			)
 
 	return return_data

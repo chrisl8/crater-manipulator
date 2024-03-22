@@ -31,6 +31,7 @@ var controlled_item: RigidBody2D
 var controlled_item_type: String = "Held"
 var controlled_item_clear_of_collisions: bool = false
 var left_hand_tool: String = "Mine"
+var right_hand_tool: String = "Place"
 
 
 func update_mining_particle_length() -> void:
@@ -100,6 +101,7 @@ func _process(delta: float) -> void:
 				_drop_held_thing.rpc()
 		elif controlled_item_type == "Placing":
 			if is_mining and is_multiplayer_authority() and controlled_item_clear_of_collisions:
+				Globals.player_has_done.built_an_item = true
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
@@ -113,28 +115,11 @@ func _process(delta: float) -> void:
 					. check_tile_location_and_surroundings(
 						mouse_position,
 						controlled_item.height_in_tiles,
-						controlled_item.width_in_tiles
+						controlled_item.width_in_tiles,
+						controlled_item.name
 					)
 				)
 				controlled_item_clear_of_collisions = intersecting_tiles.all_tiles_are_empty
-				Globals.world_map.erase_drawing_canvas(controlled_item.name)
-				if not controlled_item_clear_of_collisions:
-					for cell: Vector2i in intersecting_tiles.tile_list:
-						Globals.world_map.highlight_cell_at_map_position(
-							cell, Color(255.0, 0.0, 0.0, 0.50), controlled_item.name
-						)
-				else:
-					# TODO: Only do this if it is the "kind of item" that needs to do this (soup machines, not balls)
-					for cell: Vector2i in intersecting_tiles.tile_list:
-						Globals.world_map.highlight_cell_at_map_position(
-							cell, Color(0.0, 255.0, 0.0, 0.50), controlled_item.name
-						)
-
-				##print(colliding_tiles.all_tiles_are_empty)
-				#print(colliding_tiles.tile_list)
-				# if not Globals.world_map.check_tile_location_and_surroundings(mouse_position):
-				# 	#Globals.world_map.highlight_cell_at_global_position(mouse_position, Color.RED)
-				# 	Helpers.log_print("Nope")
 
 
 #Re-add when arms sometimes need to target other locations
@@ -165,13 +150,19 @@ func _input(event: InputEvent) -> void:
 	var previous_left_hand_tool: String = left_hand_tool
 	if event.is_action_released(&"build"):
 		left_hand_tool = "Build"
-		Globals.player_has_done.press_craft_button = true
+		owner.get_node("CanvasLayer/Tools/Current").text = "Left: Build\nRight: Place Block"
+		Globals.player_has_done.press_build_button = true
 		owner.spawn_item()
 	elif event.is_action_released(&"mine"):
+		owner.get_node("CanvasLayer/Tools/Current").text = "Left: Mine\nRight: Place Block"
+		if left_hand_tool != "Mine":
+			Globals.player_has_done.returned_to_mining_mode = true
 		left_hand_tool = "Mine"
 	elif event.is_action_released(&"pickup"):
+		owner.get_node("CanvasLayer/Tools/Current").text = "Left: Pick Up\nRight: Place Block"
 		left_hand_tool = "Pickup"
 	elif event.is_action_released(&"drag"):
+		owner.get_node("CanvasLayer/Tools/Current").text = "Left: Drag\nRight: Place Block"
 		left_hand_tool = "Drag"
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
@@ -182,6 +173,7 @@ func _input(event: InputEvent) -> void:
 			right_mouse_clicked()
 
 		if left_hand_tool == "Build":
+			Globals.player_has_done.scroll_crafting_items = true
 			if event.button_index == 4 and event.pressed:
 				# Scroll Up
 				owner.player_spawn_item_next += 1
