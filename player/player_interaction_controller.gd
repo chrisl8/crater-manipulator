@@ -18,7 +18,7 @@ const INTERACT_RANGE: float = 200.0
 @export var antenna: Node2D
 @export var mouse_position: Vector2
 @export var left_hand_tool: Globals.Tools = Globals.Tools.MINE
-@export var right_hand_tool: Globals.Tools = Globals.Tools.BUILD
+@export var right_hand_tool: Globals.Tools = Globals.Tools.PLACE
 
 var is_local: bool = false
 var max_hand_distance: float = 25.0
@@ -95,8 +95,13 @@ func _process(delta: float) -> void:
 	)
 
 	if controlled_item:
-		# Held items drop when you release the mouse button.
-		# Placed items are placed when you click the left mouse button.
+		# Picked Up items drop when you release the mouse button because they "exist" already.
+		# Build items are placed when you click the left mouse button because they did not previously "exist".
+
+		# Note that mining and picking up things happens in the tool_raycast() function that was called earlier._add_constant_central_force
+
+		# Note that by using the mouse position, with no restrictions, for placing items, your "place distance" is limited only by your screen size and resolution!
+
 		if controlled_item_type == "Held":
 			if left_hand_tool_is_active:
 				controlled_item.set_position(to_local(mouse_position))
@@ -196,6 +201,7 @@ func _input(event: InputEvent) -> void:
 		elif event.button_index == 2 and event.is_pressed():
 			right_mouse_clicked()
 
+		# This is where using the scroll wheel in build mode cycles through items
 		if left_hand_tool == Globals.Tools.BUILD:
 			Globals.player_has_done.scroll_crafting_items = true
 			if event.button_index == 4 and event.pressed:
@@ -252,7 +258,7 @@ func tool_raycast() -> void:
 		var query: PhysicsRayQueryParameters2D = (
 			PhysicsRayQueryParameters2D.create(arm_position, target_position)
 		)
-		if left_hand_tool == Globals.Tools.MINE:
+		if left_hand_tool == Globals.Tools.MINE:  # Only show the "laser" if mining
 			# LASER DRILL!!! ==>-----
 			Globals.world_map.draw_temp_line_on_map(
 				arm_position, target_position, Color.RED
@@ -267,6 +273,12 @@ func tool_raycast() -> void:
 			# experience good and make this logic easy to read.
 			# So just document it well and reorganize it later if it becomes more clear how to better organize it
 			# without also duplicating a lot of code.
+
+			# Note that the "placing" and/or "dropping" of build/held items is done in the _process() function AFTER this
+			# function is called.
+			# This can be hard to keep in mind, but the reason is that mining and picking up depend on the raycast position,
+			# while dropping and placing only depend on the mouse position.
+
 			if left_hand_tool == Globals.Tools.MINE:
 				if result["collider"] is TileMap and not controlled_item:  # Do not mine while holding items, no matter what
 					Globals.world_map.mine_cell_at_position(
@@ -288,6 +300,14 @@ func tool_raycast() -> void:
 
 
 func right_mouse_clicked() -> void:
+	# This function is terribly simple compared to the way the left mouse button works,
+	# simply due to us not having allowed swapping tools in the right hand yet,
+	# but I do plan to change that in the future.
+
+	# Note that because we just use the mouse position:
+	# 1. The distance at which you can place is only restricted by the size and resolution of your screen.
+	# 2. You can place blocks in areas that you cannot access (no ray trace check)
+	# This will probably be addressed when we update the right mouse button to allow tool swapping and make it more like left click.
 	Globals.world_map.place_cell_at_position(get_global_mouse_position())
 
 

@@ -1,6 +1,8 @@
 extends Node
 
-enum Tools { MINE, BUILD, PICKUP, DRAG }
+## Tool types
+## Note that you BUILD items and structures, but you PLACE blocks
+enum Tools { MINE, BUILD, PICKUP, DRAG, PLACE }
 enum ItemTypes { FREE, STRUCTURE }
 
 var server_config: Dictionary = {}
