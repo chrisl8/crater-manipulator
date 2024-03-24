@@ -362,7 +362,7 @@ func spawn_player_controlled_thing(
 	controlled_item.name = controlled_item_name
 
 	if spawned_item_type == "Held":
-		controlled_item.SetSpawnLocation(thing_position, thing_rotation)
+		controlled_item.set_spawn_location(thing_position, thing_rotation)
 
 	controlled_item.global_position = thing_position
 	controlled_item.global_rotation = thing_rotation

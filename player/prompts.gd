@@ -53,10 +53,6 @@ func _process(delta: float) -> void:
 				!= Globals.Tools.MINE
 			)
 		):
-			# TODO: Something is broken, it mines, but the tool is still Build.
-			# TODO: Should it "auto return" to mine or just stay in build with a new item?
-			# TODO: Highlight on screen which tool is in use.
-			print(owner.get_node("Interaction Controller").left_hand_tool)
 			text = "Press 'v' to return to mining mode."
 		else:
 			text = ""
