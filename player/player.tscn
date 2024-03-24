@@ -37,7 +37,7 @@ properties/4/replication_mode = 1
 properties/5/path = NodePath("Interaction Controller:mouse_position")
 properties/5/spawn = true
 properties/5/replication_mode = 2
-properties/6/path = NodePath("Interaction Controller:is_mining")
+properties/6/path = NodePath("Interaction Controller:left_hand_tool_is_active")
 properties/6/spawn = true
 properties/6/replication_mode = 2
 properties/7/path = NodePath("Interaction Controller:mining_distance")
@@ -46,6 +46,9 @@ properties/7/replication_mode = 2
 properties/8/path = NodePath("Interaction Controller:flipped")
 properties/8/spawn = true
 properties/8/replication_mode = 2
+properties/9/path = NodePath("Interaction Controller:left_hand_tool")
+properties/9/spawn = true
+properties/9/replication_mode = 2
 
 [sub_resource type="Curve" id="Curve_tmffk"]
 _data = [Vector2(0.455729, 0.856713), 0.0, 0.0, 0, 0, Vector2(0.669271, 0.0490983), 0.0, 0.0, 0, 0]
@@ -90,7 +93,7 @@ turbulence_enabled = true
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6r2ad"]
 size = Vector2(75, 86)
 
-[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera", "interaction_controller", "inventory_manager", "player_canvas") groups=["players"]]
+[node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera") groups=["players"]]
 collision_layer = 2
 collision_mask = 11
 mass = 200.0
@@ -99,16 +102,16 @@ can_sleep = false
 lock_rotation = true
 freeze_mode = 1
 continuous_cd = 1
-max_contacts_reported = 5
 contact_monitor = true
+max_contacts_reported = 5
 linear_damp = 0.1
 angular_damp = 0.5
 script = ExtResource("1_ntq5g")
+player = null
 player_spawn_point = Vector2(0, 0)
+synced_position = null
+synced_rotation = null
 camera = NodePath("Camera2D")
-interaction_controller = NodePath("Interaction Controller")
-inventory_manager = NodePath("Inventory Manager")
-player_canvas = NodePath("CanvasLayer")
 metadata/_edit_horizontal_guides_ = [-66.0, -74.0]
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
@@ -131,12 +134,12 @@ antenna = NodePath("../Flip Point/Antenna")
 
 [node name="Inventory Manager" type="Node2D" parent="." node_paths=PackedStringArray("stone_bar", "red_ore_bar")]
 script = ExtResource("5_xpvfg")
-stone_bar = NodePath("../CanvasLayer/Control/Stone")
-red_ore_bar = NodePath("../CanvasLayer/Control/Red ore")
+stone_bar = NodePath("../Player Canvas/Control/Stone")
+red_ore_bar = NodePath("../Player Canvas/Control/Red ore")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="Player Canvas" type="CanvasLayer" parent="."]
 
-[node name="Control" type="Control" parent="CanvasLayer"]
+[node name="Control" type="Control" parent="Player Canvas"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -146,7 +149,7 @@ grow_vertical = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 
-[node name="Prompt" type="Label" parent="CanvasLayer/Control"]
+[node name="Prompt" type="Label" parent="Player Canvas/Control"]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -155,10 +158,9 @@ offset_left = -20.0
 offset_right = 20.0
 offset_bottom = 23.0
 grow_horizontal = 2
-text = "Prompts"
 script = ExtResource("4_8hopg")
 
-[node name="Label" type="Label" parent="CanvasLayer/Control"]
+[node name="Label" type="Label" parent="Player Canvas/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -170,7 +172,7 @@ grow_horizontal = 0
 scale = Vector2(2, 2)
 text = "Resources"
 
-[node name="Red Ore Background" type="Control" parent="CanvasLayer/Control"]
+[node name="Red Ore Background" type="Control" parent="Player Canvas/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -182,14 +184,14 @@ offset_bottom = 214.0
 grow_horizontal = 0
 scale = Vector2(2, 10)
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Red Ore Background"]
+[node name="ColorRect" type="ColorRect" parent="Player Canvas/Control/Red Ore Background"]
 layout_mode = 0
 offset_left = -5.0
 offset_top = -10.0
 offset_right = 5.0
 color = Color(0.752941, 0.752941, 0.752941, 1)
 
-[node name="Red ore" type="Control" parent="CanvasLayer/Control"]
+[node name="Red ore" type="Control" parent="Player Canvas/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -201,14 +203,14 @@ offset_bottom = 214.0
 grow_horizontal = 0
 scale = Vector2(2, 10)
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Red ore"]
+[node name="ColorRect" type="ColorRect" parent="Player Canvas/Control/Red ore"]
 layout_mode = 0
 offset_left = -5.0
 offset_top = -10.0
 offset_right = 5.0
 color = Color(0.478431, 0.196078, 0.196078, 1)
 
-[node name="Stone background" type="Control" parent="CanvasLayer/Control"]
+[node name="Stone background" type="Control" parent="Player Canvas/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -220,14 +222,14 @@ offset_bottom = 214.0
 grow_horizontal = 0
 scale = Vector2(2, 10)
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Stone background"]
+[node name="ColorRect" type="ColorRect" parent="Player Canvas/Control/Stone background"]
 layout_mode = 0
 offset_left = -5.0
 offset_top = -10.0
 offset_right = 5.0
 color = Color(0.752941, 0.752941, 0.752941, 1)
 
-[node name="Stone" type="Control" parent="CanvasLayer/Control"]
+[node name="Stone" type="Control" parent="Player Canvas/Control"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -239,37 +241,34 @@ offset_bottom = 214.0
 grow_horizontal = 0
 scale = Vector2(2, 10)
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/Stone"]
+[node name="ColorRect" type="ColorRect" parent="Player Canvas/Control/Stone"]
 layout_mode = 0
 offset_left = -5.0
 offset_top = -10.0
 offset_right = 5.0
 color = Color(0.431373, 0.431373, 0.431373, 1)
 
-[node name="Tools" type="Control" parent="CanvasLayer"]
+[node name="Tools" type="Control" parent="Player Canvas"]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Title" type="Label" parent="CanvasLayer/Tools"]
+[node name="Title" type="Label" parent="Player Canvas/Tools"]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
 text = "Tools
 "
 
-[node name="Current" type="Label" parent="CanvasLayer/Tools"]
+[node name="Current" type="Label" parent="Player Canvas/Tools"]
 layout_mode = 0
 offset_left = -1.0
 offset_top = 27.0
 offset_right = 135.0
 offset_bottom = 76.0
-text = "Left: Mine
-Right: Place Block
-"
 
-[node name="Options" type="Label" parent="CanvasLayer/Tools"]
+[node name="Options" type="Label" parent="Player Canvas/Tools"]
 layout_mode = 0
 offset_top = 88.0
 offset_right = 77.0

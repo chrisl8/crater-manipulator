@@ -1,5 +1,7 @@
 extends Node
 
+enum Tools { MINE, BUILD, PICKUP, DRAG }
+
 var server_config: Dictionary = {}
 var server_player_save_data_file_name: String = "user://server_player_data.dat"
 var player_save_data: Dictionary = {}
