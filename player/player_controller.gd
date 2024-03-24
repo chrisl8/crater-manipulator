@@ -33,12 +33,6 @@ func _ready() -> void:
 		space, PhysicsServer2D.SPACE_PARAM_CONTACT_MAX_ALLOWED_PENETRATION, 0.0
 	)
 
-	Helpers.log_print(
-		str(
-			"player_controller ready_: player == multiplayer.get_unique_id(): ",
-			player == multiplayer.get_unique_id()
-		)
-	)
 	$"Interaction Controller".initialize(player == multiplayer.get_unique_id())
 	$"Inventory Manager".initialize(player == multiplayer.get_unique_id())
 	$"Player Canvas/Control/Prompt".initialize(

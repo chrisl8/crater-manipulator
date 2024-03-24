@@ -1,6 +1,7 @@
 extends Node
 
 enum Tools { MINE, BUILD, PICKUP, DRAG }
+enum ItemTypes { FREE, STRUCTURE }
 
 var server_config: Dictionary = {}
 var server_player_save_data_file_name: String = "user://server_player_data.dat"
