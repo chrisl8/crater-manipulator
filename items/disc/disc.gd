@@ -15,17 +15,11 @@ func _physics_process(_delta: float) -> void:
 	if (
 		(
 			abs(position.x)
-			> (
-				Globals.world_map.max_radius_in_tiles
-				* Globals.world_map.single_tile_width
-			)
+			> (Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width)
 		)
 		or (
 			abs(position.y)
-			> (
-				Globals.world_map.max_radius_in_tiles
-				* Globals.world_map.single_tile_width
-			)
+			> (Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width)
 		)
 	):
 		queue_free()
@@ -54,13 +48,7 @@ func grab() -> void:
 	queue_free()
 	# Once that is done, tell the player node that grabbed me to spawn a "held" version
 	var player: Node = get_node_or_null(
-		str(
-			"/root/Main/Players/",
-			multiplayer.get_remote_sender_id(),
-			"/Interaction Controller"
-		)
+		str("/root/Main/Players/", multiplayer.get_remote_sender_id(), "/Interaction Controller")
 	)
 	if player and player.has_method("spawn_player_controlled_thing"):
-		player.spawn_player_controlled_thing.rpc(
-			global_position, global_rotation, name
-		)
+		player.spawn_player_controlled_thing.rpc(global_position, global_rotation, name)

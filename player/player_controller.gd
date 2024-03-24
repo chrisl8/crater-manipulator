@@ -35,9 +35,7 @@ func _ready() -> void:
 
 	$"Interaction Controller".initialize(player == multiplayer.get_unique_id())
 	$"Inventory Manager".initialize(player == multiplayer.get_unique_id())
-	$"Player Canvas/Control/Prompt".initialize(
-		player == multiplayer.get_unique_id()
-	)
+	$"Player Canvas/Control/Prompt".initialize(player == multiplayer.get_unique_id())
 
 	set_process(player == multiplayer.get_unique_id())
 	set_physics_process(player == multiplayer.get_unique_id())
@@ -66,17 +64,11 @@ func _physics_process(delta: float) -> void:
 	if (
 		(
 			abs(position.x)
-			> (
-				Globals.world_map.max_radius_in_tiles
-				* Globals.world_map.single_tile_width
-			)
+			> (Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width)
 		)
 		or (
 			abs(position.y)
-			> (
-				Globals.world_map.max_radius_in_tiles
-				* Globals.world_map.single_tile_width
-			)
+			> (Globals.world_map.max_radius_in_tiles * Globals.world_map.single_tile_width)
 		)
 	):
 		Network.reset_connection()
@@ -93,14 +85,10 @@ func _physics_process(delta: float) -> void:
 		var damp: float = 5000.0
 		var dampening: float = velocity.x
 		if velocity.x < 0.0:
-			dampening = (
-				velocity.x - (damp * delta) * (velocity.x / abs(velocity.x))
-			)
+			dampening = (velocity.x - (damp * delta) * (velocity.x / abs(velocity.x)))
 			dampening = clamp(dampening, velocity.x, 0.0)
 		elif velocity.x > 0:
-			dampening = (
-				velocity.x - (damp * delta) * (velocity.x / abs(velocity.x))
-			)
+			dampening = (velocity.x - (damp * delta) * (velocity.x / abs(velocity.x)))
 			dampening = clamp(dampening, 0.0, velocity.x)
 
 		velocity = Vector2(dampening, velocity.y)
@@ -134,9 +122,7 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		if update_synced_position and update_synced_rotation:
 			state.transform = Transform2D(synced_rotation, synced_position)
 		elif update_synced_position:
-			state.transform = Transform2D(
-				state.transform.get_rotation(), synced_position
-			)
+			state.transform = Transform2D(state.transform.get_rotation(), synced_position)
 		elif update_synced_rotation:
 			state.transform = Transform2D(synced_rotation, state.origin)
 		update_synced_position = false
@@ -152,9 +138,7 @@ func add_inventory_data(data: Dictionary) -> void:
 func spawn_item() -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	var id: int = rng.randi()
-	var thing_name_to_spawn: String = str(
-		player_spawnable_items[player_spawn_item_next], "-", id
-	)
+	var thing_name_to_spawn: String = str(player_spawnable_items[player_spawn_item_next], "-", id)
 	$"Interaction Controller".spawn_player_controlled_thing.rpc(
 		Vector2.ZERO, 0, thing_name_to_spawn, "Placing"
 	)
