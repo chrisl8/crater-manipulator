@@ -32,6 +32,7 @@ class MapTileSet:
 	var all_tiles_are_empty: bool = false
 	var tile_list: Array[Vector2i] = []
 	var tile_content: Dictionary = {}
+	var cell_aligned_center_position: Vector2
 
 
 func get_resource_name(id: int) -> String:

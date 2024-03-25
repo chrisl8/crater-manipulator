@@ -89,10 +89,7 @@ func _process(delta: float) -> void:
 	mining_particles.emitting = (left_hand_tool_is_active and left_hand_tool == Globals.Tools.MINE)
 
 	if controlled_item:
-		# Picked Up items drop when you release the mouse button because they "exist" already.
-		# Build items are placed when you click the left mouse button because they did not previously "exist".
-
-		# Note that mining and picking up things happens in the tool_raycast() function that was called earlier._add_constant_central_force
+		# Note that mining and picking up things happens in the tool_raycast() function that was called earlier.
 
 		# Note that by using the mouse position, with no restrictions, for placing items, your "place distance" is limited only by your screen size and resolution!
 
@@ -110,7 +107,6 @@ func _process(delta: float) -> void:
 				_drop_held_thing.rpc()
 				Globals.world_map.delete_drawing_canvas(held_item_name)
 			else:
-				controlled_item.set_position(to_local(mouse_position))
 				var intersecting_tiles: Globals.MapTileSet = (
 					Globals
 					. world_map
@@ -121,6 +117,12 @@ func _process(delta: float) -> void:
 						controlled_item.name
 					)
 				)
+				if controlled_item.snaps:
+					controlled_item.set_position(
+						to_local(intersecting_tiles.cell_aligned_center_position)
+					)
+				else:
+					controlled_item.set_position(to_local(mouse_position))
 				controlled_item_clear_of_collisions = (intersecting_tiles.all_tiles_are_empty)
 
 
@@ -238,6 +240,8 @@ func tool_raycast() -> void:
 			# function is called.
 			# This can be hard to keep in mind, but the reason is that mining and picking up depend on the raycast position,
 			# while dropping and placing only depend on the mouse position.
+			# Although, it could make sense to change that and raycast to the position where a thing could be placed, which would
+			# make it harder to place objects in terrain, and on the other side of walls.
 
 			if left_hand_tool == Globals.Tools.MINE:
 				if result["collider"] is TileMap and not controlled_item:  # Do not mine while holding items, no matter what

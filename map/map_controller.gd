@@ -905,7 +905,9 @@ func check_tile_location_and_surroundings(
 	width_in_tiles: int = 1,
 	highlight_name: String = ""
 ) -> Globals.MapTileSet:
-	var half_tile_offset_position: Vector2i = Vector2i(at_position.x + 8, at_position.y + 8)
+	var half_tile_offset_position: Vector2i = Vector2i(
+		at_position.x + (single_tile_width / 2), at_position.y + (single_tile_width / 2)
+	)
 	var cell_position_at_position: Vector2i = (
 		Globals.world_map.get_cell_position_at_global_position(half_tile_offset_position)
 	)
@@ -925,7 +927,20 @@ func check_tile_location_and_surroundings(
 
 	if highlight_name != "":
 		Globals.world_map.erase_drawing_canvas(highlight_name)
+	var cell_aligned_center_position: Vector2
 	for cell_position: Vector2i in return_data.tile_list:
+		if cell_aligned_center_position.is_zero_approx():
+			cell_aligned_center_position = get_global_position_at_map_local_position(cell_position)
+			cell_aligned_center_position = Vector2(
+				(
+					(cell_aligned_center_position.x - single_tile_width / 2)
+					+ width_in_tiles / 2 * single_tile_width
+				),
+				(
+					(cell_aligned_center_position.y - single_tile_width / 2)
+					+ height_in_tiles / 2 * single_tile_width
+				)
+			)
 		return_data.tile_content[cell_position] = (
 			Globals.world_map.get_cell_id_at_map_tile_position(cell_position)
 		)
@@ -938,4 +953,5 @@ func check_tile_location_and_surroundings(
 				cell_position, highlight_color, highlight_name
 			)
 
+	return_data.cell_aligned_center_position = cell_aligned_center_position
 	return return_data
