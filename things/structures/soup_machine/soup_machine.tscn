@@ -1,18 +1,17 @@
-[gd_scene load_steps=6 format=3 uid="uid://cn847t85ugg0c"]
+[gd_scene load_steps=4 format=3 uid="uid://cn847t85ugg0c"]
 
-[ext_resource type="Texture2D" uid="uid://cifgkne11xhh6" path="res://items/soup_machine/soup_machine.png" id="1_c1lxn"]
-[ext_resource type="Script" path="res://items/soup_machine/soup_machine.gd" id="1_o1ao3"]
-[ext_resource type="Script" path="res://items/multiplayer_synchronizer.gd" id="3_duwhi"]
+[ext_resource type="Texture2D" uid="uid://cifgkne11xhh6" path="res://things/structures/soup_machine/soup_machine.png" id="1_c1lxn"]
+[ext_resource type="Script" path="res://things/structures/soup_machine/soup_machine.gd" id="1_o1ao3"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_674wf"]
 size = Vector2(32, 32)
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_1rkxc"]
-properties/0/path = NodePath("MultiplayerSynchronizer:sync_bstate_array")
+properties/0/path = NodePath(".:position")
 properties/0/spawn = true
 properties/0/replication_mode = 1
 
-[node name="SoupMachine" type="RigidBody2D"]
+[node name="SoupMachine" type="StaticBody2D"]
 z_index = -3
 collision_layer = 256
 collision_mask = 9
@@ -30,6 +29,3 @@ texture = ExtResource("1_c1lxn")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_1rkxc")
-script = ExtResource("3_duwhi")
-
-[connection signal="synchronized" from="MultiplayerSynchronizer" to="MultiplayerSynchronizer" method="_on_synchronized"]

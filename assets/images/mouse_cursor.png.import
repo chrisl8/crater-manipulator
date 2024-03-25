@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dysoemuojkdlh"
-path="res://.godot/imported/square.png-e1373f565b2cc3c52596e3d03a50e371.ctex"
+uid="uid://crq02yhbdcyw7"
+path="res://.godot/imported/mouse_cursor.png-8c2a547bc2cd25a1fd4614368da787ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://items/square/square.png"
-dest_files=["res://.godot/imported/square.png-e1373f565b2cc3c52596e3d03a50e371.ctex"]
+source_file="res://assets/images/mouse_cursor.png"
+dest_files=["res://.godot/imported/mouse_cursor.png-8c2a547bc2cd25a1fd4614368da787ac.ctex"]
 
 [params]
 

@@ -27,8 +27,7 @@ Spawner="*res://spawner.gd"
 [display]
 
 window/size/viewport_width=576
-window/size/always_on_top=true
-mouse_cursor/custom_image="res://items/mouse_cursor.png"
+mouse_cursor/custom_image="res://assets/images/mouse_cursor.png"
 
 [editor_plugins]
 

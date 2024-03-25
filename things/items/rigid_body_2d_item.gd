@@ -11,9 +11,9 @@ var waiting_to_set_location: bool = false
 var force_set_position: Vector2
 var force_set_rotation: float
 
-#Unfortunately Godot does not provide a system for physics/transform reconciliation, direct acess to the physics state, or a state update request system.
+#Unfortunately Godot does not provide a system for physics/transform reconciliation, direct access to the physics state, or a state update request system.
 #So the only option is this cyclic state update check. Hopefully it isn't too expensive.
-#The initial position can not be set either because of how the spawning system work for netwrok syncronizers.
+#The initial position can not be set either because of how the spawning system work for network synchronizers.
 
 #This is hard baked enough into Godot's methodology that I assume it is intended behavior, and consequently this will need to be broken out into it's own script
 #to allow this behavior to be easily added to objects, as it is critical for physics control.

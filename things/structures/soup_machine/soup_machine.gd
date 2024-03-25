@@ -1,4 +1,4 @@
-extends RigidBody2dItem
+extends StaticBody2dStructure
 
 
 func _ready() -> void:

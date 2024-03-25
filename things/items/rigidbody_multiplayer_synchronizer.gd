@@ -1,6 +1,6 @@
 # https://forum.godotengine.org/t/jittery-rigidbody-movement-on-client-side/38377/3
 # TODO: This does NOT synchronize rotation at all. I'm not sure how you even get or set rotation on 2D objects.
-class_name PhysicsSynchronizer
+class_name RigidBodyPhysicsSynchronizer
 extends MultiplayerSynchronizer
 
 enum {

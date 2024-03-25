@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://bbgco05vj36s"]
 
-[ext_resource type="Script" path="res://items/square/square.gd" id="1_mi7bp"]
-[ext_resource type="Texture2D" uid="uid://dysoemuojkdlh" path="res://items/square/square.png" id="2_d5e2h"]
-[ext_resource type="Script" path="res://items/multiplayer_synchronizer.gd" id="4_rkra7"]
+[ext_resource type="Script" path="res://things/items/square/square.gd" id="1_mi7bp"]
+[ext_resource type="Texture2D" uid="uid://dysoemuojkdlh" path="res://things/items/square/square.png" id="2_d5e2h"]
+[ext_resource type="Script" path="res://things/items/rigidbody_multiplayer_synchronizer.gd" id="4_rkra7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0i0wv"]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://rtlda15irjtr"
-path="res://.godot/imported/player_box.png-c3169f4d0221397ad1548fc8f83af6a0.ctex"
+uid="uid://cifgkne11xhh6"
+path="res://.godot/imported/soup_machine.png-d6cfaeaf6f1172b19c563a852807c9b9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://items/player_box.png"
-dest_files=["res://.godot/imported/player_box.png-c3169f4d0221397ad1548fc8f83af6a0.ctex"]
+source_file="res://things/structures/soup_machine/soup_machine.png"
+dest_files=["res://.godot/imported/soup_machine.png-d6cfaeaf6f1172b19c563a852807c9b9.ctex"]
 
 [params]
 

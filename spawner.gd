@@ -1,8 +1,8 @@
 extends Node
 
-var ball: Resource = preload("res://items/disc/disc.tscn")
-var box: Resource = preload("res://items/square/square.tscn")
-var soup_machine: Resource = preload("res://items/soup_machine/soup_machine.tscn")
+var ball: Resource = preload("res://things/items/disc/disc.tscn")
+var box: Resource = preload("res://things/items/square/square.tscn")
+var soup_machine: Resource = preload("res://things/structures/soup_machine/soup_machine.tscn")
 
 var done_once: bool = false
 
@@ -43,4 +43,6 @@ func thing(thing_name: String, spawn_position: Vector2 = Vector2.ZERO, id: int =
 		if spawn_position:
 			new_thing.spawn_position = spawn_position
 		Helpers.log_print(str("Spawning ", thing_name_to_spawn, " at ", spawn_position), "yellow")
+		if new_thing.snaps:
+			new_thing.freeze = true
 		things_spawning_node.add_child(new_thing)

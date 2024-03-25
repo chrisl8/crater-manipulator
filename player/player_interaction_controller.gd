@@ -26,10 +26,10 @@ var mouse_left_down: bool
 var mine_cast: RayCast2D
 var tool_speed: float = 0.1
 var current_tool_raycast_time: float = 100
-var ball: Resource = preload("res://items/disc/disc.tscn")
-var box: Resource = preload("res://items/square/square.tscn")
-var soup_machine: Resource = preload("res://items/soup_machine/soup_machine.tscn")
-var controlled_item: RigidBody2D
+var ball: Resource = preload("res://things/items/disc/disc.tscn")
+var box: Resource = preload("res://things/items/square/square.tscn")
+var soup_machine: Resource = preload("res://things/structures/soup_machine/soup_machine.tscn")
+var controlled_item: PhysicsBody2D
 var controlled_item_type: String = "Holding"
 var controlled_item_clear_of_collisions: bool = false
 
@@ -247,7 +247,7 @@ func tool_raycast() -> void:
 				if result["collider"] is TileMap and not controlled_item:  # Do not mine while holding items, no matter what
 					Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
 			elif left_hand_tool == Globals.Tools.PICKUP:
-				if not controlled_item and result["collider"] is RigidBody2D:  # You are ALREADY holding an item, you cannot hold two items.  # You can currently only pick up RigidBodies.
+				if not controlled_item and result["collider"] is PhysicsBody2D:  # You are ALREADY holding an item, you cannot hold two items.  # You can currently only pick up RigidBodies.
 					var body: Node = result["collider"]
 					if body.has_method("grab"):  # The RigidBody must have a "grab" method to be able to be picked up.
 						body.grab.rpc_id(1)
