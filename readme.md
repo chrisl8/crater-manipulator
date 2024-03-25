@@ -64,8 +64,13 @@ When a Debug build (in the Editor) is run, the first instance always automatical
 You then must have a second instance to actually play the game in or even see the game play.
 
 ### Godot 4.3 Debug -> Customize Run Instances...
-Godot 4.3 has a new dialogue for running multiple instances. You can use command line arguments both to pick which instance is the server and to set window locations to not overlap, like this
+Godot 4.3 has a new dialogue for running multiple instances. You can use command line arguments both to pick which instance is the server and to set window locations to not overlap, like this:
 ![alt text](debug_multiple_instances.png)
+
+Be aware of the spaces between the last `--` and `server` or `client`, like so:
+ - `--position 2000,600 -- server`
+ - `--position 0,25 -- client`
+ - `--position 0,700 -- client`
 
 ## Server Camera
 
