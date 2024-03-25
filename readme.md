@@ -35,7 +35,7 @@ This is entirely a hobby project for me, with no desire to monetize it, so there
 My primary target is HTML export, because I find that the best way to get new people to try out my work. It only takes them a few seconds or minutes at most to be in my game and see what is there. It is also super easy for them to come back and see updates.
 
 ## Character Controller
-The Character Controller is a Rigid Body controller where the user's input all causes physics inputs to the body. This is not the typical way that a character controller works in a 3D game, and has many draw-backs, however it works perfectly for my goals here.  
+The Character Controller is a Rigid Body controller where the user's input all causes physics inputs to the body.
 
 ## Networking
 This code currently uses WebSocket communication to communicate between the clients and the server. I find this to be the most reliable form of networking for HTML clients at the moment.  
@@ -53,7 +53,8 @@ There is currently no concept of "lobbies" or "shards." Everyone just joins the 
 
 ## Godot Version
 
-I am using Godot 4.2 at the moment, but whatever is listed in `projects.godot` is clearly the correct one.
+I am using Godot 4.2 at the moment, but whatever is listed in `projects.godot` is clearly the correct one.  
+I am also constantly building the latest Godot Engine from source and testing it.
 
 ## There Must Always be Two
 In the Godot Editor, you must set Debug-> Run Multiple Instances to at least two (2) or more.
@@ -61,6 +62,10 @@ In the Godot Editor, you must set Debug-> Run Multiple Instances to at least two
 When a Debug build (in the Editor) is run, the first instance always automatically sets itself as a Server.
 
 You then must have a second instance to actually play the game in or even see the game play.
+
+### Godot 4.3 Debug -> Customize Run Instances...
+Godot 4.3 has a new dialogue for running multiple instances. You can use command line arguments both to pick which instance is the server and to set window locations to not overlap, like this
+![alt text](debug_multiple_instances.png)
 
 ## Server Camera
 
