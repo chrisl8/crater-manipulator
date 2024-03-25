@@ -703,17 +703,17 @@ func highlight_cell_at_global_position(
 	at_position: Vector2,
 	color: Color = Color.GREEN,
 	canvas_entry_name: String = "default",
-	offsetX: int = 8,
-	offsetY: int = 8,
-	sizeX: int = 16,
-	sizeY: int = 16
+	offset_x: int = 8,
+	offset_y: int = 8,
+	size_x: int = 16,
+	size_y: int = 16
 ) -> void:
 	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
 	var at_cell_position: Vector2i = get_cell_position_at_global_position(at_position)
 	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)] = {
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offset_x, cell_global_position.y - offset_y, size_x, size_y)] = {
 	}
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)].color = color
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offset_x, cell_global_position.y - offset_y, size_x, size_y)].color = color
 	drawing_canvas.update_draw = true
 
 
@@ -721,16 +721,16 @@ func highlight_cell_at_map_position(
 	at_cell_position: Vector2i,
 	color: Color = Color.GREEN,
 	canvas_entry_name: String = "default",
-	offsetX: int = 8,
-	offsetY: int = 8,
-	sizeX: int = 16,
-	sizeY: int = 16
+	offset_x: int = 8,
+	offset_y: int = 8,
+	size_x: int = 16,
+	size_y: int = 16
 ) -> void:
 	var drawing_canvas: Node2D = _get_drawing_canvas(canvas_entry_name)
 	var cell_global_position: Vector2 = get_global_position_at_map_local_position(at_cell_position)
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)] = {
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offset_x, cell_global_position.y - offset_y, size_x, size_y)] = {
 	}
-	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offsetX, cell_global_position.y - offsetY, sizeX, sizeY)].color = color
+	drawing_canvas.rectangles_to_draw[Rect2(cell_global_position.x - offset_x, cell_global_position.y - offset_y, size_x, size_y)].color = color
 	drawing_canvas.update_draw = true
 
 

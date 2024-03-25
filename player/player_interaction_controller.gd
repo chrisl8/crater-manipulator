@@ -30,7 +30,7 @@ var ball: Resource = preload("res://items/disc/disc.tscn")
 var box: Resource = preload("res://items/square/square.tscn")
 var soup_machine: Resource = preload("res://items/soup_machine/soup_machine.tscn")
 var controlled_item: RigidBody2D
-var controlled_item_type: String = "Held"
+var controlled_item_type: String = "Holding"
 var controlled_item_clear_of_collisions: bool = false
 
 
@@ -96,21 +96,14 @@ func _process(delta: float) -> void:
 
 		# Note that by using the mouse position, with no restrictions, for placing items, your "place distance" is limited only by your screen size and resolution!
 
-		if controlled_item_type == "Held":
-			if left_hand_tool_is_active:
-				controlled_item.set_position(to_local(mouse_position))
-			elif is_multiplayer_authority():
-				var held_item_name: String = controlled_item.name
-				var held_item_global_position: Vector2 = controlled_item.global_position
-				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
-				_drop_held_thing.rpc()
-		elif controlled_item_type == "Placing":
+		if controlled_item_type == "Building" || controlled_item_type == "Holding":
 			if (
 				left_hand_tool_is_active
 				and is_multiplayer_authority()
 				and controlled_item_clear_of_collisions
 			):
-				Globals.player_has_done.built_an_item = true
+				if controlled_item_type == "Building":
+					Globals.player_has_done.built_an_item = true
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
@@ -148,7 +141,7 @@ func _drop_held_thing() -> void:
 
 @rpc("call_local")
 func de_spawn_placing_item() -> void:
-	if controlled_item and controlled_item_type == "Placing":
+	if controlled_item and controlled_item_type == "Building":
 		# Don't allow us to de-spawn held items this way.
 		Globals.world_map.delete_drawing_canvas(controlled_item.name)
 		controlled_item.queue_free()
@@ -241,7 +234,7 @@ func tool_raycast() -> void:
 			# So just document it well and reorganize it later if it becomes more clear how to better organize it
 			# without also duplicating a lot of code.
 
-			# Note that the "placing" and/or "dropping" of build/held items is done in the _process() function AFTER this
+			# Note that the "Building" and/or "dropping" of build/held items is done in the _process() function AFTER this
 			# function is called.
 			# This can be hard to keep in mind, but the reason is that mining and picking up depend on the raycast position,
 			# while dropping and placing only depend on the mouse position.
@@ -254,6 +247,7 @@ func tool_raycast() -> void:
 					var body: Node = result["collider"]
 					if body.has_method("grab"):  # The RigidBody must have a "grab" method to be able to be picked up.
 						body.grab.rpc_id(1)
+						mouse_left_down = false  # Reset now so it does not immediately drop.
 
 			# This is always set, even if we don't use it.
 			mining_particle_distance = (
@@ -273,6 +267,7 @@ func right_mouse_clicked() -> void:
 	# 1. The distance at which you can place is only restricted by the size and resolution of your screen.
 	# 2. You can place blocks in areas that you cannot access (no ray trace check)
 	# This will probably be addressed when we update the right mouse button to allow tool swapping and make it more like left click.
+
 	Globals.world_map.place_cell_at_position(get_global_mouse_position())
 
 
@@ -284,7 +279,7 @@ func spawn_player_controlled_thing(
 	thing_position: Vector2,
 	thing_rotation: float,
 	controlled_item_name: String,
-	spawned_item_type: String = "Held"
+	spawned_item_type: String = "Holding"
 ) -> void:
 	if controlled_item:
 		# We can never control a new thing if we are already controlling something
@@ -292,8 +287,8 @@ func spawn_player_controlled_thing(
 		return
 	var parsed_thing_name: Dictionary = Helpers.parse_thing_name(controlled_item_name)
 	var action: String = "picked up"
-	if spawned_item_type == "Placing":
-		action = "being placed"
+	if spawned_item_type == "Building":
+		action = "being built"
 	Helpers.log_print(
 		str(parsed_thing_name.name, " ", parsed_thing_name.id, " ", action, " by ", name),
 		"Cornflowerblue"
@@ -315,7 +310,7 @@ func spawn_player_controlled_thing(
 	controlled_item_type = spawned_item_type
 	controlled_item.name = controlled_item_name
 
-	if spawned_item_type == "Held":
+	if spawned_item_type == "Holding":
 		controlled_item.set_spawn_location(thing_position, thing_rotation)
 
 	controlled_item.global_position = thing_position

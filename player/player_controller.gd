@@ -140,7 +140,7 @@ func spawn_item() -> void:
 	var id: int = rng.randi()
 	var thing_name_to_spawn: String = str(player_spawnable_items[player_spawn_item_next], "-", id)
 	$"Interaction Controller".spawn_player_controlled_thing.rpc(
-		Vector2.ZERO, 0, thing_name_to_spawn, "Placing"
+		Vector2.ZERO, 0, thing_name_to_spawn, "Building"
 	)
 
 
