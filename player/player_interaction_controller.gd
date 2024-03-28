@@ -103,6 +103,11 @@ func _process(delta: float) -> void:
 					Globals.player_has_done.built_an_item = true
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
+				if controlled_item.snaps:
+					# Ensure it sticks to absolute integer positions!
+					held_item_global_position = Vector2(
+						int(held_item_global_position.x), int(held_item_global_position.y)
+					)
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 				_drop_held_thing.rpc()
 				Globals.world_map.delete_drawing_canvas(held_item_name)
