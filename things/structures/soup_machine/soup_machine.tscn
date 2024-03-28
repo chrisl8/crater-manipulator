@@ -1,10 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://cn847t85ugg0c"]
 
-[ext_resource type="Texture2D" uid="uid://cifgkne11xhh6" path="res://things/structures/soup_machine/soup_machine.png" id="1_c1lxn"]
 [ext_resource type="Script" path="res://things/structures/soup_machine/soup_machine.gd" id="1_o1ao3"]
-
-[sub_resource type="QuadMesh" id="QuadMesh_674wf"]
-size = Vector2(32, 32)
+[ext_resource type="Texture2D" uid="uid://1nw5akj2ow3h" path="res://things/structures/soup_machine/machine.svg" id="2_5c70h"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_1rkxc"]
 properties/0/path = NodePath(".:position")
@@ -22,10 +19,10 @@ scale = Vector2(2, 2)
 build_mode = 1
 polygon = PackedVector2Array(-14, -16, -10.5, -8, -7, -8, -2.5, -16, -1, -16, -1, -12, 16, -12, 16, 16, -16, 16, -16, -16)
 
-[node name="MeshInstance2D" type="MeshInstance2D" parent="."]
-scale = Vector2(2, 2)
-mesh = SubResource("QuadMesh_674wf")
-texture = ExtResource("1_c1lxn")
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(5.36442e-07, 4.29153e-06)
+scale = Vector2(0.104575, 0.162025)
+texture = ExtResource("2_5c70h")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_1rkxc")

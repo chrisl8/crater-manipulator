@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cifgkne11xhh6"
-path="res://.godot/imported/soup_machine.png-d6cfaeaf6f1172b19c563a852807c9b9.ctex"
+uid="uid://1nw5akj2ow3h"
+path="res://.godot/imported/machine.svg-66621160c9cd3745e3386d2defc00e54.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://things/structures/soup_machine/soup_machine.png"
-dest_files=["res://.godot/imported/soup_machine.png-d6cfaeaf6f1172b19c563a852807c9b9.ctex"]
+source_file="res://things/structures/soup_machine/machine.svg"
+dest_files=["res://.godot/imported/machine.svg-66621160c9cd3745e3386d2defc00e54.ctex"]
 
 [params]
 
@@ -32,3 +32,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false
