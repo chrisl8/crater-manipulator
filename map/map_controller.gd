@@ -932,13 +932,17 @@ func check_tile_location_and_surroundings(
 		if cell_aligned_center_position.is_zero_approx():
 			cell_aligned_center_position = get_global_position_at_map_local_position(cell_position)
 			cell_aligned_center_position = Vector2(
-				(
-					(cell_aligned_center_position.x - single_tile_width / 2)
-					+ width_in_tiles / 2 * single_tile_width
+				int(
+					(
+						(cell_aligned_center_position.x - single_tile_width / 2)
+						+ width_in_tiles / 2 * single_tile_width
+					)
 				),
-				(
-					(cell_aligned_center_position.y - single_tile_width / 2)
-					+ height_in_tiles / 2 * single_tile_width
+				int(
+					(
+						(cell_aligned_center_position.y - single_tile_width / 2)
+						+ height_in_tiles / 2 * single_tile_width
+					)
 				)
 			)
 		return_data.tile_content[cell_position] = (
