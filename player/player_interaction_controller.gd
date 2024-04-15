@@ -54,7 +54,9 @@ func initialize(local: bool) -> void:
 	set_physics_process(is_local)
 	set_physics_process_internal(is_local)
 	if is_local:
-		owner.get_node("Player Canvas/Tools/Current").text = "Left: Mine\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Current").text = "Left: Mine\nRight: Place Block"
+	else:
+		owner.get_node("Player Canvas/Tools").visible = false
 
 
 func _process(delta: float) -> void:
@@ -159,19 +161,51 @@ func _input(event: InputEvent) -> void:
 	var previous_left_hand_tool: Globals.Tools = left_hand_tool
 	if event.is_action_released(&"build"):
 		left_hand_tool = Globals.Tools.BUILD
-		owner.get_node("Player Canvas/Tools/Current").text = "Left: Build\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Current").text = "Left: Build\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key Pressed").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key Pressed").visible = false
 		Globals.player_has_done.press_build_button = true
 		owner.spawn_item()
 	elif event.is_action_released(&"mine"):
-		owner.get_node("Player Canvas/Tools/Current").text = "Left: Mine\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Current").text = "Left: Mine\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key Pressed").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key Pressed").visible = false
 		if left_hand_tool != Globals.Tools.MINE:
 			Globals.player_has_done.returned_to_mining_mode = true
 		left_hand_tool = Globals.Tools.MINE
 	elif event.is_action_released(&"pickup"):
-		owner.get_node("Player Canvas/Tools/Current").text = "Left: Pick Up\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Current").text = "Left: Pick Up\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key Pressed").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key Pressed").visible = false
 		left_hand_tool = Globals.Tools.PICKUP
 	elif event.is_action_released(&"drag"):
-		owner.get_node("Player Canvas/Tools/Current").text = "Left: Drag\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Current").text = "Left: Drag\nRight: Place Block"
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Mine/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Build/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key").visible = true
+		owner.get_node("Player Canvas/Tools/Keys/Pickup/Key Margin Container/Key Pressed").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key").visible = false
+		owner.get_node("Player Canvas/Tools/Keys/Drag/Key Margin Container/Key Pressed").visible = true
 		left_hand_tool = Globals.Tools.DRAG
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():

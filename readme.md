@@ -229,3 +229,9 @@ Both will work, but the class example is more "Godot" proper and also you can ty
 
 # Website Icons
 I used https://realfavicongenerator.net/ to generate the icons for the website.
+
+# Attributions
+
+## Fonts
+
+[Enter Input](https://v3x3d.itch.io/enter-input) (Keys) by [VEXED](https://v3x3d.itch.io/)

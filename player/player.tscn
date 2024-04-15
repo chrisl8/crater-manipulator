@@ -1,12 +1,14 @@
-[gd_scene load_steps=22 format=3 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=24 format=4 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/prompts.gd" id="4_8hopg"]
 [ext_resource type="Script" path="res://player/player_interaction_controller.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/player_atlas.png" id="5_e4w6p"]
 [ext_resource type="Script" path="res://player/player_legs_manager.gd" id="5_h6bhr"]
+[ext_resource type="FontFile" uid="uid://c5sfl5i3vhksb" path="res://assets/fonts/Enter_Input_Light.ttf" id="5_lj6li"]
 [ext_resource type="Script" path="res://player/player_inventory_manager.gd" id="5_xpvfg"]
 [ext_resource type="Script" path="res://player/player_leg_controller.gd" id="6_dfoja"]
+[ext_resource type="FontFile" uid="uid://dhgiojjdxi185" path="res://assets/fonts/Enter_Input_Dark_Pressed.ttf" id="6_prcwm"]
 [ext_resource type="Script" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
 [ext_resource type="Script" path="res://player/antenna_physics_controller.gd" id="10_c7nhb"]
 [ext_resource type="Texture2D" uid="uid://cxfvwdktyjru5" path="res://player/player.svg" id="10_wmt63"]
@@ -91,7 +93,7 @@ turbulence_enabled = true
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_6el7t"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6r2ad"]
-size = Vector2(75, 86)
+size = Vector2(75, 84)
 
 [node name="Player" type="RigidBody2D" node_paths=PackedStringArray("camera") groups=["players"]]
 collision_layer = 2
@@ -254,30 +256,188 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Title" type="Label" parent="Player Canvas/Tools"]
+[node name="Keys Old" type="Label" parent="Player Canvas/Tools"]
+visible = false
 layout_mode = 0
+offset_left = 8.0
+offset_top = 83.0
+offset_right = 48.0
+offset_bottom = 188.0
+theme_override_fonts/font = ExtResource("5_lj6li")
+text = "v
+b
+f
+g"
+
+[node name="Key Labels" type="Label" parent="Player Canvas/Tools"]
+visible = false
+layout_mode = 0
+offset_left = 29.0
+offset_top = 89.0
+offset_right = 106.0
+offset_bottom = 190.0
+text = " - Mine
+ - Build
+ - Pick Up
+ - Drag
+"
+
+[node name="Keys" type="VBoxContainer" parent="Player Canvas/Tools"]
+layout_mode = 0
+offset_top = -1.0
 offset_right = 40.0
-offset_bottom = 23.0
-text = "Tools
-"
+offset_bottom = 39.0
 
-[node name="Current" type="Label" parent="Player Canvas/Tools"]
-layout_mode = 0
-offset_left = -1.0
-offset_top = 27.0
-offset_right = 135.0
-offset_bottom = 76.0
+[node name="Title" type="Label" parent="Player Canvas/Tools/Keys"]
+layout_mode = 2
+text = "Tools"
 
-[node name="Options" type="Label" parent="Player Canvas/Tools"]
-layout_mode = 0
-offset_top = 88.0
-offset_right = 77.0
-offset_bottom = 189.0
-text = "v - Mine
-b - Build
-f - Pick Up
-g - Drag
-"
+[node name="Current" type="Label" parent="Player Canvas/Tools/Keys"]
+layout_mode = 2
+
+[node name="Mine" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
+auto_translate_mode = 1
+layout_mode = 2
+
+[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Mine"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Mine/Key Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "v"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Mine/Key Margin Container"]
+auto_translate_mode = 1
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "v"
+
+[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Mine"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Mine/Label Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+size_flags_vertical = 8
+text = "Mine"
+vertical_alignment = 2
+
+[node name="Build" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
+auto_translate_mode = 1
+layout_mode = 2
+
+[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Build"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Build/Key Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "b"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Build/Key Margin Container"]
+auto_translate_mode = 1
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "b"
+
+[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Build"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Build/Label Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+size_flags_vertical = 8
+text = "Build"
+vertical_alignment = 2
+
+[node name="Pickup" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
+auto_translate_mode = 1
+layout_mode = 2
+
+[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Pickup"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Pickup/Key Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "f"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Pickup/Key Margin Container"]
+auto_translate_mode = 1
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "f"
+
+[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Pickup"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Pickup/Label Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+size_flags_vertical = 8
+text = "Pick Up"
+vertical_alignment = 2
+
+[node name="Drag" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
+auto_translate_mode = 1
+layout_mode = 2
+
+[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Drag"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Drag/Key Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "g"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Drag/Key Margin Container"]
+auto_translate_mode = 1
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "g"
+
+[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Drag"]
+auto_translate_mode = 1
+layout_mode = 2
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Drag/Label Margin Container"]
+auto_translate_mode = 1
+layout_mode = 2
+size_flags_vertical = 8
+text = "Drag"
+vertical_alignment = 2
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 z_index = -1
@@ -598,7 +758,7 @@ collision_layer = 2
 collision_mask = 10
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Personal Space"]
-position = Vector2(7, -30)
+position = Vector2(7, -31)
 shape = SubResource("RectangleShape2D_6r2ad")
 
 [connection signal="body_entered" from="Personal Space" to="." method="_on_personal_space_body_entered"]

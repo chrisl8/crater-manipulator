@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://bemt6dotly4k3"]
+[gd_scene load_steps=2 format=4 uid="uid://bemt6dotly4k3"]
 
 [ext_resource type="Script" path="res://startup.gd" id="1_0mo3b"]
 
