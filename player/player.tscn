@@ -250,194 +250,211 @@ offset_top = -10.0
 offset_right = 5.0
 color = Color(0.431373, 0.431373, 0.431373, 1)
 
-[node name="Tools" type="Control" parent="Player Canvas"]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Keys Old" type="Label" parent="Player Canvas/Tools"]
-visible = false
-layout_mode = 0
-offset_left = 8.0
-offset_top = 83.0
-offset_right = 48.0
-offset_bottom = 188.0
-theme_override_fonts/font = ExtResource("5_lj6li")
-text = "v
-b
-f
-g"
-
-[node name="Key Labels" type="Label" parent="Player Canvas/Tools"]
-visible = false
-layout_mode = 0
-offset_left = 29.0
-offset_top = 89.0
-offset_right = 106.0
-offset_bottom = 190.0
-text = " - Mine
- - Build
- - Pick Up
- - Drag
-"
-
-[node name="Keys" type="VBoxContainer" parent="Player Canvas/Tools"]
-layout_mode = 0
+[node name="Keys" type="VBoxContainer" parent="Player Canvas"]
 offset_top = -1.0
-offset_right = 40.0
-offset_bottom = 39.0
+offset_right = 116.0
+offset_bottom = 150.0
 
-[node name="Title" type="Label" parent="Player Canvas/Tools/Keys"]
+[node name="Title Bar" type="Label" parent="Player Canvas/Keys"]
 layout_mode = 2
-text = "Tools"
+text = "L <-Hand-> R"
+horizontal_alignment = 3
 
-[node name="Current" type="Label" parent="Player Canvas/Tools/Keys"]
-layout_mode = 2
-
-[node name="Mine" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
-auto_translate_mode = 1
+[node name="Mine" type="HBoxContainer" parent="Player Canvas/Keys"]
 layout_mode = 2
 
-[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Mine"]
-auto_translate_mode = 1
+[node name="Left" type="MarginContainer" parent="Player Canvas/Keys/Mine"]
 layout_mode = 2
 theme_override_constants/margin_top = -10
 
-[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Mine/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key" type="Label" parent="Player Canvas/Keys/Mine/Left"]
+visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
 text = "v"
 
-[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Mine/Key Margin Container"]
-auto_translate_mode = 1
-visible = false
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Mine/Left"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
 text = "v"
 
-[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Mine"]
-auto_translate_mode = 1
+[node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Mine"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_bottom = 4
 
-[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Mine/Label Margin Container"]
-auto_translate_mode = 1
+[node name="Label" type="Label" parent="Player Canvas/Keys/Mine/Label"]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Mine"
+horizontal_alignment = 1
 vertical_alignment = 2
 
-[node name="Build" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
-auto_translate_mode = 1
-layout_mode = 2
-
-[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Build"]
-auto_translate_mode = 1
+[node name="Right" type="MarginContainer" parent="Player Canvas/Keys/Mine"]
 layout_mode = 2
 theme_override_constants/margin_top = -10
 
-[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Build/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key" type="Label" parent="Player Canvas/Keys/Mine/Right"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "v"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Mine/Right"]
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "v"
+
+[node name="Build" type="HBoxContainer" parent="Player Canvas/Keys"]
+layout_mode = 2
+
+[node name="Left" type="MarginContainer" parent="Player Canvas/Keys/Build"]
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Keys/Build/Left"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
 text = "b"
 
-[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Build/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Build/Left"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
 text = "b"
 
-[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Build"]
-auto_translate_mode = 1
+[node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Build"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_bottom = 4
 
-[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Build/Label Margin Container"]
-auto_translate_mode = 1
+[node name="Label" type="Label" parent="Player Canvas/Keys/Build/Label"]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Build"
+horizontal_alignment = 1
 vertical_alignment = 2
 
-[node name="Pickup" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
-auto_translate_mode = 1
-layout_mode = 2
-
-[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Pickup"]
-auto_translate_mode = 1
+[node name="Right" type="MarginContainer" parent="Player Canvas/Keys/Build"]
 layout_mode = 2
 theme_override_constants/margin_top = -10
 
-[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Pickup/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key" type="Label" parent="Player Canvas/Keys/Build/Right"]
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "b"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Build/Right"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "b"
+
+[node name="Pickup" type="HBoxContainer" parent="Player Canvas/Keys"]
+layout_mode = 2
+
+[node name="Left" type="MarginContainer" parent="Player Canvas/Keys/Pickup"]
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Keys/Pickup/Left"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
 text = "f"
 
-[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Pickup/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Pickup/Left"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
 text = "f"
 
-[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Pickup"]
-auto_translate_mode = 1
+[node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Pickup"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_bottom = 4
 
-[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Pickup/Label Margin Container"]
-auto_translate_mode = 1
+[node name="Label" type="Label" parent="Player Canvas/Keys/Pickup/Label"]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Pick Up"
+horizontal_alignment = 1
 vertical_alignment = 2
 
-[node name="Drag" type="HBoxContainer" parent="Player Canvas/Tools/Keys"]
-auto_translate_mode = 1
-layout_mode = 2
-
-[node name="Key Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Drag"]
-auto_translate_mode = 1
+[node name="Right" type="MarginContainer" parent="Player Canvas/Keys/Pickup"]
 layout_mode = 2
 theme_override_constants/margin_top = -10
 
-[node name="Key" type="Label" parent="Player Canvas/Tools/Keys/Drag/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key" type="Label" parent="Player Canvas/Keys/Pickup/Right"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "f"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Pickup/Right"]
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "f"
+
+[node name="Drag" type="HBoxContainer" parent="Player Canvas/Keys"]
+layout_mode = 2
+
+[node name="Left" type="MarginContainer" parent="Player Canvas/Keys/Drag"]
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Keys/Drag/Left"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
 text = "g"
 
-[node name="Key Pressed" type="Label" parent="Player Canvas/Tools/Keys/Drag/Key Margin Container"]
-auto_translate_mode = 1
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Drag/Left"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
 text = "g"
 
-[node name="Label Margin Container" type="MarginContainer" parent="Player Canvas/Tools/Keys/Drag"]
-auto_translate_mode = 1
+[node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Drag"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_bottom = 4
 
-[node name="Label" type="Label" parent="Player Canvas/Tools/Keys/Drag/Label Margin Container"]
-auto_translate_mode = 1
+[node name="Label" type="Label" parent="Player Canvas/Keys/Drag/Label"]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Drag"
+horizontal_alignment = 1
 vertical_alignment = 2
+
+[node name="Right" type="MarginContainer" parent="Player Canvas/Keys/Drag"]
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Keys/Drag/Right"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "g"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Drag/Right"]
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "g"
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 z_index = -1
