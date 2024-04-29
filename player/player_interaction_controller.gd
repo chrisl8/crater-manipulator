@@ -39,10 +39,23 @@ func update_mining_particle_length() -> void:
 	extents.x = mining_distance
 
 	mining_particles.process_material.set("emission_box_extents", extents)
-	mining_particles.process_material.set(
-		"emission_shape_offset", Vector3(mining_distance, 0.0, 0.0)
-	)
+	mining_particles.process_material.set("emission_shape_offset", Vector3(mining_distance, 0.0, 0.0))
 	mining_particles.look_at(mouse_position)
+
+
+## Set input key map based on settings in Godot Input Map
+func update_tool_keys_display() -> void:
+	for tool_name: String in Globals.Tools:
+		tool_name = tool_name.to_lower()
+		var input_events: Array = InputMap.action_get_events(tool_name.to_lower())
+		if !input_events.is_empty():
+			var keycode: int = DisplayServer.keyboard_get_keycode_from_physical(input_events[0].physical_keycode)
+			var key_text: String = OS.get_keycode_string(keycode)
+			# The Enter Input font keyboard keys are all lower-case. Upper-case denotes special keys.
+			owner.get_node("Player Canvas/Keys/%s/Left/Key" % tool_name.to_pascal_case()).text = (key_text.to_lower())
+			owner.get_node("Player Canvas/Keys/%s/Left/Key Pressed" % tool_name.to_pascal_case()).text = (key_text.to_lower())
+			owner.get_node("Player Canvas/Keys/%s/Right/Key" % tool_name.to_pascal_case()).text = (key_text.to_lower())
+			owner.get_node("Player Canvas/Keys/%s/Right/Key Pressed" % tool_name.to_pascal_case()).text = (key_text.to_lower())
 
 
 func initialize(local: bool) -> void:
@@ -53,7 +66,9 @@ func initialize(local: bool) -> void:
 	set_process_unhandled_key_input(is_local)
 	set_physics_process(is_local)
 	set_physics_process_internal(is_local)
-	if not is_local:
+	if is_local:
+		update_tool_keys_display()
+	else:
 		owner.get_node("Player Canvas/Keys").visible = false
 
 
@@ -94,38 +109,21 @@ func _process(delta: float) -> void:
 		# Note that by using the mouse position, with no restrictions, for placing items, your "place distance" is limited only by your screen size and resolution!
 
 		if controlled_item_type == "Building" || controlled_item_type == "Holding":
-			if (
-				left_hand_tool_is_active
-				and is_multiplayer_authority()
-				and controlled_item_clear_of_collisions
-			):
+			if left_hand_tool_is_active and is_multiplayer_authority() and controlled_item_clear_of_collisions:
 				if controlled_item_type == "Building":
 					Globals.player_has_done.built_an_item = true
 				var held_item_name: String = controlled_item.name
 				var held_item_global_position: Vector2 = controlled_item.global_position
 				if controlled_item.snaps:
 					# Ensure it sticks to absolute integer positions!
-					held_item_global_position = Vector2(
-						int(held_item_global_position.x), int(held_item_global_position.y)
-					)
+					held_item_global_position = Vector2(int(held_item_global_position.x), int(held_item_global_position.y))
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
 				_drop_held_thing.rpc()
 				Globals.world_map.delete_drawing_canvas(held_item_name)
 			else:
-				var intersecting_tiles: Globals.MapTileSet = (
-					Globals
-					. world_map
-					. check_tile_location_and_surroundings(
-						mouse_position,
-						controlled_item.height_in_tiles,
-						controlled_item.width_in_tiles,
-						controlled_item.name
-					)
-				)
+				var intersecting_tiles: Globals.MapTileSet = Globals.world_map.check_tile_location_and_surroundings(mouse_position, controlled_item.height_in_tiles, controlled_item.width_in_tiles, controlled_item.name)
 				if controlled_item.snaps:
-					controlled_item.set_position(
-						to_local(intersecting_tiles.cell_aligned_center_position)
-					)
+					controlled_item.set_position(to_local(intersecting_tiles.cell_aligned_center_position))
 				else:
 					controlled_item.set_position(to_local(mouse_position))
 				controlled_item_clear_of_collisions = (intersecting_tiles.all_tiles_are_empty)
@@ -136,10 +134,7 @@ func _process(delta: float) -> void:
 
 @rpc("call_local")
 func _drop_held_thing() -> void:
-	Helpers.log_print(
-		str(controlled_item.name, " dropped by ", multiplayer.get_remote_sender_id()),
-		"Cornflowerblue"
-	)
+	Helpers.log_print(str(controlled_item.name, " dropped by ", multiplayer.get_remote_sender_id()), "Cornflowerblue")
 	if controlled_item:
 		Globals.world_map.delete_drawing_canvas(controlled_item.name)
 		controlled_item.queue_free()
@@ -237,24 +232,9 @@ func tool_raycast() -> void:
 		current_tool_raycast_time = 0.0
 		var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 		var arm_position: Vector2 = arm_id_controller.global_position
-		var mining_particle_distance: float = (
-			clamp(
-				clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE),
-				0.0,
-				mining_particles.global_position.distance_to(mouse_position)
-			)
-			/ 2.0
-		)
-		var target_position: Vector2 = (
-			arm_position
-			+ (
-				(mouse_position - arm_position).normalized()
-				* clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE)
-			)
-		)
-		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(
-			arm_position, target_position
-		)
+		var mining_particle_distance: float = clamp(clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE), 0.0, mining_particles.global_position.distance_to(mouse_position)) / 2.0
+		var target_position: Vector2 = arm_position + ((mouse_position - arm_position).normalized() * clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE))
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(arm_position, target_position)
 		if left_hand_tool == Globals.Tools.MINE:  # Only show the "laser" if mining
 			# LASER DRILL!!! ==>-----
 			Globals.world_map.draw_temp_line_on_map(arm_position, target_position, Color.RED)
@@ -287,9 +267,7 @@ func tool_raycast() -> void:
 						mouse_left_down = false  # Reset now so it does not immediately drop.
 
 			# This is always set, even if we don't use it.
-			mining_particle_distance = (
-				mining_particles.global_position.distance_to(hit_point) / 2.0
-			)
+			mining_particle_distance = (mining_particles.global_position.distance_to(hit_point) / 2.0)
 
 		## This is a synced variable used by other players to see your mining activity.
 		mining_distance = mining_particle_distance
@@ -312,12 +290,7 @@ func right_mouse_clicked() -> void:
 # must do this to sync the view of them holding/not holding the thing across players views
 # of this player.
 @rpc("any_peer", "call_local")
-func spawn_player_controlled_thing(
-	thing_position: Vector2,
-	thing_rotation: float,
-	controlled_item_name: String,
-	spawned_item_type: String = "Holding"
-) -> void:
+func spawn_player_controlled_thing(thing_position: Vector2, thing_rotation: float, controlled_item_name: String, spawned_item_type: String = "Holding") -> void:
 	if controlled_item:
 		# We can never control a new thing if we are already controlling something
 		# Whoever called this should have called de_spawn_placing_item() first if they were serious
@@ -326,10 +299,7 @@ func spawn_player_controlled_thing(
 	var action: String = "picked up"
 	if spawned_item_type == "Building":
 		action = "being built"
-	Helpers.log_print(
-		str(parsed_thing_name.name, " ", parsed_thing_name.id, " ", action, " by ", name),
-		"Cornflowerblue"
-	)
+	Helpers.log_print(str(parsed_thing_name.name, " ", parsed_thing_name.id, " ", action, " by ", name), "Cornflowerblue")
 	# Spawn a local version for myself
 	# This is similar to the thing spawning code in spawner()
 	match parsed_thing_name.name:
@@ -340,9 +310,7 @@ func spawn_player_controlled_thing(
 		"SoupMachine":
 			controlled_item = soup_machine.instantiate()
 		_:
-			printerr(
-				"Invalid thing to spawn name into player held position: ", parsed_thing_name.name
-			)
+			printerr("Invalid thing to spawn name into player held position: ", parsed_thing_name.name)
 			return
 	controlled_item_type = spawned_item_type
 	controlled_item.name = controlled_item_name

@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=4 uid="uid://cnckqfxi8eyk8"]
+[gd_scene load_steps=24 format=3 uid="uid://cnckqfxi8eyk8"]
 
 [ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
 [ext_resource type="Script" path="res://player/prompts.gd" id="4_8hopg"]
@@ -113,16 +113,11 @@ player = null
 player_spawn_point = Vector2(0, 0)
 synced_position = null
 synced_rotation = null
-camera = NodePath("Camera2D")
+camera = NodePath("Inventory Manager/Camera2D")
 metadata/_edit_horizontal_guides_ = [-66.0, -74.0]
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_ir062")
-
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(0, -47)
-zoom = Vector2(3, 3)
-position_smoothing_enabled = true
 
 [node name="Interaction Controller" type="Node2D" parent="." node_paths=PackedStringArray("mining_particles", "flip_point", "arm_id_controller", "arm_lower_id_controller", "head", "legs_manager", "antenna")]
 script = ExtResource("4_rfuvf")
@@ -138,6 +133,11 @@ antenna = NodePath("../Flip Point/Antenna")
 script = ExtResource("5_xpvfg")
 stone_bar = NodePath("../Player Canvas/Control/Stone")
 red_ore_bar = NodePath("../Player Canvas/Control/Red ore")
+
+[node name="Camera2D" type="Camera2D" parent="Inventory Manager"]
+position = Vector2(0, -47)
+zoom = Vector2(3, 3)
+position_smoothing_enabled = true
 
 [node name="Player Canvas" type="CanvasLayer" parent="."]
 
@@ -255,10 +255,16 @@ offset_top = -1.0
 offset_right = 116.0
 offset_bottom = 150.0
 
-[node name="Title Bar" type="Label" parent="Player Canvas/Keys"]
+[node name="Title" type="Label" parent="Player Canvas/Keys"]
 layout_mode = 2
 text = "L <-Hand-> R"
 horizontal_alignment = 3
+
+[node name="Label" type="Label" parent="Player Canvas/Keys"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+text = "S"
+horizontal_alignment = 2
 
 [node name="Mine" type="HBoxContainer" parent="Player Canvas/Keys"]
 layout_mode = 2
@@ -272,13 +278,13 @@ visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "v"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Mine/Left"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "v"
+text = "?"
 
 [node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Mine"]
 layout_mode = 2
@@ -300,14 +306,63 @@ theme_override_constants/margin_top = -10
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "v"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Mine/Right"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "v"
+text = "?"
+
+[node name="Place" type="HBoxContainer" parent="Player Canvas/Keys"]
+layout_mode = 2
+
+[node name="Left" type="MarginContainer" parent="Player Canvas/Keys/Place"]
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Keys/Place/Left"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "?"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Place/Left"]
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "?"
+
+[node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Place"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="Label" parent="Player Canvas/Keys/Place/Label"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Place"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="Right" type="MarginContainer" parent="Player Canvas/Keys/Place"]
+layout_mode = 2
+theme_override_constants/margin_top = -10
+
+[node name="Key" type="Label" parent="Player Canvas/Keys/Place/Right"]
+visible = false
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_lj6li")
+theme_override_font_sizes/font_size = 25
+text = "?"
+
+[node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Place/Right"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_prcwm")
+theme_override_font_sizes/font_size = 25
+text = "?"
 
 [node name="Build" type="HBoxContainer" parent="Player Canvas/Keys"]
 layout_mode = 2
@@ -320,14 +375,14 @@ theme_override_constants/margin_top = -10
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "b"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Build/Left"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "b"
+text = "?"
 
 [node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Build"]
 layout_mode = 2
@@ -346,17 +401,17 @@ layout_mode = 2
 theme_override_constants/margin_top = -10
 
 [node name="Key" type="Label" parent="Player Canvas/Keys/Build/Right"]
-visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "b"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Build/Right"]
+visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "b"
+text = "?"
 
 [node name="Pickup" type="HBoxContainer" parent="Player Canvas/Keys"]
 layout_mode = 2
@@ -369,14 +424,14 @@ theme_override_constants/margin_top = -10
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "f"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Pickup/Left"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "f"
+text = "?"
 
 [node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Pickup"]
 layout_mode = 2
@@ -398,14 +453,14 @@ theme_override_constants/margin_top = -10
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "f"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Pickup/Right"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "f"
+text = "?"
 
 [node name="Drag" type="HBoxContainer" parent="Player Canvas/Keys"]
 layout_mode = 2
@@ -418,14 +473,14 @@ theme_override_constants/margin_top = -10
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "g"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Drag/Left"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "g"
+text = "?"
 
 [node name="Label" type="MarginContainer" parent="Player Canvas/Keys/Drag"]
 layout_mode = 2
@@ -447,14 +502,14 @@ theme_override_constants/margin_top = -10
 layout_mode = 2
 theme_override_fonts/font = ExtResource("5_lj6li")
 theme_override_font_sizes/font_size = 25
-text = "g"
+text = "?"
 
 [node name="Key Pressed" type="Label" parent="Player Canvas/Keys/Drag/Right"]
 visible = false
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_prcwm")
 theme_override_font_sizes/font_size = 25
-text = "g"
+text = "?"
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 z_index = -1
