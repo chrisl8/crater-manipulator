@@ -154,48 +154,27 @@ func _input(event: InputEvent) -> void:
 	var previous_left_hand_tool: Globals.Tools = left_hand_tool
 	if event.is_action_released(&"build"):
 		left_hand_tool = Globals.Tools.BUILD
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = false
-		owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = true
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = false
 		Globals.player_has_done.press_build_button = true
 		owner.spawn_item()
 	elif event.is_action_released(&"mine"):
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = false
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = true
-		owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = false
 		if left_hand_tool != Globals.Tools.MINE:
 			Globals.player_has_done.returned_to_mining_mode = true
 		left_hand_tool = Globals.Tools.MINE
 	elif event.is_action_released(&"pickup"):
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = false
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = true
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = false
 		left_hand_tool = Globals.Tools.PICKUP
 	elif event.is_action_released(&"drag"):
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = true
-		owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = false
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = false
-		owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = true
 		left_hand_tool = Globals.Tools.DRAG
+
+	# Set key intput display based on currently active tool.
+	owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = left_hand_tool != Globals.Tools.MINE
+	owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.MINE
+	owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = left_hand_tool != Globals.Tools.BUILD
+	owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.BUILD
+	owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = left_hand_tool != Globals.Tools.PICKUP
+	owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.PICKUP
+	owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = left_hand_tool != Globals.Tools.DRAG
+	owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.DRAG
+
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.is_pressed():
 			mouse_left_down = true
