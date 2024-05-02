@@ -1,5 +1,3 @@
-[![Static Code Checks](https://github.com/chrisl8/crater-manipulator/actions/workflows/static.yml/badge.svg)](https://github.com/chrisl8/crater-manipulator/actions/workflows/static.yml)
-
 You can play the game right now at [https://crater.voidshipephemeral.space](https://crater.voidshipephemeral.space)
 
 # Crater Manipulator - A 2D Online Game

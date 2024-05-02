@@ -9,18 +9,12 @@ var update_draw: bool = false
 
 var temp: bool = false
 
-
 func _process(_delta: float) -> void:
-	if (
-		update_draw
-		|| rectangles_to_draw.size() != rectangles_to_draw_size
-		|| lines_to_draw.size() != lines_to_draw_size
-	):
+	if (update_draw or rectangles_to_draw.size() != rectangles_to_draw_size or lines_to_draw.size() != lines_to_draw_size):
 		update_draw = false
 		rectangles_to_draw_size = rectangles_to_draw.size()
 		lines_to_draw_size = lines_to_draw.size()
 		queue_redraw()
-
 
 func _draw() -> void:
 	if rectangles_to_draw.size() > 0:
