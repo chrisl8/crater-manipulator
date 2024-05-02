@@ -2,7 +2,7 @@ extends Node2D
 
 const INTERACT_RANGE: float = 200.0
 
-@export var debug_object: Resource = preload("res://player/debug_object.tscn")
+@export var debug_object: Resource = preload ("res://player/debug_object.tscn")
 @export var mining_particles: GPUParticles2D
 @export var left_hand_tool_is_active: bool = false
 @export var mining_distance: float = 0.0:
@@ -23,16 +23,16 @@ const INTERACT_RANGE: float = 200.0
 var is_local: bool = false
 var max_hand_distance: float = 25.0
 var mouse_left_down: bool
+var mouse_right_down: bool
 var mine_cast: RayCast2D
 var tool_speed: float = 0.1
 var current_tool_raycast_time: float = 100
-var ball: Resource = preload("res://things/items/disc/disc.tscn")
-var box: Resource = preload("res://things/items/square/square.tscn")
-var soup_machine: Resource = preload("res://things/structures/soup_machine/soup_machine.tscn")
+var ball: Resource = preload ("res://things/items/disc/disc.tscn")
+var box: Resource = preload ("res://things/items/square/square.tscn")
+var soup_machine: Resource = preload ("res://things/structures/soup_machine/soup_machine.tscn")
 var controlled_item: PhysicsBody2D
 var controlled_item_type: String = "Holding"
 var controlled_item_clear_of_collisions: bool = false
-
 
 func update_mining_particle_length() -> void:
 	var extents: Vector3 = mining_particles.process_material.get("emission_box_extents")
@@ -41,7 +41,6 @@ func update_mining_particle_length() -> void:
 	mining_particles.process_material.set("emission_box_extents", extents)
 	mining_particles.process_material.set("emission_shape_offset", Vector3(mining_distance, 0.0, 0.0))
 	mining_particles.look_at(mouse_position)
-
 
 ## Set input key map based on settings in Godot Input Map
 func update_tool_keys_display() -> void:
@@ -52,11 +51,10 @@ func update_tool_keys_display() -> void:
 			var keycode: int = DisplayServer.keyboard_get_keycode_from_physical(input_events[0].physical_keycode)
 			var key_text: String = OS.get_keycode_string(keycode)
 			# The Enter Input font keyboard keys are all lower-case. Upper-case denotes special keys.
-			owner.get_node("Player Canvas/Keys/%s/Left/Key" % tool_name.to_pascal_case()).text = (key_text.to_lower())
-			owner.get_node("Player Canvas/Keys/%s/Left/Key Pressed" % tool_name.to_pascal_case()).text = (key_text.to_lower())
-			owner.get_node("Player Canvas/Keys/%s/Right/Key" % tool_name.to_pascal_case()).text = (key_text.to_lower())
-			owner.get_node("Player Canvas/Keys/%s/Right/Key Pressed" % tool_name.to_pascal_case()).text = (key_text.to_lower())
-
+			owner.get_node("Player Canvas/Keys/%s/Left/Key"% tool_name.to_pascal_case()).text = (key_text.to_lower())
+			owner.get_node("Player Canvas/Keys/%s/Left/Key Pressed"% tool_name.to_pascal_case()).text = (key_text.to_lower())
+			owner.get_node("Player Canvas/Keys/%s/Right/Key"% tool_name.to_pascal_case()).text = (key_text.to_lower())
+			owner.get_node("Player Canvas/Keys/%s/Right/Key Pressed"% tool_name.to_pascal_case()).text = (key_text.to_lower())
 
 func initialize(local: bool) -> void:
 	is_local = local
@@ -71,7 +69,6 @@ func initialize(local: bool) -> void:
 	else:
 		owner.get_node("Player Canvas/Keys").visible = false
 
-
 func _process(delta: float) -> void:
 	if is_local:
 		mouse_position = get_global_mouse_position()
@@ -84,8 +81,14 @@ func _process(delta: float) -> void:
 
 		current_tool_raycast_time += delta
 		if mouse_left_down:
-			tool_raycast()
+			var clear_mouse_down = tool_raycast(left_hand_tool)
+			if clear_mouse_down:
+				mouse_left_down = false
 		left_hand_tool_is_active = mouse_left_down
+		if mouse_right_down:
+			var clear_mouse_down = tool_raycast(right_hand_tool)
+			if clear_mouse_down:
+				mouse_right_down = false
 
 	else:
 		if flipped:
@@ -108,7 +111,7 @@ func _process(delta: float) -> void:
 
 		# Note that by using the mouse position, with no restrictions, for placing items, your "place distance" is limited only by your screen size and resolution!
 
-		if controlled_item_type == "Building" || controlled_item_type == "Holding":
+		if controlled_item_type == "Building" or controlled_item_type == "Holding":
 			if left_hand_tool_is_active and is_multiplayer_authority() and controlled_item_clear_of_collisions:
 				if controlled_item_type == "Building":
 					Globals.player_has_done.built_an_item = true
@@ -128,7 +131,6 @@ func _process(delta: float) -> void:
 					controlled_item.set_position(to_local(mouse_position))
 				controlled_item_clear_of_collisions = (intersecting_tiles.all_tiles_are_empty)
 
-
 #Re-add when arms sometimes need to target other locations
 #@export var ArmTargetPosition: Vector2
 
@@ -140,7 +142,6 @@ func _drop_held_thing() -> void:
 		controlled_item.queue_free()
 		controlled_item = null
 
-
 @rpc("call_local")
 func de_spawn_placing_item() -> void:
 	if controlled_item and controlled_item_type == "Building":
@@ -149,25 +150,29 @@ func de_spawn_placing_item() -> void:
 		controlled_item.queue_free()
 		controlled_item = null
 
-
 func _input(event: InputEvent) -> void:
 	var previous_left_hand_tool: Globals.Tools = left_hand_tool
-	if event.is_action_released(&"build"):
-		left_hand_tool = Globals.Tools.BUILD
-		Globals.player_has_done.press_build_button = true
-		owner.spawn_item()
-	elif event.is_action_released(&"mine"):
+
+	if event.is_action_released(&"mine"):
 		if left_hand_tool != Globals.Tools.MINE:
 			Globals.player_has_done.returned_to_mining_mode = true
 		left_hand_tool = Globals.Tools.MINE
+	elif event.is_action_released(&"place"):
+		left_hand_tool = Globals.Tools.PLACE
+	elif event.is_action_released(&"build"):
+		left_hand_tool = Globals.Tools.BUILD
+		Globals.player_has_done.press_build_button = true
+		owner.spawn_item()
 	elif event.is_action_released(&"pickup"):
 		left_hand_tool = Globals.Tools.PICKUP
 	elif event.is_action_released(&"drag"):
 		left_hand_tool = Globals.Tools.DRAG
 
-	# Set key intput display based on currently active tool.
+	# Set key input display based on currently active tool.
 	owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = left_hand_tool != Globals.Tools.MINE
 	owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.MINE
+	owner.get_node("Player Canvas/Keys/Place/Left/Key").visible = left_hand_tool != Globals.Tools.PLACE
+	owner.get_node("Player Canvas/Keys/Place/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.PLACE
 	owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = left_hand_tool != Globals.Tools.BUILD
 	owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.BUILD
 	owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = left_hand_tool != Globals.Tools.PICKUP
@@ -178,8 +183,8 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == 1:
 			mouse_left_down = event.is_pressed()
-		elif event.button_index == 2 and event.is_pressed():
-			right_mouse_clicked()
+		elif event.button_index == 2:
+			mouse_right_down = event.is_pressed()
 
 		# This is where using the scroll wheel in build mode cycles through items
 		if left_hand_tool == Globals.Tools.BUILD:
@@ -203,8 +208,10 @@ func _input(event: InputEvent) -> void:
 		if previous_left_hand_tool == Globals.Tools.BUILD:
 			de_spawn_placing_item.rpc()
 
-
-func tool_raycast() -> void:
+func tool_raycast(active_tool: Globals.Tools) -> bool:
+	# NOTE: If you don't want "auto-fire" on a mouse click for a given action,
+	# then you can set clear_mouse_down to true.
+	var clear_mouse_down: bool = false
 	if current_tool_raycast_time > tool_speed:
 		current_tool_raycast_time = 0.0
 		var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
@@ -212,62 +219,57 @@ func tool_raycast() -> void:
 		var mining_particle_distance: float = clamp(clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE), 0.0, mining_particles.global_position.distance_to(mouse_position)) / 2.0
 		var target_position: Vector2 = arm_position + ((mouse_position - arm_position).normalized() * clamp(arm_position.distance_to(mouse_position), 0, INTERACT_RANGE))
 		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(arm_position, target_position)
-		if left_hand_tool == Globals.Tools.MINE:  # Only show the "laser" if mining
-			# LASER DRILL!!! ==>-----
-			Globals.world_map.draw_temp_line_on_map(arm_position, target_position, Color.RED)
 		query.exclude = [self]
 		var result: Dictionary = space_state.intersect_ray(query)
+
+		# Here is the logic for "what to do with a raycast, depending on what "tool" is in your hand.
+		# I think this logic could be improved a lot, but there is no "simple" way to both make the player
+		# experience good and make this logic easy to read.
+		# So just document it well and reorganize it later if it becomes more clear how to better organize it
+		# without also duplicating a lot of code.
+
+		# Note that the "Building" and/or "dropping" of build/held items is done in the _process() function AFTER this
+		# function is called.
+		# This can be hard to keep in mind, but the reason is that mining and picking up depend on the raycast position,
+		# while dropping and placing only depend on the mouse position.
+		# Although, it could make sense to change that and raycast to the position where a thing could be placed, which would
+		# make it harder to place objects in terrain, and on the other side of walls.
+
+		if active_tool == Globals.Tools.MINE:
+			Globals.world_map.draw_temp_line_on_map(arm_position, target_position, Color.RED)
+			if result.size() > 0 and result["collider"] is TileMap:
+				Globals.world_map.mine_cell_at_position(result["position"] - result["normal"])
+		elif active_tool == Globals.Tools.PLACE:
+			Globals.world_map.draw_temp_line_on_map(arm_position, target_position, Color.BLUE)
+			if result.size() < 1:
+				# NOTE: Previously you could "replace" a block, but now you cannot since it only allows placing if the raycast finds NOTHING.
+				# However, this does prevent building "through walls and floors".
+				Globals.world_map.place_cell_at_position(get_global_mouse_position())
+		elif active_tool == Globals.Tools.PICKUP:
+			if result.size() > 0 and not controlled_item and result["collider"] is PhysicsBody2D: # You are ALREADY holding an item, you cannot hold two items.  # You can currently only pick up RigidBodies.
+				var body: Node = result["collider"]
+				if body.has_method("grab"): # The RigidBody must have a "grab" method to be able to be picked up.
+					body.grab.rpc_id(1)
+					# Reset now so it does not immediately drop.
+					# This means that you don't "release" to drop the item, but click again.
+					# The benefit of this is that the game can track overlaps and not allow you to drop the item if it is colliding with terrain.
+					# We couldn't prevent a user from releasing the mouse button, but we can ignore a click if the object is colliding.
+					clear_mouse_down = true
+
 		if result.size() > 0:
-			var hit_point: Vector2 = result["position"]
-
-			# Here is the logic for "what to do with a raycast, depending on what "tool" is in your hand.
-			# I think this logic could be improved a lot, but there is no "simple" way to both make the player
-			# experience good and make this logic easy to read.
-			# So just document it well and reorganize it later if it becomes more clear how to better organize it
-			# without also duplicating a lot of code.
-
-			# Note that the "Building" and/or "dropping" of build/held items is done in the _process() function AFTER this
-			# function is called.
-			# This can be hard to keep in mind, but the reason is that mining and picking up depend on the raycast position,
-			# while dropping and placing only depend on the mouse position.
-			# Although, it could make sense to change that and raycast to the position where a thing could be placed, which would
-			# make it harder to place objects in terrain, and on the other side of walls.
-
-			if left_hand_tool == Globals.Tools.MINE:
-				if result["collider"] is TileMap and not controlled_item:  # Do not mine while holding items, no matter what
-					Globals.world_map.mine_cell_at_position(hit_point - result["normal"])
-			elif left_hand_tool == Globals.Tools.PICKUP:
-				if not controlled_item and result["collider"] is PhysicsBody2D:  # You are ALREADY holding an item, you cannot hold two items.  # You can currently only pick up RigidBodies.
-					var body: Node = result["collider"]
-					if body.has_method("grab"):  # The RigidBody must have a "grab" method to be able to be picked up.
-						body.grab.rpc_id(1)
-						mouse_left_down = false  # Reset now so it does not immediately drop.
-
 			# This is always set, even if we don't use it.
-			mining_particle_distance = (mining_particles.global_position.distance_to(hit_point) / 2.0)
+			mining_particle_distance = (mining_particles.global_position.distance_to(result["position"]) / 2.0)
 
 		## This is a synced variable used by other players to see your mining activity.
 		mining_distance = mining_particle_distance
 
-
-func right_mouse_clicked() -> void:
-	# This function is terribly simple compared to the way the left mouse button works,
-	# simply due to us not having allowed swapping tools in the right hand yet,
-	# but I do plan to change that in the future.
-
-	# Note that because we just use the mouse position:
-	# 1. The distance at which you can place is only restricted by the size and resolution of your screen.
-	# 2. You can place blocks in areas that you cannot access (no ray trace check)
-	# This will probably be addressed when we update the right mouse button to allow tool swapping and make it more like left click.
-
-	Globals.world_map.place_cell_at_position(get_global_mouse_position())
-
+	return clear_mouse_down
 
 # Spawning and dropping the "thing" must be an RPC because all "copies" of the player
 # must do this to sync the view of them holding/not holding the thing across players views
 # of this player.
 @rpc("any_peer", "call_local")
-func spawn_player_controlled_thing(thing_position: Vector2, thing_rotation: float, controlled_item_name: String, spawned_item_type: String = "Holding") -> void:
+func spawn_player_controlled_thing(thing_position: Vector2, thing_rotation: float, controlled_item_name: String, spawned_item_type: String="Holding") -> void:
 	if controlled_item:
 		# We can never control a new thing if we are already controlling something
 		# Whoever called this should have called de_spawn_placing_item() first if they were serious
