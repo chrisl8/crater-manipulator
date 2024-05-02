@@ -176,10 +176,8 @@ func _input(event: InputEvent) -> void:
 	owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.DRAG
 
 	if event is InputEventMouseButton:
-		if event.button_index == 1 and event.is_pressed():
-			mouse_left_down = true
-		elif event.button_index == 1 and not event.is_pressed():
-			mouse_left_down = false
+		if event.button_index == 1:
+			mouse_left_down = event.is_pressed()
 		elif event.button_index == 2 and event.is_pressed():
 			right_mouse_clicked()
 
