@@ -81,12 +81,12 @@ func _process(delta: float) -> void:
 
 		current_tool_raycast_time += delta
 		if mouse_left_down:
-			var clear_mouse_down = tool_raycast(left_hand_tool)
+			var clear_mouse_down: bool = tool_raycast(left_hand_tool)
 			if clear_mouse_down:
 				mouse_left_down = false
 		left_hand_tool_is_active = mouse_left_down
 		if mouse_right_down:
-			var clear_mouse_down = tool_raycast(right_hand_tool)
+			var clear_mouse_down: bool = tool_raycast(right_hand_tool)
 			if clear_mouse_down:
 				mouse_right_down = false
 
