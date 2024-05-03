@@ -5,6 +5,7 @@ const INTERACT_RANGE: float = 200.0
 @export var debug_object: Resource = preload ("res://player/debug_object.tscn")
 @export var mining_particles: GPUParticles2D
 @export var left_hand_tool_is_active: bool = false
+@export var right_hand_tool_is_active: bool = false
 @export var mining_distance: float = 0.0:
 	set(new_value):
 		mining_distance = new_value
@@ -33,6 +34,11 @@ var soup_machine: Resource = preload ("res://things/structures/soup_machine/soup
 var controlled_item: PhysicsBody2D
 var controlled_item_type: String = "Holding"
 var controlled_item_clear_of_collisions: bool = false
+var right_hand_modifier_active: bool = false
+
+## Use this to save what tool to return to after using tools that need to auto-revert after use.
+var return_to_this_left_hand_tool: Globals.Tools = Globals.Tools.MINE
+var return_to_this_right_hand_tool: Globals.Tools = Globals.Tools.MINE
 
 func update_mining_particle_length() -> void:
 	var extents: Vector3 = mining_particles.process_material.get("emission_box_extents")
@@ -84,12 +90,20 @@ func _process(delta: float) -> void:
 			var clear_mouse_down: bool = tool_raycast(left_hand_tool)
 			if clear_mouse_down:
 				mouse_left_down = false
+		# Because mouse_left_down is set in _input:
+			# A. It is only set on the local player
+			# B. It is not synced
+			# So we transfer its value to left_hand_tool_is_active
+			# in order to  is a networked variable to allow other players to see what this player is doing
+			# Outside of this "if is_local" statement, we will always use the _is_active variable to
+			# operate so that all players see the activity
 		left_hand_tool_is_active = mouse_left_down
 		if mouse_right_down:
 			var clear_mouse_down: bool = tool_raycast(right_hand_tool)
 			if clear_mouse_down:
 				mouse_right_down = false
-
+		# See left_hand_tool_is_active above for explanation
+		right_hand_tool_is_active = mouse_right_down
 	else:
 		if flipped:
 			flip_point.scale.x = -1
@@ -109,10 +123,16 @@ func _process(delta: float) -> void:
 	if controlled_item:
 		# Note that mining and picking up things happens in the tool_raycast() function that was called earlier.
 
-		# Note that by using the mouse position, with no restrictions, for placing items, your "place distance" is limited only by your screen size and resolution!
+		# Note that by using the mouse position, with no restrictions, for placing items,
+		# your "place distance" is limited only by your screen size and resolution!
 
+		# TODO: Also let this work if PICKUP is selected.
+		# TODO: We probably have to block some combinations, like you can't build with one hand and drag with the other can you?
 		if controlled_item_type == "Building" or controlled_item_type == "Holding":
-			if left_hand_tool_is_active and is_multiplayer_authority() and controlled_item_clear_of_collisions:
+			if (is_multiplayer_authority()
+			and ((left_hand_tool_is_active and left_hand_tool == Globals.Tools.BUILD)
+			or (right_hand_tool_is_active and right_hand_tool == Globals.Tools.BUILD))
+			and controlled_item_clear_of_collisions):
 				if controlled_item_type == "Building":
 					Globals.player_has_done.built_an_item = true
 				var held_item_name: String = controlled_item.name
@@ -121,8 +141,13 @@ func _process(delta: float) -> void:
 					# Ensure it sticks to absolute integer positions!
 					held_item_global_position = Vector2(int(held_item_global_position.x), int(held_item_global_position.y))
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
-				_drop_held_thing.rpc()
+				_drop_held_thing. rpc ()
 				Globals.world_map.delete_drawing_canvas(held_item_name)
+				if right_hand_tool_is_active and right_hand_tool == Globals.Tools.BUILD:
+					right_hand_tool = return_to_this_right_hand_tool
+				elif left_hand_tool_is_active and left_hand_tool == Globals.Tools.BUILD:
+					left_hand_tool = return_to_this_left_hand_tool
+				setKeyInputDisplay()
 			else:
 				var intersecting_tiles: Globals.MapTileSet = Globals.world_map.check_tile_location_and_surroundings(mouse_position, controlled_item.height_in_tiles, controlled_item.width_in_tiles, controlled_item.name)
 				if controlled_item.snaps:
@@ -150,25 +175,9 @@ func de_spawn_placing_item() -> void:
 		controlled_item.queue_free()
 		controlled_item = null
 
-func _input(event: InputEvent) -> void:
-	var previous_left_hand_tool: Globals.Tools = left_hand_tool
-
-	if event.is_action_released(&"mine"):
-		if left_hand_tool != Globals.Tools.MINE:
-			Globals.player_has_done.returned_to_mining_mode = true
-		left_hand_tool = Globals.Tools.MINE
-	elif event.is_action_released(&"place"):
-		left_hand_tool = Globals.Tools.PLACE
-	elif event.is_action_released(&"build"):
-		left_hand_tool = Globals.Tools.BUILD
-		Globals.player_has_done.press_build_button = true
-		owner.spawn_item()
-	elif event.is_action_released(&"pickup"):
-		left_hand_tool = Globals.Tools.PICKUP
-	elif event.is_action_released(&"drag"):
-		left_hand_tool = Globals.Tools.DRAG
-
-	# Set key input display based on currently active tool.
+## Set key input display based on currently active tool
+func setKeyInputDisplay() -> void:
+	# Left
 	owner.get_node("Player Canvas/Keys/Mine/Left/Key").visible = left_hand_tool != Globals.Tools.MINE
 	owner.get_node("Player Canvas/Keys/Mine/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.MINE
 	owner.get_node("Player Canvas/Keys/Place/Left/Key").visible = left_hand_tool != Globals.Tools.PLACE
@@ -179,6 +188,60 @@ func _input(event: InputEvent) -> void:
 	owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.PICKUP
 	owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = left_hand_tool != Globals.Tools.DRAG
 	owner.get_node("Player Canvas/Keys/Drag/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.DRAG
+	# Right
+	owner.get_node("Player Canvas/Keys/Mine/Right/Key").visible = right_hand_tool != Globals.Tools.MINE
+	owner.get_node("Player Canvas/Keys/Mine/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.MINE
+	owner.get_node("Player Canvas/Keys/Place/Right/Key").visible = right_hand_tool != Globals.Tools.PLACE
+	owner.get_node("Player Canvas/Keys/Place/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.PLACE
+	owner.get_node("Player Canvas/Keys/Build/Right/Key").visible = right_hand_tool != Globals.Tools.BUILD
+	owner.get_node("Player Canvas/Keys/Build/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.BUILD
+	owner.get_node("Player Canvas/Keys/Pickup/Right/Key").visible = right_hand_tool != Globals.Tools.PICKUP
+	owner.get_node("Player Canvas/Keys/Pickup/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.PICKUP
+	owner.get_node("Player Canvas/Keys/Drag/Right/Key").visible = right_hand_tool != Globals.Tools.DRAG
+	owner.get_node("Player Canvas/Keys/Drag/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.DRAG
+
+func _input(event: InputEvent) -> void:
+	var previous_left_hand_tool: Globals.Tools = left_hand_tool
+	var previous_right_hand_tool: Globals.Tools = right_hand_tool
+
+	if event.is_action_pressed(&"right_hand_modifier"):
+		right_hand_modifier_active = true
+	elif event.is_action_released(&"right_hand_modifier"):
+		right_hand_modifier_active = false
+	elif event.is_action_released(&"mine"):
+		if right_hand_modifier_active:
+			right_hand_tool = Globals.Tools.MINE
+		else:
+			left_hand_tool = Globals.Tools.MINE
+		Globals.player_has_done.returned_to_mining_mode = true
+	elif event.is_action_released(&"place"):
+		if right_hand_modifier_active:
+			right_hand_tool = Globals.Tools.PLACE
+		else:
+			left_hand_tool = Globals.Tools.PLACE
+	elif event.is_action_released(&"build"):
+		if right_hand_modifier_active:
+			if previous_right_hand_tool != Globals.Tools.BUILD:
+				return_to_this_right_hand_tool = previous_right_hand_tool
+			right_hand_tool = Globals.Tools.BUILD
+		else:
+			if previous_left_hand_tool != Globals.Tools.BUILD:
+				return_to_this_left_hand_tool = previous_left_hand_tool
+			left_hand_tool = Globals.Tools.BUILD
+		Globals.player_has_done.press_build_button = true
+		owner.spawn_item()
+	elif event.is_action_released(&"pickup"):
+		if right_hand_modifier_active:
+			right_hand_tool = Globals.Tools.PICKUP
+		else:
+			left_hand_tool = Globals.Tools.PICKUP
+	elif event.is_action_released(&"drag"):
+		if right_hand_modifier_active:
+			right_hand_tool = Globals.Tools.DRAG
+		else:
+			left_hand_tool = Globals.Tools.DRAG
+
+	setKeyInputDisplay()
 
 	if event is InputEventMouseButton:
 		if event.button_index == 1:
@@ -187,26 +250,31 @@ func _input(event: InputEvent) -> void:
 			mouse_right_down = event.is_pressed()
 
 		# This is where using the scroll wheel in build mode cycles through items
-		if left_hand_tool == Globals.Tools.BUILD:
+		if left_hand_tool == Globals.Tools.BUILD or right_hand_tool == Globals.Tools.BUILD:
 			Globals.player_has_done.scroll_crafting_items = true
 			if event.button_index == 4 and event.pressed:
 				# Scroll Up
 				owner.player_spawn_item_next += 1
 				if owner.player_spawn_item_next > owner.player_spawnable_items.size() - 1:
 					owner.player_spawn_item_next = 0
-				de_spawn_placing_item.rpc()
+				de_spawn_placing_item. rpc ()
 				owner.spawn_item()
 			elif event.button_index == 5 and event.pressed:
 				# Scroll Down
 				owner.player_spawn_item_next -= 1
 				if owner.player_spawn_item_next < 0:
 					owner.player_spawn_item_next = (owner.player_spawnable_items.size() - 1)
-				de_spawn_placing_item.rpc()
+				de_spawn_placing_item. rpc ()
 				owner.spawn_item()
+
 	if previous_left_hand_tool != left_hand_tool:
 		# Tool changed
 		if previous_left_hand_tool == Globals.Tools.BUILD:
-			de_spawn_placing_item.rpc()
+			de_spawn_placing_item. rpc ()
+	if previous_right_hand_tool != right_hand_tool:
+		# Tool changed
+		if previous_right_hand_tool == Globals.Tools.BUILD:
+			de_spawn_placing_item. rpc ()
 
 func tool_raycast(active_tool: Globals.Tools) -> bool:
 	# NOTE: If you don't want "auto-fire" on a mouse click for a given action,
