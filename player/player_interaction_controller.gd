@@ -141,7 +141,7 @@ func _process(delta: float) -> void:
 					# Ensure it sticks to absolute integer positions!
 					held_item_global_position = Vector2(int(held_item_global_position.x), int(held_item_global_position.y))
 				Spawner.place_thing.rpc_id(1, held_item_name, held_item_global_position)
-				_drop_held_thing. rpc ()
+				_drop_held_thing.rpc()
 				Globals.world_map.delete_drawing_canvas(held_item_name)
 				if right_hand_tool_is_active and right_hand_tool == Globals.Tools.BUILD:
 					right_hand_tool = return_to_this_right_hand_tool
@@ -184,6 +184,8 @@ func setKeyInputDisplay() -> void:
 	owner.get_node("Player Canvas/Keys/Place/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.PLACE
 	owner.get_node("Player Canvas/Keys/Build/Left/Key").visible = left_hand_tool != Globals.Tools.BUILD
 	owner.get_node("Player Canvas/Keys/Build/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.BUILD
+	owner.get_node("Player Canvas/Keys/Destroy/Left/Key").visible = left_hand_tool != Globals.Tools.DESTROY
+	owner.get_node("Player Canvas/Keys/Destroy/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.DESTROY
 	owner.get_node("Player Canvas/Keys/Pickup/Left/Key").visible = left_hand_tool != Globals.Tools.PICKUP
 	owner.get_node("Player Canvas/Keys/Pickup/Left/Key Pressed").visible = left_hand_tool == Globals.Tools.PICKUP
 	owner.get_node("Player Canvas/Keys/Drag/Left/Key").visible = left_hand_tool != Globals.Tools.DRAG
@@ -195,6 +197,8 @@ func setKeyInputDisplay() -> void:
 	owner.get_node("Player Canvas/Keys/Place/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.PLACE
 	owner.get_node("Player Canvas/Keys/Build/Right/Key").visible = right_hand_tool != Globals.Tools.BUILD
 	owner.get_node("Player Canvas/Keys/Build/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.BUILD
+	owner.get_node("Player Canvas/Keys/Destroy/Right/Key").visible = right_hand_tool != Globals.Tools.DESTROY
+	owner.get_node("Player Canvas/Keys/Destroy/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.DESTROY
 	owner.get_node("Player Canvas/Keys/Pickup/Right/Key").visible = right_hand_tool != Globals.Tools.PICKUP
 	owner.get_node("Player Canvas/Keys/Pickup/Right/Key Pressed").visible = right_hand_tool == Globals.Tools.PICKUP
 	owner.get_node("Player Canvas/Keys/Drag/Right/Key").visible = right_hand_tool != Globals.Tools.DRAG
@@ -257,24 +261,24 @@ func _input(event: InputEvent) -> void:
 				owner.player_spawn_item_next += 1
 				if owner.player_spawn_item_next > owner.player_spawnable_items.size() - 1:
 					owner.player_spawn_item_next = 0
-				de_spawn_placing_item. rpc ()
+				de_spawn_placing_item.rpc()
 				owner.spawn_item()
 			elif event.button_index == 5 and event.pressed:
 				# Scroll Down
 				owner.player_spawn_item_next -= 1
 				if owner.player_spawn_item_next < 0:
 					owner.player_spawn_item_next = (owner.player_spawnable_items.size() - 1)
-				de_spawn_placing_item. rpc ()
+				de_spawn_placing_item.rpc()
 				owner.spawn_item()
 
 	if previous_left_hand_tool != left_hand_tool:
 		# Tool changed
 		if previous_left_hand_tool == Globals.Tools.BUILD:
-			de_spawn_placing_item. rpc ()
+			de_spawn_placing_item.rpc()
 	if previous_right_hand_tool != right_hand_tool:
 		# Tool changed
 		if previous_right_hand_tool == Globals.Tools.BUILD:
-			de_spawn_placing_item. rpc ()
+			de_spawn_placing_item.rpc()
 
 func tool_raycast(active_tool: Globals.Tools) -> bool:
 	# NOTE: If you don't want "auto-fire" on a mouse click for a given action,
