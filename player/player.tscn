@@ -1,16 +1,16 @@
 [gd_scene load_steps=24 format=3 uid="uid://cnckqfxi8eyk8"]
 
-[ext_resource type="Script" path="res://player/player_controller.gd" id="1_ntq5g"]
-[ext_resource type="Script" path="res://player/prompts.gd" id="4_8hopg"]
-[ext_resource type="Script" path="res://player/player_interaction_controller.gd" id="4_rfuvf"]
+[ext_resource type="Script" uid="uid://ddc0rnhif3fsu" path="res://player/player_controller.gd" id="1_ntq5g"]
+[ext_resource type="Script" uid="uid://b8kxj5hfbkw3m" path="res://player/prompts.gd" id="4_8hopg"]
+[ext_resource type="Script" uid="uid://baj7wp1fguhf" path="res://player/player_interaction_controller.gd" id="4_rfuvf"]
 [ext_resource type="Texture2D" uid="uid://cgoy7vka18x5b" path="res://player/player_atlas.png" id="5_e4w6p"]
-[ext_resource type="Script" path="res://player/player_legs_manager.gd" id="5_h6bhr"]
+[ext_resource type="Script" uid="uid://bc1eermcnslbv" path="res://player/player_legs_manager.gd" id="5_h6bhr"]
 [ext_resource type="FontFile" uid="uid://c5sfl5i3vhksb" path="res://assets/fonts/Enter_Input_Light.ttf" id="5_lj6li"]
-[ext_resource type="Script" path="res://player/player_inventory_manager.gd" id="5_xpvfg"]
-[ext_resource type="Script" path="res://player/player_leg_controller.gd" id="6_dfoja"]
+[ext_resource type="Script" uid="uid://byemxw5n7mfdc" path="res://player/player_inventory_manager.gd" id="5_xpvfg"]
+[ext_resource type="Script" uid="uid://dvagdll3efgpm" path="res://player/player_leg_controller.gd" id="6_dfoja"]
 [ext_resource type="FontFile" uid="uid://dhgiojjdxi185" path="res://assets/fonts/Enter_Input_Dark_Pressed.ttf" id="6_prcwm"]
-[ext_resource type="Script" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
-[ext_resource type="Script" path="res://player/antenna_physics_controller.gd" id="10_c7nhb"]
+[ext_resource type="Script" uid="uid://2fq5tdqvikto" path="res://player/equal_two_segment_ik_controller.gd" id="7_g23pf"]
+[ext_resource type="Script" uid="uid://clgpbc3q14q27" path="res://player/antenna_physics_controller.gd" id="10_c7nhb"]
 [ext_resource type="Texture2D" uid="uid://cxfvwdktyjru5" path="res://player/player.svg" id="10_wmt63"]
 [ext_resource type="Texture2D" uid="uid://btvwh51r4767" path="res://player/Party Hat.svg" id="11_2y8ad"]
 
@@ -809,18 +809,18 @@ visible = false
 position = Vector2(15, 0)
 rotation = 1.20897
 amount = 100
-process_material = SubResource("ParticleProcessMaterial_jfoyl")
 lifetime = 0.5
 collision_base_size = 0.0
 visibility_rect = Rect2(0, -15, 1000, 30)
+process_material = SubResource("ParticleProcessMaterial_jfoyl")
 
 [node name="GPUParticles2D" type="GPUParticles2D" parent="Flip Point/Player Rig/IK Rig/Arm/Upper/Lower"]
 position = Vector2(15, 0)
 rotation = 1.20897
 amount = 200
-process_material = SubResource("ParticleProcessMaterial_at8od")
 collision_base_size = 0.0
 visibility_rect = Rect2(0, -15, 1000, 30)
+process_material = SubResource("ParticleProcessMaterial_at8od")
 
 [node name="Body - OLD" type="Polygon2D" parent="Flip Point/Player Rig"]
 visible = false
